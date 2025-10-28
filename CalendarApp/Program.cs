@@ -3,6 +3,7 @@ using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Extensions;
 using CalendarApp.Infrastructure.Mapping;
 using CalendarApp.Services.User;
+using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,6 +34,7 @@ builder.Services.AddAutoMapper(cfg =>
 });
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -61,6 +63,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+app.MapHub<ChatHub>("/hubs/chat");
 
 
 app.Run();
