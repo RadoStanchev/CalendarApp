@@ -2,6 +2,7 @@ using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Extensions;
 using CalendarApp.Infrastructure.Mapping;
+using CalendarApp.Services.Friendships;
 using CalendarApp.Services.User;
 using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
@@ -27,6 +28,7 @@ builder.Services.AddIdentity<Contact, IdentityRole<Guid>>(options =>
 .AddDefaultTokenProviders();
 
 builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {

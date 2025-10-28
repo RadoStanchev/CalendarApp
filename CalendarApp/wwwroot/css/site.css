@@ -29,3 +29,109 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+.friendship-page {
+  background: linear-gradient(135deg, #f0f2f5 0%, #ffffff 100%);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.08);
+}
+
+.friendship-card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.08);
+  border: none;
+  position: relative;
+}
+
+.friendship-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(37, 140, 251, 0.08);
+  pointer-events: none;
+}
+
+.friend-item + .friend-item {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  padding-top: 1rem;
+}
+
+.friend-item:first-child {
+  margin-top: 0.25rem;
+}
+
+.avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  box-shadow: 0 0.75rem 2rem rgba(37, 99, 235, 0.35);
+}
+
+.avatar.avatar-lg {
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.75rem;
+  background: linear-gradient(135deg, #10b981, #2563eb);
+}
+
+.friendship-grid .btn {
+  border-radius: 999px;
+  font-weight: 600;
+  padding-inline: 1.25rem;
+}
+
+.friendship-grid .btn-outline-secondary,
+.friendship-grid .btn-outline-danger {
+  background: rgba(15, 23, 42, 0.02);
+}
+
+.friendship-grid .btn-outline-secondary:hover,
+.friendship-grid .btn-outline-danger:hover {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.friendship-card h2 {
+  color: #0f172a;
+}
+
+.requests-section + .requests-section {
+  border-top: 1px dashed rgba(148, 163, 184, 0.4);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.empty-state .avatar {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  box-shadow: none;
+  font-size: 2rem;
+}
+
+.xsmall {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 991.98px) {
+  .friendship-page {
+    padding: 1.25rem;
+  }
+
+  .friendship-card {
+    padding: 1.25rem;
+    border-radius: 1rem;
+  }
+
+  .friendship-grid .btn {
+    width: 100%;
+  }
+}
