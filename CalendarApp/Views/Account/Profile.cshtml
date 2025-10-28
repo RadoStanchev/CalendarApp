@@ -1,0 +1,25 @@
+﻿@model CalendarApp.Models.Account.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<h2 class="text-center mt-4">My Profile</h2>
+
+<div class="card w-50 mx-auto mt-4 shadow">
+    <div class="card-body">
+        <h4>@Model.FullName</h4>
+        <p><strong>Email:</strong> @Model.Email</p>
+        @if (Model.BirthDate != null)
+        {
+            <p><strong>Birth Date:</strong> @Model.BirthDate.Value.ToShortDateString()</p>
+        }
+        @if (!string.IsNullOrEmpty(Model.Address))
+        {
+            <p><strong>Address:</strong> @Model.Address</p>
+        }
+    </div>
+</div>
+
+<form asp-action="@nameof(AccountController.Logout)" method="post" class="text-center mt-3">
+    <button type="submit" class="btn btn-outline-danger">Logout</button>
+</form>

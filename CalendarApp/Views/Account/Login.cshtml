@@ -1,0 +1,34 @@
+﻿@model CalendarApp.Models.Account.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h2 class="text-center mt-4">Login</h2>
+
+<form asp-action="Login" method="post" class="w-50 mx-auto mt-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-2">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="RememberMe" class="form-check-input" />
+        <label asp-for="RememberMe" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100">Login</button>
+</form>
+
+<p class="text-center mt-3">
+    Don't have an account?
+    <a asp-action="@nameof(AccountController.Register)">Register</a>
+</p>
