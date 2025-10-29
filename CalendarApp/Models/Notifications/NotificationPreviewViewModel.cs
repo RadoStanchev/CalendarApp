@@ -1,9 +1,9 @@
-namespace CalendarApp.Services.Notifications.Models
+namespace CalendarApp.Models.Notifications
 {
     using System;
     using CalendarApp.Data.Models;
 
-    public class NotificationDto
+    public class NotificationPreviewViewModel
     {
         public Guid Id { get; set; }
 
