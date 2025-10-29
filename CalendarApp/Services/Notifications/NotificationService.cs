@@ -1,21 +1,28 @@
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using CalendarApp.Data;
+using CalendarApp.Data.Models;
+using CalendarApp.Hubs;
+using CalendarApp.Services.Notifications.Models;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System;
+
 namespace CalendarApp.Services.Notifications
 {
-    using System;
-    using AutoMapper;
-    using AutoMapper.QueryableExtensions;
-    using CalendarApp.Data;
-    using CalendarApp.Services.Notifications.Models;
-    using Microsoft.EntityFrameworkCore;
-
     public class NotificationService : INotificationService
     {
         private readonly ApplicationDbContext db;
+        private readonly IHubContext<NotificationHub> hubContext;
+        private readonly ILogger<NotificationService> logger;
         private readonly IMapper mapper;
 
-        public NotificationService(ApplicationDbContext db, IMapper mapper)
+        public NotificationService(ApplicationDbContext db, IMapper mapper, ILogger<NotificationService> logger, IHubContext<NotificationHub> hubContext)
         {
             this.db = db;
             this.mapper = mapper;
+            this.logger = logger;
+            this.hubContext = hubContext;
         }
 
         public async Task<IReadOnlyList<NotificationDto>> GetRecentAsync(Guid userId, int count, bool includeRead = false)
@@ -87,34 +94,6 @@ namespace CalendarApp.Services.Notifications
             }
 
             return true;
-using CalendarApp.Data;
-using CalendarApp.Data.Models;
-using CalendarApp.Hubs;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using AutoMapper;
-using CalendarApp.Data;
-using CalendarApp.Data.Models;
-using CalendarApp.Hubs;
-using CalendarApp.Services.Notifications.Models;
-using Microsoft.AspNetCore.SignalR;
-
-namespace CalendarApp.Services.Notifications
-{
-    public class NotificationService : INotificationService
-    {
-        private readonly ApplicationDbContext db;
-        private readonly IHubContext<NotificationHub> hubContext;
-        private readonly ILogger<NotificationService> logger;
-        private readonly IMapper mapper;
-
-        public NotificationService(ApplicationDbContext db, IHubContext<NotificationHub> hubContext, ILogger<NotificationService> logger, IMapper mapper)
-        {
-            this.db = db;
-            this.hubContext = hubContext;
-            this.logger = logger;
-            this.mapper = mapper;
         }
 
         public async Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds, CancellationToken cancellationToken = default)
@@ -230,7 +209,7 @@ namespace CalendarApp.Services.Notifications
                 .ToList();
 
             var broadcastTasks = results
-                .Select(result => hubContext.Clients.User(result.UserId.ToString())
+                .Select(result => hubContext.Clients.User(result.Id.ToString())
                     .SendAsync("ReceiveNotification", result, cancellationToken))
                 .ToList();
 
