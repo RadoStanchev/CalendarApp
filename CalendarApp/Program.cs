@@ -4,6 +4,7 @@ using CalendarApp.Infrastructure.Extensions;
 using CalendarApp.Infrastructure.Mapping;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.User;
+using CalendarApp.Services.Meetings;
 using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -29,10 +30,12 @@ builder.Services.AddIdentity<Contact, IdentityRole<Guid>>(options =>
 
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
+builder.Services.AddScoped<IMeetingService, MeetingService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<AccountProfile>();
+    cfg.AddProfile<MeetingProfile>();
 });
 
 builder.Services.AddControllersWithViews();
