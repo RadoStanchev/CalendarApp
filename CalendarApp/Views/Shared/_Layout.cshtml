@@ -33,6 +33,9 @@
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="Create">Meetings</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Friendships" asp-action="Index">Friends</a>
                             </li>
                         }

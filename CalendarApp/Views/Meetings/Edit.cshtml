@@ -1,0 +1,120 @@
+@model MeetingEditViewModel
+@{
+    ViewData["Title"] = "Edit meeting";
+    var startValue = Model.StartTime?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
+    var statuses = Enum.GetValues(typeof(ParticipantStatus)).Cast<ParticipantStatus>().ToArray();
+}
+
+<div class="meeting-form-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Edit meeting</h1>
+            <p class="text-muted mb-0">Update meeting details and review participant responses.</p>
+        </div>
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Back to details</a>
+    </div>
+
+    <form asp-action="Edit" method="post" class="meeting-form" data-meeting-form>
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="CreatedById" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="StartTime" class="form-label"></label>
+                            <input asp-for="StartTime" type="datetime-local" class="form-control" value="@startValue" />
+                            <span asp-validation-for="StartTime" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Location" class="form-label">Location</label>
+                            <input asp-for="Location" class="form-control" placeholder="Update the location" />
+                            <span asp-validation-for="Location" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-0">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card shadow-sm border-0 h-100" data-meeting-search-root data-search-url="@Url.Action("SearchContacts", new { })" data-show-status="true">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h2 class="h5 fw-semibold mb-0">Participants</h2>
+                                <p class="text-muted small mb-0">Adjust attendance and invite more people instantly.</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text">🔍</span>
+                                <input type="search" class="form-control" placeholder="Search by name or email" data-meeting-search />
+                            </div>
+                            <div class="list-group mt-2 d-none" data-meeting-search-results></div>
+                        </div>
+
+                        <div>
+                            <h3 class="h6 text-muted text-uppercase mb-2">Attendance</h3>
+                            <div class="selected-participants" data-meeting-selected data-empty-text="No one has been invited yet.">
+                                @if (!Model.Participants.Any())
+                                {
+                                    <p class="text-muted small mb-0" data-meeting-empty>No one has been invited yet.</p>
+                                }
+                                @for (var i = 0; i < Model.Participants.Count; i++)
+                                {
+                                    var participant = Model.Participants[i];
+                                    var isCreator = participant.ContactId == Model.CreatedById;
+                                    <div class="border rounded p-3 mb-2" data-participant data-contact-id="@participant.ContactId" data-is-creator="@(isCreator.ToString().ToLowerInvariant())">
+                                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                            <div>
+                                                <div class="fw-semibold">@participant.DisplayName @if (isCreator) { <span class="badge bg-primary ms-1">Organizer</span> }</div>
+                                                <div class="text-muted small">@participant.Email</div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <select class="form-select form-select-sm" data-status-select name="Participants[@i].Status">
+                                                    @foreach (var status in statuses)
+                                                    {
+                                                        var selected = participant.Status == status ? "selected" : string.Empty;
+                                                        <option value="@((int)status)" @selected>@status</option>
+                                                    }
+                                                </select>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-remove-participant @(isCreator ? "disabled" : string.Empty)>&times;</button>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" data-contact-input name="Participants[@i].ContactId" value="@participant.ContactId" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end gap-2">
+            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/meetings.js" asp-append-version="true"></script>
+    <script>
+        window.initMeetingParticipants && window.initMeetingParticipants({
+            rootSelector: '[data-meeting-search-root]',
+            showStatus: true
+        });
+    </script>
+}
