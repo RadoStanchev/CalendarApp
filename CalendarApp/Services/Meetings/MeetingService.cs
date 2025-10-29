@@ -286,6 +286,7 @@ namespace CalendarApp.Services.Meetings
                 return false;
             }
 
+            var originalStartTime = meeting.StartTime;
             var existingParticipantIds = meeting.Participants
                 .Select(p => p.ContactId)
                 .ToHashSet();
@@ -293,6 +294,11 @@ namespace CalendarApp.Services.Meetings
             meeting.StartTime = dto.StartTime;
             meeting.Location = dto.Location;
             meeting.Description = dto.Description;
+
+            if (originalStartTime != dto.StartTime && dto.StartTime > DateTime.Now)
+            {
+                meeting.ReminderSent = false;
+            }
 
             var incomingParticipants = (dto.Participants ?? Array.Empty<MeetingParticipantUpdateDto>())
                 .GroupBy(p => p.ContactId)
