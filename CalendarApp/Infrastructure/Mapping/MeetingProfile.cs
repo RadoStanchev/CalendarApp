@@ -11,6 +11,8 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<MeetingDetailsDto, MeetingDetailsViewModel>();
             CreateMap<MeetingParticipantDto, MeetingParticipantDisplayViewModel>();
 
+            CreateMap<MeetingSummaryDto, MeetingListItemViewModel>();
+
             CreateMap<MeetingEditDto, MeetingEditViewModel>();
             CreateMap<MeetingParticipantDto, MeetingParticipantFormModel>();
 

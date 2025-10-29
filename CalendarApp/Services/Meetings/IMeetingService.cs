@@ -1,3 +1,4 @@
+using CalendarApp.Data.Models;
 using CalendarApp.Services.Meetings.Models;
 
 namespace CalendarApp.Services.Meetings
@@ -15,5 +16,9 @@ namespace CalendarApp.Services.Meetings
         Task<IReadOnlyCollection<ContactSuggestionDto>> SearchContactsAsync(Guid requesterId, string term, IEnumerable<Guid> excludeIds);
 
         Task<IReadOnlyCollection<ContactSummaryDto>> GetContactsAsync(IEnumerable<Guid> ids);
+
+        Task<IReadOnlyCollection<MeetingSummaryDto>> GetMeetingsForUserAsync(Guid userId);
+
+        Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status);
     }
 }

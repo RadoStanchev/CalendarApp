@@ -1,3 +1,5 @@
+using CalendarApp.Data.Models;
+
 namespace CalendarApp.Services.Meetings.Models
 {
     public class MeetingDetailsDto
@@ -19,6 +21,8 @@ namespace CalendarApp.Services.Meetings.Models
         public bool ViewerIsCreator { get; set; }
 
         public bool ViewerIsParticipant { get; set; }
+
+        public ParticipantStatus? ViewerStatus { get; set; }
 
         public IReadOnlyCollection<MeetingParticipantDto> Participants { get; set; } = Array.Empty<MeetingParticipantDto>();
     }

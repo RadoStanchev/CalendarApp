@@ -24,6 +24,19 @@ namespace CalendarApp.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> My()
+        {
+            var userId = await GetCurrentUserIdAsync();
+            var meetings = await meetingService.GetMeetingsForUserAsync(userId);
+            var model = new MeetingListViewModel
+            {
+                Meetings = mapper.Map<List<MeetingListItemViewModel>>(meetings)
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
         public IActionResult Create()
         {
             var model = new MeetingCreateViewModel
@@ -120,6 +133,30 @@ namespace CalendarApp.Controllers
             var results = await meetingService.SearchContactsAsync(userId, term ?? string.Empty, excludeIds);
             var viewModels = mapper.Map<List<ContactSuggestionViewModel>>(results);
             return Json(viewModels);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStatus(Guid id, ParticipantStatus status, string? returnUrl)
+        {
+            var userId = await GetCurrentUserIdAsync();
+            var updated = await meetingService.UpdateParticipantStatusAsync(id, userId, status);
+
+            if (!updated)
+            {
+                TempData["MeetingError"] = "We couldn't update your response for that meeting.";
+            }
+            else
+            {
+                TempData["MeetingMessage"] = "Your meeting response was updated.";
+            }
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(My));
         }
 
         private async Task<Guid> GetCurrentUserIdAsync()

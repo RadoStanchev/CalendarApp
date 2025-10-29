@@ -76,6 +76,8 @@ namespace CalendarApp.Services.Meetings
 
             var viewerIsCreator = meeting.CreatedById == requesterId;
             var viewerIsParticipant = meeting.Participants.Any(p => p.ContactId == requesterId);
+            var viewerParticipant = meeting.Participants.FirstOrDefault(p => p.ContactId == requesterId);
+            var viewerStatus = viewerParticipant?.Status;
 
             if (!viewerIsCreator && !viewerIsParticipant)
             {
@@ -106,6 +108,7 @@ namespace CalendarApp.Services.Meetings
                 ViewerId = requesterId,
                 ViewerIsCreator = viewerIsCreator,
                 ViewerIsParticipant = viewerIsParticipant,
+                ViewerStatus = viewerStatus,
                 Participants = participants
             };
         }
@@ -200,6 +203,54 @@ namespace CalendarApp.Services.Meetings
             return contacts;
         }
 
+        public async Task<IReadOnlyCollection<MeetingSummaryDto>> GetMeetingsForUserAsync(Guid userId)
+        {
+            var meetings = await db.Meetings
+                .AsNoTracking()
+                .Where(m => m.CreatedById == userId || m.Participants.Any(p => p.ContactId == userId))
+                .Select(m => new
+                {
+                    m.Id,
+                    m.StartTime,
+                    m.Location,
+                    m.Description,
+                    m.CreatedById,
+                    CreatorFirstName = m.CreatedBy.FirstName,
+                    CreatorLastName = m.CreatedBy.LastName,
+                    ParticipantCount = m.Participants.Count,
+                    ViewerStatus = m.Participants
+                        .Where(p => p.ContactId == userId)
+                        .Select(p => (ParticipantStatus?)p.Status)
+                        .FirstOrDefault()
+                })
+                .OrderBy(m => m.StartTime)
+                .ToListAsync();
+
+            return meetings
+                .Select(m =>
+                {
+                    var viewerStatus = m.ViewerStatus;
+                    if (viewerStatus == null && m.CreatedById == userId)
+                    {
+                        viewerStatus = ParticipantStatus.Accepted;
+                    }
+
+                    return new MeetingSummaryDto
+                    {
+                        Id = m.Id,
+                        StartTime = m.StartTime,
+                        Location = m.Location,
+                        Description = m.Description,
+                        CreatedById = m.CreatedById,
+                        CreatedByName = FormatName(m.CreatorFirstName, m.CreatorLastName),
+                        ViewerIsCreator = m.CreatedById == userId,
+                        ViewerStatus = viewerStatus,
+                        ParticipantCount = m.ParticipantCount
+                    };
+                })
+                .ToList();
+        }
+
         public async Task<bool> UpdateMeetingAsync(MeetingUpdateDto dto)
         {
             var meeting = await db.Meetings
@@ -259,6 +310,27 @@ namespace CalendarApp.Services.Meetings
                 });
             }
 
+            await db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status)
+        {
+            var participant = await db.MeetingParticipants
+                .Include(p => p.Meeting)
+                .FirstOrDefaultAsync(p => p.MeetingId == meetingId && p.ContactId == participantId);
+
+            if (participant == null || participant.Meeting.CreatedById == participantId)
+            {
+                return false;
+            }
+
+            if (participant.Status == status)
+            {
+                return true;
+            }
+
+            participant.Status = status;
             await db.SaveChangesAsync();
             return true;
         }

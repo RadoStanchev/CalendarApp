@@ -1,7 +1,9 @@
 @model MeetingDetailsViewModel
-@{
+@{ 
     ViewData["Title"] = "Meeting details";
     var message = TempData["MeetingMessage"] as string;
+    var error = TempData["MeetingError"] as string;
+    var statusOptions = Enum.GetValues<ParticipantStatus>();
     string FormatStatusClass(ParticipantStatus status) => status switch
     {
         ParticipantStatus.Accepted => "bg-success",
@@ -22,10 +24,25 @@
             <h1 class="h3 fw-bold mb-1">Meeting overview</h1>
             <p class="text-muted mb-0">@Model.StartTime.ToLocalTime().ToString("f")</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
             @if (Model.ViewerIsCreator)
             {
                 <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit meeting</a>
+            }
+            else if (Model.ViewerIsParticipant && Model.ViewerStatus.HasValue)
+            {
+                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex align-items-center gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Meetings", new { id = Model.Id })" />
+                    <label class="form-label mb-0 me-1" for="viewer-status">Your status</label>
+                    <select class="form-select form-select-sm" id="viewer-status" name="status">
+                        @foreach (var status in statusOptions)
+                        {
+                            <option value="@((int)status)" @(Model.ViewerStatus == status ? "selected" : string.Empty)>@FormatStatusLabel(status)</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                </form>
             }
         </div>
     </div>
@@ -34,6 +51,13 @@
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <span>@message</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span>@error</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
@@ -111,13 +135,15 @@
 @section Scripts {
     <script>
         (() => {
-            const alert = document.querySelector('.meeting-details-page .alert');
-            if (!alert) return;
-            const timeout = setTimeout(() => {
-                const bsAlert = bootstrap?.Alert?.getOrCreateInstance(alert);
-                bsAlert?.close();
-            }, 4000);
-            alert.addEventListener('close.bs.alert', () => clearTimeout(timeout));
+            const alerts = document.querySelectorAll('.meeting-details-page .alert');
+            if (!alerts.length) return;
+            alerts.forEach(alert => {
+                const timeout = setTimeout(() => {
+                    const bsAlert = bootstrap?.Alert?.getOrCreateInstance(alert);
+                    bsAlert?.close();
+                }, 4000);
+                alert.addEventListener('close.bs.alert', () => clearTimeout(timeout));
+            });
         })();
     </script>
 }

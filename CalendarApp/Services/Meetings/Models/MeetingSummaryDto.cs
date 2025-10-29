@@ -1,8 +1,8 @@
 using CalendarApp.Data.Models;
 
-namespace CalendarApp.Models.Meetings
+namespace CalendarApp.Services.Meetings.Models
 {
-    public class MeetingDetailsViewModel
+    public class MeetingSummaryDto
     {
         public Guid Id { get; set; }
 
@@ -12,16 +12,14 @@ namespace CalendarApp.Models.Meetings
 
         public string? Description { get; set; }
 
-        public string CreatedByName { get; set; } = string.Empty;
+        public Guid CreatedById { get; set; }
 
-        public Guid ViewerId { get; set; }
+        public string CreatedByName { get; set; } = string.Empty;
 
         public bool ViewerIsCreator { get; set; }
 
-        public bool ViewerIsParticipant { get; set; }
-
         public ParticipantStatus? ViewerStatus { get; set; }
 
-        public List<MeetingParticipantDisplayViewModel> Participants { get; set; } = new();
+        public int ParticipantCount { get; set; }
     }
 }
