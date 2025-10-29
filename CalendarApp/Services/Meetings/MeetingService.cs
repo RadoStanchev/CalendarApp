@@ -1,6 +1,8 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Services.Meetings.Models;
+using CalendarApp.Services.Notifications;
+using CalendarApp.Services.Notifications.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,10 +13,12 @@ namespace CalendarApp.Services.Meetings
     public class MeetingService : IMeetingService
     {
         private readonly ApplicationDbContext db;
+        private readonly INotificationService notificationService;
 
-        public MeetingService(ApplicationDbContext db)
+        public MeetingService(ApplicationDbContext db, INotificationService notificationService)
         {
             this.db = db;
+            this.notificationService = notificationService;
         }
 
         public async Task<Guid> CreateMeetingAsync(MeetingCreateDto dto)
@@ -57,6 +61,26 @@ namespace CalendarApp.Services.Meetings
 
             db.Meetings.Add(meeting);
             await db.SaveChangesAsync();
+
+            var creatorName = await GetUserDisplayNameAsync(dto.CreatedById);
+            var startTime = meeting.StartTime.ToLocalTime().ToString("g");
+            var locationSuffix = BuildLocationSuffix(meeting.Location);
+
+            var notifications = meeting.Participants
+                .Where(p => p.ContactId != dto.CreatedById)
+                .Select(p => new NotificationCreateDto
+                {
+                    UserId = p.ContactId,
+                    Message = $"{creatorName} invited you to a meeting on {startTime}{locationSuffix}.",
+                    Type = NotificationType.Invitation
+                })
+                .ToList();
+
+            if (notifications.Count > 0)
+            {
+                await notificationService.CreateNotificationsAsync(notifications);
+            }
+
             return meeting.Id;
         }
 
@@ -263,6 +287,9 @@ namespace CalendarApp.Services.Meetings
             }
 
             var originalStartTime = meeting.StartTime;
+            var existingParticipantIds = meeting.Participants
+                .Select(p => p.ContactId)
+                .ToHashSet();
 
             meeting.StartTime = dto.StartTime;
             meeting.Location = dto.Location;
@@ -285,6 +312,7 @@ namespace CalendarApp.Services.Meetings
             incomingParticipants[dto.UpdatedById] = ParticipantStatus.Accepted;
 
             var existingParticipants = meeting.Participants.ToList();
+            var newlyAddedParticipantIds = new List<Guid>();
             foreach (var participant in existingParticipants)
             {
                 if (participant.ContactId == meeting.CreatedById)
@@ -315,9 +343,50 @@ namespace CalendarApp.Services.Meetings
                     ContactId = contactId,
                     Status = status
                 });
+
+                if (!existingParticipantIds.Contains(contactId))
+                {
+                    newlyAddedParticipantIds.Add(contactId);
+                }
             }
 
             await db.SaveChangesAsync();
+            var updaterName = await GetUserDisplayNameAsync(dto.UpdatedById);
+            var startTime = meeting.StartTime.ToLocalTime().ToString("g");
+            var locationSuffix = BuildLocationSuffix(meeting.Location);
+
+            var invitationNotifications = newlyAddedParticipantIds
+                .Where(id => id != dto.UpdatedById)
+                .Select(id => new NotificationCreateDto
+                {
+                    UserId = id,
+                    Message = $"{updaterName} added you to a meeting on {startTime}{locationSuffix}.",
+                    Type = NotificationType.Invitation
+                })
+                .ToList();
+
+            if (invitationNotifications.Count > 0)
+            {
+                await notificationService.CreateNotificationsAsync(invitationNotifications);
+            }
+
+            var participantsToNotify = meeting.Participants
+                .Select(p => p.ContactId)
+                .Where(id => id != dto.UpdatedById && id != meeting.CreatedById && !newlyAddedParticipantIds.Contains(id))
+                .Distinct()
+                .Select(id => new NotificationCreateDto
+                {
+                    UserId = id,
+                    Message = $"{updaterName} updated the meeting on {startTime}{locationSuffix}.",
+                    Type = NotificationType.Info
+                })
+                .ToList();
+
+            if (participantsToNotify.Count > 0)
+            {
+                await notificationService.CreateNotificationsAsync(participantsToNotify);
+            }
+
             return true;
         }
 
@@ -348,6 +417,27 @@ namespace CalendarApp.Services.Meetings
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .ToArray();
             return parts.Length > 0 ? string.Join(" ", parts) : "Unknown";
+        }
+
+        private async Task<string> GetUserDisplayNameAsync(Guid userId)
+        {
+            var user = await db.Users
+                .AsNoTracking()
+                .Where(u => u.Id == userId)
+                .Select(u => new { u.FirstName, u.LastName })
+                .FirstOrDefaultAsync();
+
+            return FormatName(user?.FirstName, user?.LastName);
+        }
+
+        private static string BuildLocationSuffix(string? location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                return string.Empty;
+            }
+
+            return $" at {location.Trim()}";
         }
     }
 }

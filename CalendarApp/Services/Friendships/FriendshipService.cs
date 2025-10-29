@@ -1,6 +1,8 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Services.Friendships.Models;
+using CalendarApp.Services.Notifications;
+using CalendarApp.Services.Notifications.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +12,12 @@ namespace CalendarApp.Services.Friendships
     public class FriendshipService : IFriendshipService
     {
         private readonly ApplicationDbContext db;
+        private readonly INotificationService notificationService;
 
-        public FriendshipService(ApplicationDbContext db)
+        public FriendshipService(ApplicationDbContext db, INotificationService notificationService)
         {
             this.db = db;
+            this.notificationService = notificationService;
         }
 
         public async Task<IReadOnlyCollection<FriendInfo>> GetFriendsAsync(Guid userId)
@@ -230,6 +234,15 @@ namespace CalendarApp.Services.Friendships
             }
 
             await db.SaveChangesAsync();
+
+            var requesterName = await GetUserDisplayNameAsync(requesterId);
+            await notificationService.CreateNotificationAsync(new NotificationCreateDto
+            {
+                UserId = receiverId,
+                Message = $"{requesterName} sent you a friend request.",
+                Type = NotificationType.Invitation
+            });
+
             return true;
         }
 
@@ -244,6 +257,15 @@ namespace CalendarApp.Services.Friendships
             friendship.Status = FriendshipStatus.Accepted;
             friendship.CreatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
+
+            var receiverName = await GetUserDisplayNameAsync(receiverId);
+            await notificationService.CreateNotificationAsync(new NotificationCreateDto
+            {
+                UserId = friendship.RequesterId,
+                Message = $"{receiverName} accepted your friend request.",
+                Type = NotificationType.Info
+            });
+
             return true;
         }
 
@@ -258,6 +280,15 @@ namespace CalendarApp.Services.Friendships
             friendship.Status = FriendshipStatus.Declined;
             friendship.CreatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
+
+            var receiverName = await GetUserDisplayNameAsync(receiverId);
+            await notificationService.CreateNotificationAsync(new NotificationCreateDto
+            {
+                UserId = friendship.RequesterId,
+                Message = $"{receiverName} declined your friend request.",
+                Type = NotificationType.Warning
+            });
+
             return true;
         }
 
@@ -269,8 +300,18 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
+            var receiverId = friendship.ReceiverId;
             db.Friendships.Remove(friendship);
             await db.SaveChangesAsync();
+
+            var requesterName = await GetUserDisplayNameAsync(requesterId);
+            await notificationService.CreateNotificationAsync(new NotificationCreateDto
+            {
+                UserId = receiverId,
+                Message = $"{requesterName} canceled the friend request.",
+                Type = NotificationType.Info
+            });
+
             return true;
         }
 
@@ -289,6 +330,26 @@ namespace CalendarApp.Services.Friendships
             db.Friendships.Remove(friendship);
             await db.SaveChangesAsync();
             return true;
+        }
+
+        private async Task<string> GetUserDisplayNameAsync(Guid userId)
+        {
+            var user = await db.Users
+                .AsNoTracking()
+                .Where(u => u.Id == userId)
+                .Select(u => new { u.FirstName, u.LastName })
+                .FirstOrDefaultAsync();
+
+            return FormatName(user?.FirstName, user?.LastName);
+        }
+
+        private static string FormatName(string? firstName, string? lastName)
+        {
+            var parts = new[] { firstName, lastName }
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .ToArray();
+
+            return parts.Length > 0 ? string.Join(" ", parts) : "Unknown";
         }
 
         private static string BuildPairKey(Guid first, Guid second)
