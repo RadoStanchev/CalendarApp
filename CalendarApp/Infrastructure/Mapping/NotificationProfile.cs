@@ -9,6 +9,9 @@ namespace CalendarApp.Infrastructure.Mapping
     {
         public NotificationProfile()
         {
+            CreateMap<Notification, NotificationDto>();
+            CreateMap<NotificationDto, NotificationListItemViewModel>();
+            CreateMap<NotificationDto, NotificationPreviewViewModel>();
             CreateMap<NotificationCreateDto, Notification>();
             CreateMap<Notification, NotificationDto>();
             CreateMap<NotificationDto, NotificationViewModel>();

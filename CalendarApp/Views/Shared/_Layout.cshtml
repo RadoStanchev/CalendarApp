@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/chat.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CalendarApp.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -54,6 +55,11 @@
         </main>
     </div>
 
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <partial name="_NotificationPanel" />
+    }
+
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2025 - CalendarApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -61,6 +67,7 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js" integrity="sha512-LDM47Yk7u+XtKiarrt2By+Sy6drshGWDCJSjV7eITbIt8OJ7n6Zc+1PsvBRUdyyuEc/37BLVOdsS1ip6yJFq9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
