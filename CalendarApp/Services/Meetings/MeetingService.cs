@@ -262,9 +262,16 @@ namespace CalendarApp.Services.Meetings
                 return false;
             }
 
+            var originalStartTime = meeting.StartTime;
+
             meeting.StartTime = dto.StartTime;
             meeting.Location = dto.Location;
             meeting.Description = dto.Description;
+
+            if (originalStartTime != dto.StartTime && dto.StartTime > DateTime.Now)
+            {
+                meeting.ReminderSent = false;
+            }
 
             var incomingParticipants = (dto.Participants ?? Array.Empty<MeetingParticipantUpdateDto>())
                 .GroupBy(p => p.ContactId)

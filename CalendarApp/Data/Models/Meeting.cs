@@ -23,6 +23,8 @@ namespace CalendarApp.Data.Models
         public Guid CreatedById { get; set; }
         public Contact CreatedBy { get; set; }
 
+        public bool ReminderSent { get; set; } = false;
+
         public ICollection<MeetingParticipant> Participants { get; set; } = [];
     }
 }
