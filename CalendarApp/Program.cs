@@ -5,6 +5,7 @@ using CalendarApp.Infrastructure.Mapping;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.User;
 using CalendarApp.Services.Meetings;
+using CalendarApp.Services.Notifications;
 using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -31,11 +32,13 @@ builder.Services.AddIdentity<Contact, IdentityRole<Guid>>(options =>
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<AccountProfile>();
     cfg.AddProfile<MeetingProfile>();
+    cfg.AddProfile<NotificationProfile>();
 });
 
 builder.Services.AddControllersWithViews();
@@ -70,6 +73,7 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 
 app.Run();

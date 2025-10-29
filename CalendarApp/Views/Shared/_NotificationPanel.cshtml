@@ -1,0 +1,26 @@
+@using CalendarApp.Services.Notifications.Models
+@inject Microsoft.AspNetCore.Mvc.IUrlHelperFactory UrlHelperFactory
+@{
+    var urlHelper = UrlHelperFactory.GetUrlHelper(ViewContext);
+    var listUrl = urlHelper.Action("Index", "Notifications");
+    var recentUrl = urlHelper.Action("Recent", "Notifications");
+    var markUrl = urlHelper.Action("MarkAsRead", "Notifications");
+}
+<div id="notification-panel" class="notification-panel" data-notification-panel data-recent-url="@recentUrl" data-mark-url="@markUrl" data-list-url="@listUrl">
+    <div class="notification-panel__island">
+        <a class="notification-panel__headline" href="@listUrl" aria-label="View notifications">
+            <span class="notification-panel__title">Notifications</span>
+            <span class="notification-panel__count badge bg-danger d-none" data-notification-count>0</span>
+        </a>
+        <div class="notification-panel__body">
+            <ul class="notification-preview-list" data-notification-items></ul>
+            <div class="notification-panel__empty" data-notification-empty>You're all caught up!</div>
+        </div>
+        <div class="notification-panel__footer">
+            <a class="notification-panel__view-all" href="@listUrl">View all</a>
+        </div>
+    </div>
+    <form id="notification-antiforgery-form" class="d-none" method="post">
+        @Html.AntiForgeryToken()
+    </form>
+</div>

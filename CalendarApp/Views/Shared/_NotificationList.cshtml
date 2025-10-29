@@ -1,0 +1,29 @@
+@using System.Collections.Generic
+@model IReadOnlyList<CalendarApp.Models.Notifications.NotificationListItemViewModel>
+
+@if (Model == null || Model.Count == 0)
+{
+    <div class="notification-empty">You're all caught up!</div>
+}
+else
+{
+    <ul class="notification-list">
+        @foreach (var notification in Model)
+        {
+            var itemClasses = notification.IsRead ? "notification-item is-read" : "notification-item is-unread";
+            <li class="@itemClasses" data-notification-id="@notification.Id">
+                <div class="notification-item__icon notification-type-@notification.Type.ToString().ToLowerInvariant()"></div>
+                <div class="notification-item__content">
+                    <div class="notification-item__message">@notification.Message</div>
+                    <div class="notification-item__meta">
+                        <time datetime="@notification.CreatedAt.ToString("o")" class="notification-item__time">@notification.CreatedAt.ToLocalTime().ToString("g")</time>
+                        @if (!notification.IsRead)
+                        {
+                            <span class="badge rounded-pill bg-primary">New</span>
+                        }
+                    </div>
+                </div>
+            </li>
+        }
+    </ul>
+}
