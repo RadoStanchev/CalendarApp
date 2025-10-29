@@ -1,10 +1,10 @@
+using AutoMapper;
+using CalendarApp.Data.Models;
+using CalendarApp.Models.Notifications;
+using CalendarApp.Services.Notifications.Models;
+
 namespace CalendarApp.Infrastructure.Mapping
 {
-    using AutoMapper;
-    using CalendarApp.Data.Models;
-    using CalendarApp.Models.Notifications;
-    using CalendarApp.Services.Notifications.Models;
-
     public class NotificationProfile : Profile
     {
         public NotificationProfile()
@@ -12,6 +12,9 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<Notification, NotificationDto>();
             CreateMap<NotificationDto, NotificationListItemViewModel>();
             CreateMap<NotificationDto, NotificationPreviewViewModel>();
+            CreateMap<NotificationCreateDto, Notification>();
+            CreateMap<Notification, NotificationDto>();
+            CreateMap<NotificationDto, NotificationViewModel>();
         }
     }
 }

@@ -1,5 +1,6 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Background;
 using CalendarApp.Infrastructure.Extensions;
 using CalendarApp.Infrastructure.Mapping;
 using CalendarApp.Services.Friendships;
@@ -33,6 +34,7 @@ builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddHostedService<MeetingReminderService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
