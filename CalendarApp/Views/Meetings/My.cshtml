@@ -97,7 +97,7 @@
                                             <select class="form-select form-select-sm" id="status-@meeting.Id" name="status">
                                                 @foreach (var status in statusOptions)
                                                 {
-                                                    <option value="@((int)status)" @(meeting.ViewerStatus == status ? "selected" : string.Empty)>@FormatStatusLabel(status)</option>
+                                                    <option value="@((int)status)" selected="@(meeting.ViewerStatus == status ? "selected" : string.Empty)">@FormatStatusLabel(status)</option>
                                                 }
                                             </select>
                                             <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>

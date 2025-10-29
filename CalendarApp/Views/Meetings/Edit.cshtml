@@ -85,7 +85,7 @@
                                                     @foreach (var status in statuses)
                                                     {
                                                         var selected = participant.Status == status ? "selected" : string.Empty;
-                                                        <option value="@((int)status)" @selected>@status</option>
+                                                        <option value="@((int)status)" selected>@status</option>
                                                     }
                                                 </select>
                                                 <button type="button" class="btn btn-sm btn-outline-danger" data-remove-participant @(isCreator ? "disabled" : string.Empty)>&times;</button>

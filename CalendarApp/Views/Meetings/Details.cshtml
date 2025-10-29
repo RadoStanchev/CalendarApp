@@ -38,7 +38,7 @@
                     <select class="form-select form-select-sm" id="viewer-status" name="status">
                         @foreach (var status in statusOptions)
                         {
-                            <option value="@((int)status)" @(Model.ViewerStatus == status ? "selected" : string.Empty)>@FormatStatusLabel(status)</option>
+                            <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? "selected" : string.Empty)">@FormatStatusLabel(status)</option>
                         }
                     </select>
                     <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
