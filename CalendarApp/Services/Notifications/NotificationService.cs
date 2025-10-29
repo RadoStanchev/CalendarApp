@@ -18,12 +18,14 @@ namespace CalendarApp.Services.Notifications
         private readonly ApplicationDbContext db;
         private readonly IHubContext<NotificationHub> hubContext;
         private readonly ILogger<NotificationService> logger;
+        private readonly IMapper mapper;
 
-        public NotificationService(ApplicationDbContext db, IHubContext<NotificationHub> hubContext, ILogger<NotificationService> logger)
+        public NotificationService(ApplicationDbContext db, IHubContext<NotificationHub> hubContext, ILogger<NotificationService> logger, IMapper mapper)
         {
             this.db = db;
             this.hubContext = hubContext;
             this.logger = logger;
+            this.mapper = mapper;
         }
 
         public async Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds, CancellationToken cancellationToken = default)
@@ -90,14 +92,6 @@ namespace CalendarApp.Services.Notifications
                 : meeting.Description;
 
             return $"Reminder: {description} starts at {meeting.StartTime:dddd, MMM d yyyy h:mm tt}.";
-        private readonly IMapper mapper;
-        private readonly IHubContext<NotificationHub> hubContext;
-
-        public NotificationService(ApplicationDbContext db, IMapper mapper, IHubContext<NotificationHub> hubContext)
-        {
-            this.db = db;
-            this.mapper = mapper;
-            this.hubContext = hubContext;
         }
 
         public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification, CancellationToken cancellationToken = default)
