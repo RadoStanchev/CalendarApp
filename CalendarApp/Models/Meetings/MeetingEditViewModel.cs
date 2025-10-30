@@ -20,6 +20,11 @@ namespace CalendarApp.Models.Meetings
         [DataType(DataType.MultilineText)]
         public string? Description { get; set; }
 
+        [Display(Name = "Category")]
+        public Guid? CategoryId { get; set; }
+
+        public List<CategoryOptionViewModel> Categories { get; set; } = new();
+
         public List<MeetingParticipantFormModel> Participants { get; set; } = new();
     }
 }

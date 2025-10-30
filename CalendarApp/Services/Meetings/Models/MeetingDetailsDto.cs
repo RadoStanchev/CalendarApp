@@ -16,6 +16,12 @@ namespace CalendarApp.Services.Meetings.Models
 
         public string CreatedByName { get; set; } = string.Empty;
 
+        public Guid? CategoryId { get; set; }
+
+        public string? CategoryName { get; set; }
+
+        public string? CategoryColor { get; set; }
+
         public Guid ViewerId { get; set; }
 
         public bool ViewerIsCreator { get; set; }

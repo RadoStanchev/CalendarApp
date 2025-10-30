@@ -1,6 +1,7 @@
 using AutoMapper;
 using CalendarApp.Data.Models;
 using CalendarApp.Models.Meetings;
+using CalendarApp.Services.Categories;
 using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -13,12 +14,14 @@ namespace CalendarApp.Controllers
     public class MeetingsController : Controller
     {
         private readonly IMeetingService meetingService;
+        private readonly ICategoryService categoryService;
         private readonly IMapper mapper;
         private readonly UserManager<Contact> userManager;
 
-        public MeetingsController(IMeetingService meetingService, IMapper mapper, UserManager<Contact> userManager)
+        public MeetingsController(IMeetingService meetingService, ICategoryService categoryService, IMapper mapper, UserManager<Contact> userManager)
         {
             this.meetingService = meetingService;
+            this.categoryService = categoryService;
             this.mapper = mapper;
             this.userManager = userManager;
         }
@@ -37,12 +40,14 @@ namespace CalendarApp.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             var model = new MeetingCreateViewModel
             {
                 StartTime = DateTime.UtcNow.AddHours(1)
             };
+
+            model.Categories = await GetCategoryOptionsAsync();
 
             return View(model);
         }
@@ -56,6 +61,7 @@ namespace CalendarApp.Controllers
             if (!ModelState.IsValid)
             {
                 await PopulateParticipantDetailsAsync(model.Participants);
+                model.Categories = await GetCategoryOptionsAsync();
                 return View(model);
             }
 
@@ -78,6 +84,7 @@ namespace CalendarApp.Controllers
             }
 
             var model = mapper.Map<MeetingEditViewModel>(dto);
+            model.Categories = await GetCategoryOptionsAsync();
             return View(model);
         }
 
@@ -95,6 +102,7 @@ namespace CalendarApp.Controllers
             if (!ModelState.IsValid)
             {
                 await PopulateParticipantDetailsAsync(model.Participants);
+                model.Categories = await GetCategoryOptionsAsync();
                 return View(model);
             }
 
@@ -187,6 +195,12 @@ namespace CalendarApp.Controllers
                 participant.DisplayName = summary.DisplayName;
                 participant.Email = summary.Email;
             }
+        }
+
+        private async Task<List<CategoryOptionViewModel>> GetCategoryOptionsAsync()
+        {
+            var categories = await categoryService.GetAllAsync();
+            return mapper.Map<List<CategoryOptionViewModel>>(categories);
         }
 
         private static IEnumerable<Guid> ParseExcludeIds(string? exclude)

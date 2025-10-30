@@ -26,6 +26,16 @@
     };
 
     var statusOptions = Enum.GetValues<ParticipantStatus>();
+
+    string BuildCategoryBadgeStyle(string? color)
+    {
+        if (string.IsNullOrWhiteSpace(color))
+        {
+            return string.Empty;
+        }
+
+        return $"background-color: {color}; border-color: {color}; color: #fff;";
+    }
 }
 
 <div class="meeting-list-page">
@@ -71,6 +81,10 @@
                             <div class="flex-grow-1">
                                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                                     <h2 class="h5 fw-semibold mb-0">@meeting.StartTime.ToLocalTime().ToString("f")</h2>
+                                    @if (!string.IsNullOrWhiteSpace(meeting.CategoryName))
+                                    {
+                                        <span class="badge rounded-pill" style="@BuildCategoryBadgeStyle(meeting.CategoryColor)">@meeting.CategoryName</span>
+                                    }
                                     @if (meeting.ViewerStatus.HasValue)
                                     {
                                         <span class="badge @FormatStatusBadge(meeting)">@FormatStatusLabel(meeting.ViewerStatus.Value)</span>

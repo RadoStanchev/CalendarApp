@@ -16,6 +16,16 @@
         ParticipantStatus.Declined => "Declined",
         _ => "Pending"
     };
+
+    string BuildCategoryBadgeStyle(string? color)
+    {
+        if (string.IsNullOrWhiteSpace(color))
+        {
+            return string.Empty;
+        }
+
+        return $"background-color: {color}; border-color: {color}; color: #fff;";
+    }
 }
 
 <div class="meeting-details-page">
@@ -74,6 +84,17 @@
                         <dd class="col-sm-8">@Model.StartTime.ToLocalTime().ToString("f")</dd>
                         <dt class="col-sm-4 text-muted">Location</dt>
                         <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Location) ? Model.Location : "No location set")</dd>
+                        <dt class="col-sm-4 text-muted">Category</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrWhiteSpace(Model.CategoryName))
+                            {
+                                <span class="badge rounded-pill" style="@BuildCategoryBadgeStyle(Model.CategoryColor)">@Model.CategoryName</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">No category assigned</span>
+                            }
+                        </dd>
                         <dt class="col-sm-4 text-muted">Description</dt>
                         <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "No description provided")</dd>
                     </dl>

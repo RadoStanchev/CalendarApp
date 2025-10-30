@@ -32,6 +32,18 @@
                             <span asp-validation-for="Location" class="text-danger"></span>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" class="form-select">
+                                <option value="">No category</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Id" @(Model.CategoryId == category.Id ? "selected" : string.Empty) data-color="@category.Color">@category.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger"></span>
+                        </div>
+
                         <div class="mb-0">
                             <label asp-for="Description" class="form-label">Description</label>
                             <textarea asp-for="Description" class="form-control" rows="5" placeholder="Share meeting goals, agenda or context"></textarea>

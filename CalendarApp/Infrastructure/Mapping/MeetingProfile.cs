@@ -1,5 +1,6 @@
 using AutoMapper;
 using CalendarApp.Models.Meetings;
+using CalendarApp.Services.Categories.Models;
 using CalendarApp.Services.Meetings.Models;
 
 namespace CalendarApp.Infrastructure.Mapping
@@ -25,6 +26,8 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<MeetingParticipantFormModel, MeetingParticipantUpdateDto>();
 
             CreateMap<ContactSuggestionDto, ContactSuggestionViewModel>();
+
+            CreateMap<CategorySummaryDto, CategoryOptionViewModel>();
         }
     }
 }
