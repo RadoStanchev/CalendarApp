@@ -12,10 +12,13 @@
     const itemsContainer = panel.querySelector('[data-notification-items]');
     const emptyState = panel.querySelector('[data-notification-empty]');
     const countBadge = panel.querySelector('[data-notification-count]');
+    const closeButton = panel.querySelector('[data-notification-close]');
     const recentUrl = panel.getAttribute('data-recent-url');
     const markUrl = panel.getAttribute('data-mark-url');
     const listUrl = panel.getAttribute('data-list-url');
     const antiForgeryToken = document.querySelector('#notification-antiforgery-form input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    let hideTimeoutId = null;
 
     const typeEmojis = {
         info: 'ℹ️',
@@ -25,6 +28,32 @@
     };
 
     const typeClass = (type) => `notification-type-${type?.toString().toLowerCase() ?? 'info'}`;
+
+    function hidePanel() {
+        if (!panel) {
+            return;
+        }
+
+        panel.classList.add('notification-panel--hidden');
+        window.clearTimeout(hideTimeoutId);
+        hideTimeoutId = null;
+    }
+
+    function scheduleAutoHide() {
+        window.clearTimeout(hideTimeoutId);
+        hideTimeoutId = window.setTimeout(() => {
+            hidePanel();
+        }, 5000);
+    }
+
+    function showPanel() {
+        if (!panel) {
+            return;
+        }
+
+        panel.classList.remove('notification-panel--hidden');
+        scheduleAutoHide();
+    }
 
     function updateBadge(unreadCount) {
         if (!countBadge) {
@@ -44,6 +73,12 @@
         const hasItems = itemsContainer.children.length > 0;
         emptyState.classList.toggle('d-none', hasItems);
         itemsContainer.classList.toggle('d-none', !hasItems);
+
+        if (hasItems) {
+            showPanel();
+        } else {
+            hidePanel();
+        }
     }
 
     function formatRelativeTime(dateString) {
@@ -192,6 +227,13 @@
             if (listUrl) {
                 window.location.href = listUrl;
             }
+        });
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            hidePanel();
         });
     }
 
