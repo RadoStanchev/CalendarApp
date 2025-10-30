@@ -6,12 +6,15 @@
     var recentUrl = Url.Action(nameof(NotificationsController.Recent), controllerName);
     var markUrl = Url.Action(nameof(NotificationsController.MarkAsRead), controllerName);
 }
-<div id="notification-panel" class="notification-panel" data-notification-panel data-recent-url="@recentUrl" data-mark-url="@markUrl" data-list-url="@listUrl">
+<div id="notification-panel" class="notification-panel notification-panel--hidden" data-notification-panel data-recent-url="@recentUrl" data-mark-url="@markUrl" data-list-url="@listUrl">
     <div class="notification-panel__island">
-        <a class="notification-panel__headline" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.Index)" aria-label="View notifications">
-            <span class="notification-panel__title">Notifications</span>
-            <span class="notification-panel__count badge bg-danger d-none" data-notification-count>0</span>
-        </a>
+        <div class="notification-panel__headline">
+            <a class="notification-panel__headline-link" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.Index)" aria-label="View notifications">
+                <span class="notification-panel__title">Notifications</span>
+                <span class="notification-panel__count badge bg-danger d-none" data-notification-count>0</span>
+            </a>
+            <button type="button" class="notification-panel__close" data-notification-close aria-label="Dismiss notifications">&times;</button>
+        </div>
         <div class="notification-panel__body">
             <ul class="notification-preview-list" data-notification-items></ul>
             <div class="notification-panel__empty" data-notification-empty>You're all caught up!</div>
