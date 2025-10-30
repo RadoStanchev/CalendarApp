@@ -66,15 +66,15 @@ namespace CalendarApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkAsRead([FromBody] MarkNotificationReadRequest request)
+        public async Task<IActionResult> MarkAsRead([FromBody] Guid? Id)
         {
-            if (request == null || request.Id == Guid.Empty)
+            if (Id == null || Id.Value == Guid.Empty)
             {
                 return BadRequest();
             }
 
             var userId = await GetCurrentUserIdAsync();
-            var marked = await notificationService.MarkAsReadAsync(userId, request.Id);
+            var marked = await notificationService.MarkAsReadAsync(userId, Id.Value);
 
             if (!marked)
             {
@@ -89,11 +89,6 @@ namespace CalendarApp.Controllers
         {
             var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
             return user.Id;
-        }
-
-        public class MarkNotificationReadRequest
-        {
-            public Guid Id { get; set; }
         }
     }
 }

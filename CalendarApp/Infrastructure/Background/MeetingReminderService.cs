@@ -31,6 +31,7 @@ namespace CalendarApp.Infrastructure.Background
                 try
                 {
                     await CheckForUpcomingMeetingsAsync(stoppingToken);
+                    await Task.Delay(PollInterval, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -39,15 +40,6 @@ namespace CalendarApp.Infrastructure.Background
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Error while processing meeting reminders.");
-                }
-
-                try
-                {
-                    await Task.Delay(PollInterval, stoppingToken);
-                }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-                {
-                    break;
                 }
             }
 
@@ -69,9 +61,7 @@ namespace CalendarApp.Infrastructure.Background
                 .ToListAsync(cancellationToken);
 
             if (meetings.Count == 0)
-            {
                 return;
-            }
 
             foreach (var meeting in meetings)
             {

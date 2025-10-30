@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,19 +11,19 @@ namespace CalendarApp.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
-                name: "ReminderSent",
-                table: "Meetings",
-                type: "bit",
-                nullable: false,
-                defaultValue: false);
+               name: "ReminderSent",
+               table: "Meetings",
+               type: "bit",
+               nullable: false,
+               defaultValue: false);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ReminderSent",
-                table: "Meetings");
+               name: "ReminderSent",
+               table: "Meetings");
         }
     }
 }
