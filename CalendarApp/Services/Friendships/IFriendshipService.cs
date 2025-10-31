@@ -1,4 +1,5 @@
 using CalendarApp.Services.Friendships.Models;
+using System.Collections.Generic;
 
 namespace CalendarApp.Services.Friendships
 {
@@ -9,6 +10,8 @@ namespace CalendarApp.Services.Friendships
         Task<IReadOnlyCollection<FriendRequestInfo>> GetPendingRequestsAsync(Guid userId);
 
         Task<IReadOnlyCollection<FriendSuggestionInfo>> GetSuggestionsAsync(Guid userId, int maxSuggestions = 12);
+
+        Task<IReadOnlyCollection<FriendSearchResultInfo>> SearchAsync(Guid userId, string term, IEnumerable<Guid> excludeIds);
 
         Task<bool> SendFriendRequestAsync(Guid requesterId, Guid receiverId);
 
