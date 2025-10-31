@@ -91,16 +91,6 @@ namespace CalendarApp.Services.Categories
 
             var meetingsUpdated = 0;
 
-            if (category.Meetings.Count > 0)
-            {
-                foreach (var meeting in category.Meetings)
-                {
-                    meeting.CategoryId = null;
-                    meeting.Category = null;
-                    meetingsUpdated++;
-                }
-            }
-
             db.Categories.Remove(category);
             await db.SaveChangesAsync();
 
@@ -110,28 +100,6 @@ namespace CalendarApp.Services.Categories
         public async Task<bool> IsInUseAsync(Guid categoryId)
         {
             return await db.Meetings.AnyAsync(m => m.CategoryId == categoryId);
-        }
-
-        public async Task<int> RemoveAssignmentsAsync(Guid categoryId)
-        {
-            var meetings = await db.Meetings
-                .Where(m => m.CategoryId == categoryId)
-                .ToListAsync();
-
-            if (meetings.Count == 0)
-            {
-                return 0;
-            }
-
-            foreach (var meeting in meetings)
-            {
-                meeting.CategoryId = null;
-                meeting.Category = null;
-            }
-
-            await db.SaveChangesAsync();
-
-            return meetings.Count;
         }
     }
 }

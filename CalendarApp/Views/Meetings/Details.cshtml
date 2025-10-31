@@ -48,7 +48,7 @@
                     <select class="form-select form-select-sm" id="viewer-status" name="status">
                         @foreach (var status in statusOptions)
                         {
-                            <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? "selected" : string.Empty)">@FormatStatusLabel(status)</option>
+                            <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? true : false)">@FormatStatusLabel(status)</option>
                         }
                     </select>
                     <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
@@ -64,7 +64,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
-    if (!string.IsNullOrWhiteSpace(error))
+    @if (!string.IsNullOrWhiteSpace(error))
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <span>@error</span>

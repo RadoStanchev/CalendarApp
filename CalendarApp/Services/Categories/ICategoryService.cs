@@ -16,6 +16,5 @@ namespace CalendarApp.Services.Categories
 
         Task<bool> IsInUseAsync(Guid categoryId);
 
-        Task<int> RemoveAssignmentsAsync(Guid categoryId);
     }
 }

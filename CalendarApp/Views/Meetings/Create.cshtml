@@ -35,10 +35,9 @@
                         <div class="mb-3">
                             <label asp-for="CategoryId" class="form-label"></label>
                             <select asp-for="CategoryId" class="form-select">
-                                <option value="" @(Model.CategoryId == null ? "selected" : string.Empty)>Select a category</option>
                                 @foreach (var category in Model.Categories)
                                 {
-                                    <option value="@category.Id" @(Model.CategoryId == category.Id ? "selected" : string.Empty) data-color="@category.Color">@category.Name</option>
+                                    <option value="@category.Id" selected="@(Model.CategoryId == category.Id ? true : false)" data-color="@category.Color">@category.Name</option>
                                 }
                             </select>
                             <span asp-validation-for="CategoryId" class="text-danger"></span>
