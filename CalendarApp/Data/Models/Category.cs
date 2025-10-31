@@ -11,7 +11,7 @@ namespace CalendarApp.Data.Models
         public string Name { get; set; }
 
         [StringLength(20)]
-        public string? Color { get; set; } // Hex code, напр. "#00AEEF"
+        public string? Color { get; set; }
 
         public ICollection<Meeting> Meetings { get; set; } = [];
     }

@@ -42,7 +42,7 @@
                                 <option value="">No category</option>
                                 @foreach (var category in Model.Categories)
                                 {
-                                    <option value="@category.Id" @(Model.CategoryId == category.Id ? "selected" : string.Empty) data-color="@category.Color">@category.Name</option>
+                                    <option value="@category.Id" selected="@(Model.CategoryId == category.Id ? true : false)" data-color="@category.Color">@category.Name</option>
                                 }
                             </select>
                             <span asp-validation-for="CategoryId" class="text-danger"></span>
@@ -96,8 +96,7 @@
                                                 <select class="form-select form-select-sm" data-status-select name="Participants[@i].Status">
                                                     @foreach (var status in statuses)
                                                     {
-                                                        var selected = participant.Status == status ? "selected" : string.Empty;
-                                                        <option value="@((int)status)" selected>@status</option>
+                                                        <option value="@((int)status)" selected="@(participant.Status == status ? true : false)">@status</option>
                                                     }
                                                 </select>
                                                 <button type="button" class="btn btn-sm btn-outline-danger" data-remove-participant @(isCreator ? "disabled" : string.Empty)>&times;</button>
