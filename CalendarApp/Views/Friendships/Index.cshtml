@@ -2,7 +2,7 @@
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     ViewData["Title"] = "Community";
-    var antiForgeryTokens = Antiforgery.GetAndStoreTokens(HttpContext);
+    var antiForgeryTokens = Antiforgery.GetAndStoreTokens(Context);
     string BuildInitials(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
