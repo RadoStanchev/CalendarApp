@@ -184,6 +184,81 @@ namespace CalendarApp.Services.Friendships
                 .ToList();
         }
 
+        public async Task<IReadOnlyCollection<FriendSearchResultInfo>> SearchAsync(Guid userId, string term, IEnumerable<Guid> excludeIds)
+        {
+            term = term?.Trim() ?? string.Empty;
+            if (term.Length < 2)
+            {
+                return Array.Empty<FriendSearchResultInfo>();
+            }
+
+            var exclude = new HashSet<Guid>(excludeIds ?? Enumerable.Empty<Guid>()) { userId };
+
+            var relationshipStatuses = await db.Friendships
+                .AsNoTracking()
+                .Where(f => f.RequesterId == userId || f.ReceiverId == userId)
+                .Select(f => new
+                {
+                    f.RequesterId,
+                    f.ReceiverId,
+                    f.Status
+                })
+                .ToListAsync();
+
+            var statusLookup = new Dictionary<Guid, FriendRelationshipStatus>();
+            foreach (var relationship in relationshipStatuses)
+            {
+                var otherUserId = relationship.RequesterId == userId ? relationship.ReceiverId : relationship.RequesterId;
+                var status = relationship.Status switch
+                {
+                    FriendshipStatus.Accepted => FriendRelationshipStatus.Friend,
+                    FriendshipStatus.Pending when relationship.RequesterId == userId => FriendRelationshipStatus.OutgoingRequest,
+                    FriendshipStatus.Pending when relationship.ReceiverId == userId => FriendRelationshipStatus.IncomingRequest,
+                    FriendshipStatus.Blocked => FriendRelationshipStatus.Blocked,
+                    _ => FriendRelationshipStatus.None
+                };
+
+                statusLookup[otherUserId] = status;
+            }
+
+            var query = db.Users.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var pattern = $"%{term}%";
+                query = query.Where(u => EF.Functions.Like(u.FirstName ?? string.Empty, pattern)
+                    || EF.Functions.Like(u.LastName ?? string.Empty, pattern)
+                    || EF.Functions.Like(u.Email ?? string.Empty, pattern));
+            }
+
+            var matches = await query
+                .Where(u => !exclude.Contains(u.Id))
+                .OrderBy(u => u.FirstName)
+                .ThenBy(u => u.LastName)
+                .Take(10)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email
+                })
+                .ToListAsync();
+
+            return matches
+                .Select(match => new FriendSearchResultInfo
+                {
+                    UserId = match.Id,
+                    FirstName = match.FirstName ?? string.Empty,
+                    LastName = match.LastName ?? string.Empty,
+                    Email = match.Email ?? string.Empty,
+                    RelationshipStatus = statusLookup.TryGetValue(match.Id, out var status)
+                        ? status
+                        : FriendRelationshipStatus.None
+                })
+                .ToList();
+        }
+
         public async Task<bool> SendFriendRequestAsync(Guid requesterId, Guid receiverId)
         {
             if (requesterId == receiverId)

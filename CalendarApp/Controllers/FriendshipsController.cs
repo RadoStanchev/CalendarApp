@@ -1,9 +1,12 @@
 using CalendarApp.Data.Models;
 using CalendarApp.Models.Friendships;
 using CalendarApp.Services.Friendships;
+using CalendarApp.Services.Friendships.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CalendarApp.Controllers
@@ -76,7 +79,14 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
             var result = await friendshipService.SendFriendRequestAsync(userId, receiverId);
-            TempData["FriendshipMessage"] = result ? "Friend request sent." : "Unable to send friend request.";
+            var message = result ? "Friend request sent." : "Unable to send friend request.";
+
+            if (IsJsonRequest())
+            {
+                return Json(new { success = result, message });
+            }
+
+            TempData["FriendshipMessage"] = message;
             return RedirectToAction(nameof(Index));
         }
 
@@ -110,6 +120,24 @@ namespace CalendarApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Search(string term, string? exclude)
+        {
+            var userId = await GetCurrentUserIdAsync();
+            var excludeIds = ParseExcludeIds(exclude);
+            var results = await friendshipService.SearchAsync(userId, term ?? string.Empty, excludeIds);
+
+            var payload = results.Select(result => new
+            {
+                id = result.UserId,
+                displayName = FormatName(result.FirstName, result.LastName),
+                email = result.Email,
+                status = result.RelationshipStatus.ToString()
+            });
+
+            return Json(payload);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Remove(Guid friendId)
@@ -124,6 +152,41 @@ namespace CalendarApp.Controllers
         {
             var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
             return user.Id;
+        }
+
+        private bool IsJsonRequest()
+        {
+            if (Request.Headers.TryGetValue("X-Requested-With", out var requestedWith) && requestedWith == "XMLHttpRequest")
+            {
+                return true;
+            }
+
+            if (Request.Headers.TryGetValue("Accept", out var accept) && accept.ToString().Contains("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static IEnumerable<Guid> ParseExcludeIds(string? exclude)
+        {
+            if (string.IsNullOrWhiteSpace(exclude))
+            {
+                return Array.Empty<Guid>();
+            }
+
+            var ids = new List<Guid>();
+            var parts = exclude.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                if (Guid.TryParse(part, out var id))
+                {
+                    ids.Add(id);
+                }
+            }
+
+            return ids;
         }
 
         private static string FormatName(string firstName, string lastName)

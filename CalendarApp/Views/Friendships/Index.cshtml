@@ -1,6 +1,8 @@
 @model CalendarApp.Models.Friendships.FriendshipsDashboardViewModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     ViewData["Title"] = "Community";
+    var antiForgeryTokens = Antiforgery.GetAndStoreTokens(HttpContext);
     string BuildInitials(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -148,33 +150,60 @@
         </div>
 
         <div class="col-12 col-lg-3">
-            <div class="friendship-card h-100">
+            <div class="friendship-card friendship-card--friends h-100">
                 <h2 class="h5 fw-semibold mb-3">Your friends</h2>
-                @if (!Model.Friends.Any())
-                {
-                    <p class="text-muted small">You have no friends yet. Start by sending a request!</p>
-                }
-                else
-                {
-                    foreach (var friend in Model.Friends)
+
+                <div class="friendship-search" data-friend-search-root
+                     data-search-url="@Url.Action("Search")"
+                     data-request-url="@Url.Action("Send")"
+                     data-exclude="@string.Join(',', Model.Friends.Select(f => f.Id))">
+                    <label for="friend-search-input" class="form-label text-uppercase small text-muted mb-2">Find people</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="friend-search-addon">🔍</span>
+                        <input type="search"
+                               class="form-control"
+                               id="friend-search-input"
+                               placeholder="Search by name or email"
+                               autocomplete="off"
+                               data-friend-search
+                               aria-describedby="friend-search-addon" />
+                    </div>
+                    <input type="hidden" value="@antiForgeryTokens.RequestToken" data-friend-antiforgery />
+                    <div class="list-group mt-2 d-none" data-friend-search-results></div>
+                    <div class="alert alert-info mt-3 d-none" role="status" data-friend-search-feedback></div>
+                </div>
+
+                <div class="friend-list mt-4 flex-grow-1">
+                    @if (!Model.Friends.Any())
                     {
-                        <div class="friend-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar me-3">@BuildInitials(friend.DisplayName)</div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">@friend.DisplayName</div>
-                                    <div class="text-muted small">@friend.Email</div>
-                                </div>
-                                <form asp-action="Remove" method="post">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="friendId" value="@friend.Id" />
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Remove</button>
-                                </form>
-                            </div>
-                        </div>
+                        <p class="text-muted small mb-0">You have no friends yet. Start by sending a request!</p>
                     }
-                }
+                    else
+                    {
+                        foreach (var friend in Model.Friends)
+                        {
+                            <div class="friend-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">@BuildInitials(friend.DisplayName)</div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">@friend.DisplayName</div>
+                                        <div class="text-muted small">@friend.Email</div>
+                                    </div>
+                                    <form asp-action="Remove" method="post" class="ms-auto">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="friendId" value="@friend.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/friendships.js" asp-append-version="true"></script>
+}
