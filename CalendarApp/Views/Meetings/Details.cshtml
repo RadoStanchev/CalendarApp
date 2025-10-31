@@ -1,5 +1,7 @@
 @model MeetingDetailsViewModel
-@{ 
+@using CalendarApp.Models.Chat
+@using System.Globalization
+@{
     ViewData["Title"] = "Meeting details";
     var message = TempData["MeetingMessage"] as string;
     var error = TempData["MeetingError"] as string;
@@ -26,6 +28,50 @@
 
         return $"background-color: {color}; border-color: {color}; color: #fff;";
     }
+
+    var chatEnabled = Model.ViewerIsCreator || (Model.ViewerIsParticipant && Model.ViewerStatus == ParticipantStatus.Accepted);
+    var accentPalette = new[] { "accent-blue", "accent-purple", "accent-green", "accent-orange", "accent-teal" };
+    string BuildAccent(Guid id) => accentPalette[Math.Abs(id.GetHashCode()) % accentPalette.Length];
+    string BuildInitials(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return "М";
+        }
+
+        var trimmed = text.Trim();
+        return new string(new[] { char.ToUpper(trimmed[0], CultureInfo.GetCultureInfo("bg-BG")) });
+    }
+
+    string BuildMeetingTitle(string? description, DateTime startTimeUtc)
+    {
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            return description.Trim();
+        }
+
+        var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
+        return $"Събитие на {local:dd MMM yyyy}";
+    }
+
+    string BuildMeetingSubtitle(DateTime startTimeUtc, string? location)
+    {
+        var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
+        var formatted = local.ToString("g", CultureInfo.GetCultureInfo("bg-BG"));
+        if (string.IsNullOrWhiteSpace(location))
+        {
+            return formatted;
+        }
+
+        return $"{formatted} • {location.Trim()}";
+    }
+
+    var meetingTitle = BuildMeetingTitle(Model.Description, Model.StartTime);
+    var meetingSubtitle = BuildMeetingSubtitle(Model.StartTime, Model.Location);
+    var meetingAccent = BuildAccent(Model.Id);
+    var meetingInitials = BuildInitials(meetingTitle);
+    var viewerName = Model.Participants.FirstOrDefault(p => p.ContactId == Model.ViewerId)?.DisplayName
+        ?? (User?.Identity?.Name ?? string.Empty);
 }
 
 <div class="meeting-details-page">
@@ -151,9 +197,109 @@
             </div>
         </div>
     </div>
+
+    @if (chatEnabled)
+    {
+        <div class="meeting-chat-widget mt-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <h2 class="h5 fw-semibold mb-1">Meeting chat</h2>
+                        <p class="text-muted small mb-0">Chat with organizers and confirmed attendees.</p>
+                    </div>
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#meetingChatModal">
+                        Open chat
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="meetingChatModal" tabindex="-1" aria-labelledby="meetingChatModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="meetingChatModalLabel">Meeting chat</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="messenger-layout messenger-layout--embedded">
+                            <aside class="messenger-sidebar">
+                                <div class="messenger-sidebar__section">
+                                    <div class="messenger-thread-list">
+                                        <button class="messenger-thread active" type="button"
+                                                data-thread-id="@Model.Id"
+                                                data-thread-type="meeting"
+                                                data-fetch-url="@Url.Action("Thread", "Chat", new { id = Model.Id, type = ThreadType.Meeting })"
+                                                data-display-name="@meetingTitle"
+                                                data-secondary="@meetingSubtitle"
+                                                data-status=""
+                                                data-avatar="@meetingInitials"
+                                                data-accent="@meetingAccent"
+                                                data-last-message=""
+                                                data-meeting-id="@Model.Id">
+                                            <span class="messenger-avatar @meetingAccent">@meetingInitials</span>
+                                            <span class="messenger-thread__content">
+                                                <span class="messenger-thread__name">@meetingTitle</span>
+                                                <span class="messenger-thread__preview">Няма съобщения</span>
+                                            </span>
+                                            <span class="messenger-thread__meta"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </aside>
+                            <section class="messenger-content">
+                                <header class="messenger-header">
+                                    <div class="messenger-contact" aria-live="polite">
+                                        <span id="activeContactAvatar" class="messenger-avatar @meetingAccent">@meetingInitials</span>
+                                        <span class="messenger-contact__meta">
+                                            <span id="activeContactName" class="messenger-contact__name">@meetingTitle</span>
+                                            <span id="activeContactStatus" class="messenger-contact__status">@meetingSubtitle</span>
+                                        </span>
+                                    </div>
+                                    <div class="messenger-self">
+                                        <label class="messenger-label" for="userInput">Вашето име</label>
+                                        <input id="userInput" class="messenger-input" value="@viewerName" readonly />
+                                    </div>
+                                </header>
+                                <div id="chatMessages"
+                                     class="messenger-messages"
+                                     data-empty="true"
+                                     data-thread-id="@Model.Id"
+                                     data-thread-type="meeting"
+                                     data-current-user-id="@Model.ViewerId"
+                                     data-current-user-name="@viewerName">
+                                    <div class="messenger-empty-state">
+                                        <h3 class="messenger-empty-state__title">Изберете приятел или започнете нов разговор</h3>
+                                        <p class="messenger-empty-state__text">Съобщенията се появяват тук веднага щом някой напише нещо.</p>
+                                    </div>
+                                </div>
+                                <form id="chatForm" class="messenger-form" autocomplete="off">
+                                    <div class="messenger-form__composer">
+                                        <textarea id="messageInput"
+                                                  class="messenger-input messenger-input--multiline"
+                                                  rows="1"
+                                                  placeholder="Напишете съобщение..."
+                                                  required></textarea>
+                                    </div>
+                                    <div class="messenger-form__actions">
+                                        <button id="sendButton" type="submit" class="messenger-button">Изпрати</button>
+                                    </div>
+                                </form>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts {
+    @if (chatEnabled)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@9.0.6/dist/browser/signalr.min.js" crossorigin="anonymous"></script>
+        <script src="~/js/chat.js" asp-append-version="true"></script>
+    }
     <script>
         (() => {
             const alerts = document.querySelectorAll('.meeting-details-page .alert');

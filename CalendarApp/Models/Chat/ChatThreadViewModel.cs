@@ -4,13 +4,17 @@ namespace CalendarApp.Models.Chat
 {
     public class ChatThreadViewModel
     {
-        public Guid FriendshipId { get; set; }
+        public Guid ThreadId { get; set; }
 
-        public Guid FriendId { get; set; }
+        public ThreadType Type { get; set; }
 
-        public string FriendName { get; set; } = string.Empty;
+        public Guid? FriendshipId { get; set; }
 
-        public string FriendEmail { get; set; } = string.Empty;
+        public Guid? FriendId { get; set; }
+
+        public string DisplayName { get; set; } = string.Empty;
+
+        public string SecondaryLabel { get; set; } = string.Empty;
 
         public string AvatarInitials { get; set; } = string.Empty;
 
@@ -23,5 +27,7 @@ namespace CalendarApp.Models.Chat
         public string LastActivityLabel { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; }
+
+        public MeetingThreadMetadata? Meeting { get; set; }
     }
 }

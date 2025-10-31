@@ -9,9 +9,13 @@ namespace CalendarApp.Models.Chat
 
         public string CurrentUserName { get; set; } = string.Empty;
 
-        public IReadOnlyList<ChatThreadViewModel> Threads { get; set; } = Array.Empty<ChatThreadViewModel>();
+        public IReadOnlyList<ChatThreadViewModel> FriendshipThreads { get; set; } = Array.Empty<ChatThreadViewModel>();
 
-        public Guid? ActiveFriendshipId { get; set; }
+        public IReadOnlyList<ChatThreadViewModel> MeetingThreads { get; set; } = Array.Empty<ChatThreadViewModel>();
+
+        public ThreadType? ActiveThreadType { get; set; }
+
+        public Guid? ActiveThreadId { get; set; }
 
         public IReadOnlyList<ChatMessageViewModel> Messages { get; set; } = Array.Empty<ChatMessageViewModel>();
     }
