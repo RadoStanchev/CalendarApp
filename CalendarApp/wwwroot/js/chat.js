@@ -12,6 +12,11 @@
         return;
     }
 
+    const THREAD_TYPES = {
+        FRIENDSHIP: "friendship",
+        MEETING: "meeting"
+    };
+
     const accentClasses = new Set([
         "accent-blue",
         "accent-purple",
@@ -20,18 +25,38 @@
         "accent-teal"
     ]);
 
+    const normaliseThreadType = (value) => {
+        const lowered = (value ?? "").toString().toLowerCase();
+        return lowered === THREAD_TYPES.MEETING ? THREAD_TYPES.MEETING : THREAD_TYPES.FRIENDSHIP;
+    };
+
     const getCurrentUserId = () => messagesContainer.dataset.currentUserId ?? "";
 
-    const chatThreads = () => Array.from(document.querySelectorAll(".messenger-thread"));
+    const threadButtons = () => Array.from(document.querySelectorAll(".messenger-thread"));
+
+    const findThreadButton = (threadId, threadType) => {
+        const normalisedType = normaliseThreadType(threadType);
+        return threadButtons().find(item =>
+            item.dataset.threadId === threadId
+            && normaliseThreadType(item.dataset.threadType) === normalisedType
+        ) ?? null;
+    };
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/hubs/chat")
         .withAutomaticReconnect()
         .build();
 
-    let currentFriendshipId = messagesContainer.dataset.friendshipId || null;
+    let currentThreadId = messagesContainer.dataset.threadId || null;
+    let currentThreadType = currentThreadId ? normaliseThreadType(messagesContainer.dataset.threadType) : null;
+    if (!currentThreadId) {
+        currentThreadType = null;
+    }
+
     let connectionStarted = false;
-    let pendingJoin = currentFriendshipId;
+    let pendingJoin = currentThreadId && currentThreadType
+        ? { id: currentThreadId, type: currentThreadType }
+        : null;
 
     const setComposerState = (enabled) => {
         if (messageInput) {
@@ -106,8 +131,8 @@
         return date.toLocaleDateString("bg-BG");
     };
 
-    const updateThreadPreview = (friendshipId, message) => {
-        const button = chatThreads().find(item => item.dataset.friendshipId === friendshipId);
+    const updateThreadPreview = (threadId, threadType, message) => {
+        const button = findThreadButton(threadId, threadType);
         if (!button) {
             return;
         }
@@ -127,12 +152,12 @@
         button.dataset.status = button.dataset.status || "";
     };
 
-    const ensureActiveContact = (button) => {
-        chatThreads().forEach(item => item.classList.remove("active"));
+    const applyActiveThread = (button) => {
+        threadButtons().forEach(item => item.classList.remove("active"));
 
         if (!button) {
             if (activeContactName) {
-                activeContactName.textContent = "Изберете приятел";
+                activeContactName.textContent = "Изберете разговор";
             }
 
             if (activeContactStatus) {
@@ -146,15 +171,16 @@
                 activeContactAvatar.classList.add("accent-blue");
             }
 
-            messagesContainer.dataset.friendshipId = "";
+            messagesContainer.dataset.threadId = "";
+            messagesContainer.dataset.threadType = "";
             setComposerState(false);
             return;
         }
 
         button.classList.add("active");
 
-        const name = button.dataset.contact || "Разговор";
-        const email = button.dataset.email || "";
+        const name = button.dataset.displayName || "Разговор";
+        const secondary = button.dataset.secondary || "";
         const status = button.dataset.status || "";
         const initials = button.dataset.avatar || name.substring(0, 2).toUpperCase();
         const accent = button.dataset.accent;
@@ -164,7 +190,7 @@
         }
 
         if (activeContactStatus) {
-            const statusText = email || status;
+            const statusText = secondary || status;
             activeContactStatus.textContent = statusText;
             activeContactStatus.classList.toggle("text-muted", !statusText);
         }
@@ -175,8 +201,9 @@
             activeContactAvatar.classList.add(accent && accentClasses.has(accent) ? accent : "accent-blue");
         }
 
-        messagesContainer.dataset.friendshipId = button.dataset.friendshipId || "";
-        setComposerState(connectionStarted && Boolean(button.dataset.friendshipId));
+        messagesContainer.dataset.threadId = button.dataset.threadId || "";
+        messagesContainer.dataset.threadType = normaliseThreadType(button.dataset.threadType);
+        setComposerState(connectionStarted && Boolean(button.dataset.threadId));
     };
 
     const appendMessage = (message) => {
@@ -215,39 +242,47 @@
 
         if (!messages || messages.length === 0) {
             showEmptyState();
-            setComposerState(connectionStarted && Boolean(currentFriendshipId));
+            setComposerState(connectionStarted && Boolean(currentThreadId));
             return;
         }
 
         messagesContainer.dataset.empty = "false";
         messages.forEach(message => appendMessage(message));
-        setComposerState(connectionStarted && Boolean(currentFriendshipId));
+        setComposerState(connectionStarted && Boolean(currentThreadId));
     };
 
-    const joinFriendship = async (friendshipId) => {
-        if (!friendshipId) {
+    const joinThread = async (threadId, threadType) => {
+        if (!threadId) {
             return;
         }
+
+        const normalisedType = normaliseThreadType(threadType);
 
         if (!connectionStarted) {
-            pendingJoin = friendshipId;
+            pendingJoin = { id: threadId, type: normalisedType };
             return;
         }
 
+        const method = normalisedType === THREAD_TYPES.MEETING ? "JoinMeeting" : "JoinFriendship";
+
         try {
-            await connection.invoke("JoinFriendship", friendshipId);
+            await connection.invoke(method, threadId);
+            pendingJoin = null;
         } catch (error) {
             console.error("Неуспешно присъединяване към разговора:", error);
         }
     };
 
-    const leaveFriendship = async (friendshipId) => {
-        if (!friendshipId || !connectionStarted) {
+    const leaveThread = async (threadId, threadType) => {
+        if (!threadId || !connectionStarted) {
             return;
         }
 
+        const normalisedType = normaliseThreadType(threadType);
+        const method = normalisedType === THREAD_TYPES.MEETING ? "LeaveMeeting" : "LeaveFriendship";
+
         try {
-            await connection.invoke("LeaveFriendship", friendshipId);
+            await connection.invoke(method, threadId);
         } catch (error) {
             console.warn("Неуспешно напускане на разговора:", error);
         }
@@ -255,20 +290,28 @@
 
     const loadThread = async (button) => {
         if (!button) {
-            ensureActiveContact(null);
+            currentThreadId = null;
+            currentThreadType = null;
+            applyActiveThread(null);
             return;
         }
 
-        const friendshipId = button.dataset.friendshipId;
-        if (!friendshipId) {
+        const threadId = button.dataset.threadId;
+        const threadType = normaliseThreadType(button.dataset.threadType);
+
+        if (!threadId) {
             return;
         }
 
-        const previousFriendshipId = currentFriendshipId;
-        currentFriendshipId = friendshipId;
+        const previousThreadId = currentThreadId;
+        const previousThreadType = currentThreadType;
+        const previousButton = previousThreadId ? findThreadButton(previousThreadId, previousThreadType) : null;
+
+        currentThreadId = threadId;
+        currentThreadType = threadType;
 
         try {
-            const response = await fetch(button.dataset.fetchUrl ?? `/Chat/Thread?friendshipId=${friendshipId}`, {
+            const response = await fetch(button.dataset.fetchUrl ?? `/Chat/Thread?id=${threadId}&type=${threadType}`, {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"
                 }
@@ -279,22 +322,28 @@
             }
 
             const payload = await response.json();
-            messagesContainer.dataset.friendshipId = friendshipId;
+            messagesContainer.dataset.threadId = threadId;
+            messagesContainer.dataset.threadType = threadType;
 
             renderMessages(payload.messages || []);
-            ensureActiveContact(button);
 
-            if (payload.friendEmail) {
-                button.dataset.email = payload.friendEmail;
+            if (payload.displayName) {
+                button.dataset.displayName = payload.displayName;
+            }
+
+            if (payload.secondaryLabel) {
+                button.dataset.secondary = payload.secondaryLabel;
             }
 
             if (payload.lastActivity) {
                 button.dataset.status = payload.lastActivity;
             }
 
+            applyActiveThread(button);
+
             if (Array.isArray(payload.messages) && payload.messages.length > 0) {
                 const lastMessage = payload.messages[payload.messages.length - 1];
-                updateThreadPreview(friendshipId, lastMessage);
+                updateThreadPreview(threadId, threadType, lastMessage);
             } else {
                 const preview = button.querySelector(".messenger-thread__preview");
                 if (preview) {
@@ -309,15 +358,19 @@
                 button.dataset.lastMessage = "";
             }
 
-            await leaveFriendship(previousFriendshipId);
-            await joinFriendship(friendshipId);
+            await leaveThread(previousThreadId, previousThreadType);
+            await joinThread(threadId, threadType);
 
             if (messageInput) {
                 messageInput.focus();
             }
         } catch (error) {
             console.error("Failed to load conversation:", error);
-            currentFriendshipId = previousFriendshipId;
+            currentThreadId = previousThreadId;
+            currentThreadType = previousThreadType;
+            messagesContainer.dataset.threadId = previousThreadId ?? "";
+            messagesContainer.dataset.threadType = previousThreadType ?? "";
+
             const existingAlert = messagesContainer.querySelector(".chat-thread-error");
             if (existingAlert) {
                 existingAlert.remove();
@@ -327,26 +380,46 @@
             alert.className = "alert alert-danger chat-thread-error";
             alert.textContent = "Неуспешно зареждане на разговора. Опитайте отново.";
             messagesContainer.appendChild(alert);
+
+            if (previousButton) {
+                applyActiveThread(previousButton);
+            } else {
+                applyActiveThread(null);
+            }
         }
     };
 
     connection.on("ReceiveMessage", payload => {
-        if (!payload || !payload.friendshipId) {
+        if (!payload) {
             return;
         }
 
-        const friendshipId = payload.friendshipId.toString();
+        let threadId = null;
+        let threadType = null;
+
+        if (payload.meetingId) {
+            threadId = payload.meetingId.toString();
+            threadType = THREAD_TYPES.MEETING;
+        } else if (payload.friendshipId) {
+            threadId = payload.friendshipId.toString();
+            threadType = THREAD_TYPES.FRIENDSHIP;
+        } else {
+            return;
+        }
+
         const message = {
             id: payload.messageId,
             senderId: payload.senderId,
             senderName: payload.senderName,
             content: payload.content,
-            sentAt: payload.sentAt
+            sentAt: payload.sentAt,
+            friendshipId: payload.friendshipId,
+            meetingId: payload.meetingId
         };
 
-        updateThreadPreview(friendshipId, message);
+        updateThreadPreview(threadId, threadType, message);
 
-        if (friendshipId !== currentFriendshipId) {
+        if (threadId !== currentThreadId || threadType !== currentThreadType) {
             return;
         }
 
@@ -360,11 +433,11 @@
 
     connection.onreconnected(async () => {
         connectionStarted = true;
-        if (currentFriendshipId) {
-            await joinFriendship(currentFriendshipId);
+        if (currentThreadId && currentThreadType) {
+            await joinThread(currentThreadId, currentThreadType);
         }
 
-        setComposerState(Boolean(currentFriendshipId));
+        setComposerState(Boolean(currentThreadId));
     });
 
     connection.onclose(() => {
@@ -376,13 +449,13 @@
         .then(async () => {
             connectionStarted = true;
             if (pendingJoin) {
-                await joinFriendship(pendingJoin);
+                await joinThread(pendingJoin.id, pendingJoin.type);
                 pendingJoin = null;
             }
 
-            setComposerState(Boolean(currentFriendshipId));
+            setComposerState(Boolean(currentThreadId));
 
-            if (messageInput && currentFriendshipId) {
+            if (messageInput && currentThreadId) {
                 messageInput.focus();
             }
         })
@@ -424,14 +497,16 @@
         event.preventDefault();
 
         const message = messageInput?.value.trim();
-        if (!message || !currentFriendshipId) {
+        if (!message || !currentThreadId || !currentThreadType) {
             return;
         }
 
         sendButton.disabled = true;
 
+        const method = currentThreadType === THREAD_TYPES.MEETING ? "SendMeetingMessage" : "SendMessage";
+
         try {
-            await connection.invoke("SendMessage", currentFriendshipId, message);
+            await connection.invoke(method, currentThreadId, message);
         } catch (error) {
             console.error("Error sending message:", error);
         } finally {
@@ -444,7 +519,7 @@
         }
     });
 
-    chatThreads().forEach(button => {
+    threadButtons().forEach(button => {
         button.addEventListener("click", () => {
             loadThread(button);
         });
@@ -453,7 +528,7 @@
     if (searchInput) {
         searchInput.addEventListener("input", () => {
             const term = searchInput.value.trim().toLocaleLowerCase("bg-BG");
-            const buttons = chatThreads();
+            const buttons = threadButtons();
 
             buttons.forEach(button => {
                 if (!term) {
@@ -461,7 +536,7 @@
                     return;
                 }
 
-                const haystack = `${button.dataset.contact ?? ""} ${button.dataset.lastMessage ?? ""}`
+                const haystack = `${button.dataset.displayName ?? ""} ${button.dataset.lastMessage ?? ""} ${button.dataset.secondary ?? ""}`
                     .toLocaleLowerCase("bg-BG");
                 button.classList.toggle("is-hidden", !haystack.includes(term));
             });
@@ -475,10 +550,14 @@
         });
     }
 
-    if (currentFriendshipId) {
-        const activeButton = chatThreads().find(button => button.dataset.friendshipId === currentFriendshipId);
-        ensureActiveContact(activeButton ?? null);
+    if (currentThreadId) {
+        const activeButton = findThreadButton(currentThreadId, currentThreadType);
+        if (activeButton) {
+            loadThread(activeButton);
+        } else {
+            applyActiveThread(null);
+        }
     } else {
-        ensureActiveContact(null);
+        applyActiveThread(null);
     }
 })();

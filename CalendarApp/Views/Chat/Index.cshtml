@@ -1,23 +1,34 @@
 @model CalendarApp.Models.Chat.ChatViewModel
 @using System.Globalization
 @using System.Linq
-@{
+@using CalendarApp.Models.Chat
+@{ 
     ViewData["Title"] = "Live Chat";
 
-    var activeFriendshipId = Model.ActiveFriendshipId;
-    var activeThread = activeFriendshipId.HasValue
-        ? Model.Threads.FirstOrDefault(t => t.FriendshipId == activeFriendshipId.Value)
-        : null;
-    var hasThreads = Model.Threads.Any();
-    var activeContactName = activeThread?.FriendName ?? "Изберете приятел";
-    var activeContactStatus = !string.IsNullOrWhiteSpace(activeThread?.FriendEmail)
-        ? activeThread!.FriendEmail
+    ChatThreadViewModel? ResolveActiveThread()
+    {
+        if (!Model.ActiveThreadId.HasValue || !Model.ActiveThreadType.HasValue)
+        {
+            return null;
+        }
+
+        return Model.ActiveThreadType == ThreadType.Meeting
+            ? Model.MeetingThreads.FirstOrDefault(t => t.ThreadId == Model.ActiveThreadId)
+            : Model.FriendshipThreads.FirstOrDefault(t => t.ThreadId == Model.ActiveThreadId);
+    }
+
+    var activeThread = ResolveActiveThread();
+    var hasThreads = Model.FriendshipThreads.Any() || Model.MeetingThreads.Any();
+    var activeContactName = activeThread?.DisplayName ?? "Изберете разговор";
+    var activeContactStatus = !string.IsNullOrWhiteSpace(activeThread?.SecondaryLabel)
+        ? activeThread!.SecondaryLabel
         : activeThread?.LastActivityLabel ?? string.Empty;
     var activeContactAvatar = activeThread?.AvatarInitials ?? "";
     var activeAccent = activeThread?.AccentClass ?? "accent-blue";
 
-    var activeThreads = Model.Threads.Take(3).ToList();
-    var recentThreads = Model.Threads.Skip(3).ToList();
+    var activeFriendThreads = Model.FriendshipThreads.Take(3).ToList();
+    var recentFriendThreads = Model.FriendshipThreads.Skip(3).ToList();
+    var meetingThreads = Model.MeetingThreads.ToList();
 
     string FormatMeta(DateTime? sentAt)
     {
@@ -65,30 +76,66 @@
             <input id="chatSearch" class="messenger-input" type="search" placeholder="Търсене на разговори" />
         </div>
         <div class="messenger-sidebar__section">
+            <h3 class="messenger-sidebar__subtitle">Събития</h3>
+            <div class="messenger-thread-list" id="meetingThreads">
+                @if (!meetingThreads.Any())
+                {
+                    <p class="text-muted">Няма предстоящи събития с чат.</p>
+                }
+                else
+                {
+                    foreach (var thread in meetingThreads)
+                    {
+                        var isActiveMeeting = Model.ActiveThreadType == ThreadType.Meeting && Model.ActiveThreadId == thread.ThreadId;
+                        var fetchUrl = Url.Action("Thread", "Chat", new { id = thread.ThreadId, type = ThreadType.Meeting });
+                        <button class="messenger-thread @(isActiveMeeting ? "active" : string.Empty)" type="button"
+                                data-thread-id="@thread.ThreadId"
+                                data-thread-type="meeting"
+                                data-fetch-url="@fetchUrl"
+                                data-display-name="@thread.DisplayName"
+                                data-secondary="@thread.SecondaryLabel"
+                                data-status="@thread.LastActivityLabel"
+                                data-avatar="@thread.AvatarInitials"
+                                data-accent="@thread.AccentClass"
+                                data-last-message="@thread.LastMessagePreview"
+                                data-meeting-id="@thread.Meeting?.MeetingId">
+                            <span class="messenger-avatar @thread.AccentClass">@thread.AvatarInitials</span>
+                            <span class="messenger-thread__content">
+                                <span class="messenger-thread__name">@thread.DisplayName</span>
+                                <span class="messenger-thread__preview">@(string.IsNullOrWhiteSpace(thread.LastMessagePreview) ? "Няма съобщения" : thread.LastMessagePreview)</span>
+                            </span>
+                            <span class="messenger-thread__meta">@FormatMeta(thread.LastMessageAt)</span>
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+        <div class="messenger-sidebar__section">
             <h3 class="messenger-sidebar__subtitle">Активни приятели</h3>
             <div class="messenger-thread-list" id="chatThreads">
-                @if (!activeThreads.Any())
+                @if (!activeFriendThreads.Any())
                 {
                     <p class="text-muted">Добавете приятели, за да започнете разговор.</p>
                 }
                 else
                 {
-                    foreach (var thread in activeThreads)
+                    foreach (var thread in activeFriendThreads)
                     {
-                        var isActive = activeFriendshipId.HasValue && thread.FriendshipId == activeFriendshipId.Value;
-                        var fetchUrl = Url.Action("Thread", "Chat", new { friendshipId = thread.FriendshipId });
+                        var isActive = Model.ActiveThreadType == ThreadType.Friendship && Model.ActiveThreadId == thread.ThreadId;
+                        var fetchUrl = Url.Action("Thread", "Chat", new { id = thread.ThreadId, type = ThreadType.Friendship });
                         <button class="messenger-thread @(isActive ? "active" : string.Empty)" type="button"
-                                data-friendship-id="@thread.FriendshipId"
-                                data-contact="@thread.FriendName"
-                                data-email="@thread.FriendEmail"
+                                data-thread-id="@thread.ThreadId"
+                                data-thread-type="friendship"
+                                data-fetch-url="@fetchUrl"
+                                data-display-name="@thread.DisplayName"
+                                data-secondary="@thread.SecondaryLabel"
                                 data-status="@thread.LastActivityLabel"
                                 data-avatar="@thread.AvatarInitials"
                                 data-accent="@thread.AccentClass"
-                                data-last-message="@thread.LastMessagePreview"
-                                data-fetch-url="@fetchUrl">
+                                data-last-message="@thread.LastMessagePreview">
                             <span class="messenger-avatar @thread.AccentClass">@thread.AvatarInitials</span>
                             <span class="messenger-thread__content">
-                                <span class="messenger-thread__name">@thread.FriendName</span>
+                                <span class="messenger-thread__name">@thread.DisplayName</span>
                                 <span class="messenger-thread__preview">@(string.IsNullOrWhiteSpace(thread.LastMessagePreview) ? "Няма съобщения" : thread.LastMessagePreview)</span>
                             </span>
                             <span class="messenger-thread__meta">@FormatMeta(thread.LastMessageAt)</span>
@@ -100,28 +147,29 @@
         <div class="messenger-sidebar__section">
             <h3 class="messenger-sidebar__subtitle">Скорошни разговори</h3>
             <div class="messenger-thread-list messenger-thread-list--compact">
-                @if (!recentThreads.Any())
+                @if (!recentFriendThreads.Any())
                 {
                     <p class="text-muted">Няма други разговори.</p>
                 }
                 else
                 {
-                    foreach (var thread in recentThreads)
+                    foreach (var thread in recentFriendThreads)
                     {
-                        var isActive = activeFriendshipId.HasValue && thread.FriendshipId == activeFriendshipId.Value;
-                        var fetchUrl = Url.Action("Thread", "Chat", new { friendshipId = thread.FriendshipId });
+                        var isActive = Model.ActiveThreadType == ThreadType.Friendship && Model.ActiveThreadId == thread.ThreadId;
+                        var fetchUrl = Url.Action("Thread", "Chat", new { id = thread.ThreadId, type = ThreadType.Friendship });
                         <button class="messenger-thread messenger-thread--compact @(isActive ? "active" : string.Empty)" type="button"
-                                data-friendship-id="@thread.FriendshipId"
-                                data-contact="@thread.FriendName"
-                                data-email="@thread.FriendEmail"
+                                data-thread-id="@thread.ThreadId"
+                                data-thread-type="friendship"
+                                data-fetch-url="@fetchUrl"
+                                data-display-name="@thread.DisplayName"
+                                data-secondary="@thread.SecondaryLabel"
                                 data-status="@thread.LastActivityLabel"
                                 data-avatar="@thread.AvatarInitials"
                                 data-accent="@thread.AccentClass"
-                                data-last-message="@thread.LastMessagePreview"
-                                data-fetch-url="@fetchUrl">
+                                data-last-message="@thread.LastMessagePreview">
                             <span class="messenger-avatar @thread.AccentClass">@thread.AvatarInitials</span>
                             <span class="messenger-thread__content">
-                                <span class="messenger-thread__name">@thread.FriendName</span>
+                                <span class="messenger-thread__name">@thread.DisplayName</span>
                                 <span class="messenger-thread__preview">@(string.IsNullOrWhiteSpace(thread.LastMessagePreview) ? "Няма съобщения" : thread.LastMessagePreview)</span>
                             </span>
                             <span class="messenger-thread__meta">@FormatMeta(thread.LastMessageAt)</span>
@@ -148,7 +196,8 @@
         <div id="chatMessages"
              class="messenger-messages"
              data-empty="@(Model.Messages.Any() ? "false" : "true")"
-             data-friendship-id="@(activeFriendshipId?.ToString() ?? string.Empty)"
+             data-thread-id="@(Model.ActiveThreadId?.ToString() ?? string.Empty)"
+             data-thread-type="@(Model.ActiveThreadType?.ToString().ToLowerInvariant() ?? string.Empty)"
              data-current-user-id="@Model.CurrentUserId"
              data-current-user-name="@Model.CurrentUserName">
             @if (!Model.Messages.Any())
