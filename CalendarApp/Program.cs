@@ -8,6 +8,7 @@ using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Categories;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.User;
+using CalendarApp.Services.Messages;
 using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,7 @@ builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddHostedService<MeetingReminderService>();
 
 builder.Services.AddAutoMapper(cfg =>

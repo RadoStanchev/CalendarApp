@@ -10,7 +10,7 @@ namespace CalendarApp.Services.Meetings.Models
 
         public string? Description { get; set; }
 
-        public Guid? CategoryId { get; set; }
+        public Guid CategoryId { get; set; }
 
         public Guid UpdatedById { get; set; }
 
