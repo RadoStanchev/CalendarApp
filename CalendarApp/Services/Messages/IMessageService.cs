@@ -9,8 +9,14 @@ namespace CalendarApp.Services.Messages
     {
         Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId, CancellationToken cancellationToken = default);
 
+        Task EnsureMeetingAccessAsync(Guid userId, Guid meetingId, CancellationToken cancellationToken = default);
+
         Task<ChatMessageDto> SaveMessageAsync(Guid userId, Guid friendshipId, string content, CancellationToken cancellationToken = default);
 
-        string BuildGroupName(Guid friendshipId);
+        Task<ChatMessageDto> SaveMeetingMessageAsync(Guid userId, Guid meetingId, string content, CancellationToken cancellationToken = default);
+
+        string BuildFriendshipGroupName(Guid friendshipId);
+
+        string BuildMeetingGroupName(Guid meetingId);
     }
 }
