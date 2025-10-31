@@ -13,5 +13,9 @@ namespace CalendarApp.Models.Chat
         public string Content { get; set; } = string.Empty;
 
         public DateTime SentAt { get; set; }
+
+        public Guid? FriendshipId { get; set; }
+
+        public Guid? MeetingId { get; set; }
     }
 }
