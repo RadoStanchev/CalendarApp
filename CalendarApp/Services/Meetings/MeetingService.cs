@@ -31,6 +31,8 @@ namespace CalendarApp.Services.Meetings
                 CreatedById = dto.CreatedById,
             };
 
+            meeting.CategoryId = await EnsureValidCategoryIdAsync(dto.CategoryId);
+
             meeting.Participants.Add(new MeetingParticipant
             {
                 ContactId = dto.CreatedById,
@@ -89,6 +91,7 @@ namespace CalendarApp.Services.Meetings
             var meeting = await db.Meetings
                 .AsNoTracking()
                 .Include(m => m.CreatedBy)
+                .Include(m => m.Category)
                 .Include(m => m.Participants)
                     .ThenInclude(p => p.Contact)
                 .FirstOrDefaultAsync(m => m.Id == meetingId);
@@ -129,6 +132,9 @@ namespace CalendarApp.Services.Meetings
                 Description = meeting.Description,
                 CreatedById = meeting.CreatedById,
                 CreatedByName = FormatName(meeting.CreatedBy?.FirstName, meeting.CreatedBy?.LastName),
+                CategoryId = meeting.CategoryId,
+                CategoryName = meeting.Category?.Name,
+                CategoryColor = meeting.Category?.Color,
                 ViewerId = requesterId,
                 ViewerIsCreator = viewerIsCreator,
                 ViewerIsParticipant = viewerIsParticipant,
@@ -169,6 +175,7 @@ namespace CalendarApp.Services.Meetings
                 StartTime = meeting.StartTime,
                 Location = meeting.Location,
                 Description = meeting.Description,
+                CategoryId = meeting.CategoryId,
                 CreatedById = meeting.CreatedById,
                 Participants = participants
             };
@@ -239,8 +246,11 @@ namespace CalendarApp.Services.Meetings
                     m.Location,
                     m.Description,
                     m.CreatedById,
+                    m.CategoryId,
                     CreatorFirstName = m.CreatedBy.FirstName,
                     CreatorLastName = m.CreatedBy.LastName,
+                    CategoryName = m.Category != null ? m.Category.Name : null,
+                    CategoryColor = m.Category != null ? m.Category.Color : null,
                     ParticipantCount = m.Participants.Count,
                     ViewerStatus = m.Participants
                         .Where(p => p.ContactId == userId)
@@ -267,6 +277,9 @@ namespace CalendarApp.Services.Meetings
                         Description = m.Description,
                         CreatedById = m.CreatedById,
                         CreatedByName = FormatName(m.CreatorFirstName, m.CreatorLastName),
+                        CategoryId = m.CategoryId,
+                        CategoryName = m.CategoryName,
+                        CategoryColor = m.CategoryColor,
                         ViewerIsCreator = m.CreatedById == userId,
                         ViewerStatus = viewerStatus,
                         ParticipantCount = m.ParticipantCount
@@ -294,6 +307,7 @@ namespace CalendarApp.Services.Meetings
             meeting.StartTime = dto.StartTime;
             meeting.Location = dto.Location;
             meeting.Description = dto.Description;
+            meeting.CategoryId = await EnsureValidCategoryIdAsync(dto.CategoryId);
 
             if (originalStartTime != dto.StartTime && dto.StartTime > DateTime.Now)
             {
@@ -409,6 +423,25 @@ namespace CalendarApp.Services.Meetings
             participant.Status = status;
             await db.SaveChangesAsync();
             return true;
+        }
+
+        private async Task<Guid> EnsureValidCategoryIdAsync(Guid categoryId)
+        {
+            if (categoryId == Guid.Empty)
+            {
+                throw new ArgumentException("A category is required.", nameof(categoryId));
+            }
+
+            var exists = await db.Categories
+                .AsNoTracking()
+                .AnyAsync(c => c.Id == categoryId);
+
+            if (!exists)
+            {
+                throw new ArgumentException("The selected category does not exist.", nameof(categoryId));
+            }
+
+            return categoryId;
         }
 
         private static string FormatName(string? firstName, string? lastName)

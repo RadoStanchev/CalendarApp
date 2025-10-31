@@ -1,5 +1,6 @@
 using AutoMapper;
 using CalendarApp.Models.Meetings;
+using CalendarApp.Services.Categories.Models;
 using CalendarApp.Services.Meetings.Models;
 
 namespace CalendarApp.Infrastructure.Mapping
@@ -17,14 +18,18 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<MeetingParticipantDto, MeetingParticipantFormModel>();
 
             CreateMap<MeetingCreateViewModel, MeetingCreateDto>()
-                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value));
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value))
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId!.Value));
 
             CreateMap<MeetingEditViewModel, MeetingUpdateDto>()
-                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value));
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value))
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId!.Value));
 
             CreateMap<MeetingParticipantFormModel, MeetingParticipantUpdateDto>();
 
             CreateMap<ContactSuggestionDto, ContactSuggestionViewModel>();
+
+            CreateMap<CategorySummaryDto, CategoryOptionViewModel>();
         }
     }
 }

@@ -10,6 +10,8 @@ namespace CalendarApp.Services.Meetings.Models
 
         public string? Description { get; set; }
 
+        public Guid CategoryId { get; set; }
+
         public Guid CreatedById { get; set; }
 
         public IReadOnlyCollection<MeetingParticipantDto> Participants { get; set; } = Array.Empty<MeetingParticipantDto>();

@@ -16,7 +16,8 @@ namespace CalendarApp.Data.Models
         [StringLength(500)]
         public string? Description { get; set; }
 
-        public Guid? CategoryId { get; set; }
+        [Required]
+        public Guid CategoryId { get; set; }
         public Category? Category { get; set; }
 
         [Required]
