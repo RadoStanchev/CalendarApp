@@ -31,7 +31,7 @@ namespace CalendarApp.Services.Meetings
                 CreatedById = dto.CreatedById,
             };
 
-            meeting.CategoryId = await GetValidCategoryIdAsync(dto.CategoryId);
+            meeting.CategoryId = await EnsureValidCategoryIdAsync(dto.CategoryId);
 
             meeting.Participants.Add(new MeetingParticipant
             {
@@ -307,7 +307,7 @@ namespace CalendarApp.Services.Meetings
             meeting.StartTime = dto.StartTime;
             meeting.Location = dto.Location;
             meeting.Description = dto.Description;
-            meeting.CategoryId = await GetValidCategoryIdAsync(dto.CategoryId);
+            meeting.CategoryId = await EnsureValidCategoryIdAsync(dto.CategoryId);
 
             if (originalStartTime != dto.StartTime && dto.StartTime > DateTime.Now)
             {
@@ -425,18 +425,23 @@ namespace CalendarApp.Services.Meetings
             return true;
         }
 
-        private async Task<Guid?> GetValidCategoryIdAsync(Guid? categoryId)
+        private async Task<Guid> EnsureValidCategoryIdAsync(Guid categoryId)
         {
-            if (!categoryId.HasValue)
+            if (categoryId == Guid.Empty)
             {
-                return null;
+                throw new ArgumentException("A category is required.", nameof(categoryId));
             }
 
             var exists = await db.Categories
                 .AsNoTracking()
-                .AnyAsync(c => c.Id == categoryId.Value);
+                .AnyAsync(c => c.Id == categoryId);
 
-            return exists ? categoryId : null;
+            if (!exists)
+            {
+                throw new ArgumentException("The selected category does not exist.", nameof(categoryId));
+            }
+
+            return categoryId;
         }
 
         private static string FormatName(string? firstName, string? lastName)

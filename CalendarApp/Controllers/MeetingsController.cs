@@ -7,6 +7,7 @@ using CalendarApp.Services.Meetings.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
 
 namespace CalendarApp.Controllers
 {
@@ -65,12 +66,31 @@ namespace CalendarApp.Controllers
                 return View(model);
             }
 
+            var category = await categoryService.GetByIdAsync(model.CategoryId!.Value);
+            if (category == null)
+            {
+                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                await PopulateParticipantDetailsAsync(model.Participants);
+                model.Categories = await GetCategoryOptionsAsync();
+                return View(model);
+            }
+
             var dto = mapper.Map<MeetingCreateDto>(model);
             dto.CreatedById = userId;
 
-            var meetingId = await meetingService.CreateMeetingAsync(dto);
-            TempData["MeetingMessage"] = "Meeting created successfully.";
-            return RedirectToAction(nameof(Details), new { id = meetingId });
+            try
+            {
+                var meetingId = await meetingService.CreateMeetingAsync(dto);
+                TempData["MeetingMessage"] = "Meeting created successfully.";
+                return RedirectToAction(nameof(Details), new { id = meetingId });
+            }
+            catch (ArgumentException ex) when (string.Equals(ex.ParamName, nameof(dto.CategoryId), StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                await PopulateParticipantDetailsAsync(model.Participants);
+                model.Categories = await GetCategoryOptionsAsync();
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -106,10 +126,31 @@ namespace CalendarApp.Controllers
                 return View(model);
             }
 
+            var category = await categoryService.GetByIdAsync(model.CategoryId!.Value);
+            if (category == null)
+            {
+                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                await PopulateParticipantDetailsAsync(model.Participants);
+                model.Categories = await GetCategoryOptionsAsync();
+                return View(model);
+            }
+
             var dto = mapper.Map<MeetingUpdateDto>(model);
             dto.UpdatedById = userId;
 
-            var updated = await meetingService.UpdateMeetingAsync(dto);
+            bool updated;
+            try
+            {
+                updated = await meetingService.UpdateMeetingAsync(dto);
+            }
+            catch (ArgumentException ex) when (string.Equals(ex.ParamName, nameof(dto.CategoryId), StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                await PopulateParticipantDetailsAsync(model.Participants);
+                model.Categories = await GetCategoryOptionsAsync();
+                return View(model);
+            }
+
             if (!updated)
             {
                 return NotFound();

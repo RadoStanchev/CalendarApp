@@ -18,10 +18,12 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<MeetingParticipantDto, MeetingParticipantFormModel>();
 
             CreateMap<MeetingCreateViewModel, MeetingCreateDto>()
-                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value));
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value))
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId!.Value));
 
             CreateMap<MeetingEditViewModel, MeetingUpdateDto>()
-                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value));
+                .ForMember(dest => dest.StartTime, opt => opt.MapFrom(src => src.StartTime!.Value))
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.CategoryId!.Value));
 
             CreateMap<MeetingParticipantFormModel, MeetingParticipantUpdateDto>();
 
