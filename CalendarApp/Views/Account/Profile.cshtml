@@ -17,6 +17,13 @@
         {
             <p><strong>Address:</strong> @Model.Address</p>
         }
+        @if (!string.IsNullOrEmpty(Model.Note))
+        {
+            <p><strong>Note:</strong> @Model.Note</p>
+        }
+        <div class="mt-3">
+            <a asp-action="@nameof(AccountController.Edit)" class="btn btn-primary">Edit Profile</a>
+        </div>
     </div>
 </div>
 

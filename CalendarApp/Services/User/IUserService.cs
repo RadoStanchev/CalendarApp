@@ -1,4 +1,6 @@
-﻿using CalendarApp.Data.Models;
+using CalendarApp.Data.Models;
+using CalendarApp.Services.User.Models;
+using System;
 
 namespace CalendarApp.Services.User
 {
@@ -8,7 +10,7 @@ namespace CalendarApp.Services.User
         Task<Contact?> GetByEmailAsync(string email);
         Task<IEnumerable<Contact>> SearchAsync(string term);
         Task<IEnumerable<Contact>> GetAllAsync();
-        Task<bool> UpdateProfileAsync(Guid id, string? firstName, string? lastName, string? address);
+        Task<bool> UpdateProfileAsync(UpdateProfileDto dto);
         Task<bool> DeleteAsync(Guid id);
     }
 }

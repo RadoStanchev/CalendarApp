@@ -1,5 +1,6 @@
 ﻿using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Services.User.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,14 +48,16 @@ namespace CalendarApp.Services.User
                 .ToListAsync();
         }
 
-        public async Task<bool> UpdateProfileAsync(Guid id, string? firstName, string? lastName, string? address)
+        public async Task<bool> UpdateProfileAsync(UpdateProfileDto dto)
         {
-            var user = await userManager.FindByIdAsync(id.ToString());
+            var user = await userManager.FindByIdAsync(dto.Id.ToString());
             if (user == null) return false;
 
-            if (!string.IsNullOrWhiteSpace(firstName)) user.FirstName = firstName;
-            if (!string.IsNullOrWhiteSpace(lastName)) user.LastName = lastName;
-            if (!string.IsNullOrWhiteSpace(address)) user.Address = address;
+            user.FirstName = dto.FirstName;
+            user.LastName = dto.LastName;
+            user.BirthDate = dto.BirthDate;
+            user.Address = dto.Address;
+            user.Note = dto.Note;
 
             var result = await userManager.UpdateAsync(user);
             return result.Succeeded;
