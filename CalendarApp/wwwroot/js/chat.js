@@ -42,6 +42,50 @@
         ) ?? null;
     };
 
+    const getAntiForgeryToken = () => chatForm.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+    const markCache = new Map();
+
+    const threadTypeValue = (threadType) => normaliseThreadType(threadType) === THREAD_TYPES.MEETING ? 1 : 0;
+
+    const markThreadAsRead = async (threadId, threadType) => {
+        if (!threadId) {
+            return;
+        }
+
+        const token = getAntiForgeryToken();
+        if (!token) {
+            return;
+        }
+
+        const key = `${normaliseThreadType(threadType)}:${threadId}`;
+        const now = Date.now();
+        const lastMarked = markCache.get(key) ?? 0;
+
+        if (now - lastMarked < 500) {
+            return;
+        }
+
+        markCache.set(key, now);
+
+        try {
+            const params = new URLSearchParams({
+                threadId,
+                threadType: threadTypeValue(threadType).toString()
+            });
+
+            await fetch(`/Chat/MarkThreadAsRead?${params.toString()}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+        } catch (error) {
+            console.warn('Failed to mark conversation as read:', error);
+        }
+    };
+
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/hubs/chat")
         .withAutomaticReconnect()
@@ -364,6 +408,8 @@
             if (messageInput) {
                 messageInput.focus();
             }
+
+            await markThreadAsRead(threadId, threadType);
         } catch (error) {
             console.error("Failed to load conversation:", error);
             currentThreadId = previousThreadId;
@@ -424,6 +470,11 @@
         }
 
         appendMessage(message);
+
+        const senderId = message.senderId?.toString?.() ?? message.senderId ?? '';
+        if (senderId && senderId.toString() !== getCurrentUserId()) {
+            markThreadAsRead(threadId, threadType);
+        }
     });
 
     connection.onreconnecting(() => {

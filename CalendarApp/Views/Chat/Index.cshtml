@@ -225,6 +225,7 @@
             }
         </div>
         <form id="chatForm" class="messenger-form" autocomplete="off">
+            @Html.AntiForgeryToken()
             <div class="messenger-form__composer">
                 <textarea id="messageInput"
                           class="messenger-input messenger-input--multiline"

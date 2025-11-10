@@ -141,6 +141,66 @@ namespace CalendarApp.Services.Messages
             };
         }
 
+        public async Task MarkFriendshipMessagesAsReadAsync(Guid userId, Guid friendshipId, CancellationToken cancellationToken = default)
+        {
+            await EnsureFriendshipAccessAsync(userId, friendshipId, cancellationToken);
+
+            var now = DateTime.UtcNow;
+
+            var unreadMessages = await db.Messages
+                .Where(m => m.FriendshipId == friendshipId && m.SenderId != userId)
+                .Where(m => !db.MessageSeens.Any(r => r.MessageId == m.Id && r.ContactId == userId))
+                .Select(m => m.Id)
+                .ToListAsync(cancellationToken);
+
+            if (unreadMessages.Count == 0)
+            {
+                return;
+            }
+
+            var receipts = unreadMessages
+                .Select(messageId => new MessageSeen
+                {
+                    MessageId = messageId,
+                    ContactId = userId,
+                    SeenAt = now
+                })
+                .ToList();
+
+            db.MessageSeens.AddRange(receipts);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task MarkMeetingMessagesAsReadAsync(Guid userId, Guid meetingId, CancellationToken cancellationToken = default)
+        {
+            await EnsureMeetingAccessAsync(userId, meetingId, cancellationToken);
+
+            var now = DateTime.UtcNow;
+
+            var unreadMessages = await db.Messages
+                .Where(m => m.MeetingId == meetingId && m.SenderId != userId)
+                .Where(m => !db.MessageSeens.Any(r => r.MessageId == m.Id && r.ContactId == userId))
+                .Select(m => m.Id)
+                .ToListAsync(cancellationToken);
+
+            if (unreadMessages.Count == 0)
+            {
+                return;
+            }
+
+            var receipts = unreadMessages
+                .Select(messageId => new MessageSeen
+                {
+                    MessageId = messageId,
+                    ContactId = userId,
+                    SeenAt = now
+                })
+                .ToList();
+
+            db.MessageSeens.AddRange(receipts);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
         private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId, CancellationToken cancellationToken)
         {
             var sender = await userManager.Users

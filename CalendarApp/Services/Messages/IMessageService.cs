@@ -15,6 +15,10 @@ namespace CalendarApp.Services.Messages
 
         Task<ChatMessageDto> SaveMeetingMessageAsync(Guid userId, Guid meetingId, string content, CancellationToken cancellationToken = default);
 
+        Task MarkFriendshipMessagesAsReadAsync(Guid userId, Guid friendshipId, CancellationToken cancellationToken = default);
+
+        Task MarkMeetingMessagesAsReadAsync(Guid userId, Guid meetingId, CancellationToken cancellationToken = default);
+
         string BuildFriendshipGroupName(Guid friendshipId);
 
         string BuildMeetingGroupName(Guid meetingId);

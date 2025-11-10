@@ -1,6 +1,7 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Models.Chat;
+using CalendarApp.Services.Messages;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -29,11 +30,13 @@ namespace CalendarApp.Controllers
 
         private readonly ApplicationDbContext db;
         private readonly UserManager<Contact> userManager;
+        private readonly IMessageService messageService;
 
-        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager)
+        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager, IMessageService messageService)
         {
             this.db = db;
             this.userManager = userManager;
+            this.messageService = messageService;
         }
 
         [HttpGet]
@@ -293,6 +296,40 @@ namespace CalendarApp.Controllers
             }
 
             return await BuildFriendshipThreadResponse(id, userId);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkThreadAsRead(Guid threadId, ThreadType threadType)
+        {
+            if (threadId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+
+            var currentUser = await userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return Unauthorized();
+            }
+
+            try
+            {
+                if (threadType == ThreadType.Meeting)
+                {
+                    await messageService.MarkMeetingMessagesAsReadAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
+                }
+                else
+                {
+                    await messageService.MarkFriendshipMessagesAsReadAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
 
         private async Task<IActionResult> BuildFriendshipThreadResponse(Guid friendshipId, Guid userId)

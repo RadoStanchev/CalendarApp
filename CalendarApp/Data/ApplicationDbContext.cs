@@ -1,4 +1,4 @@
-﻿using CalendarApp.Data.Models;
+using CalendarApp.Data.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +16,7 @@ namespace CalendarApp.Data
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<MeetingParticipant> MeetingParticipants { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<MessageSeen> MessageSeens { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
 
@@ -35,6 +36,25 @@ namespace CalendarApp.Data
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<MessageSeen>()
+                .HasKey(r => new { r.MessageId, r.ContactId });
+
+            builder.Entity<MessageSeen>()
+                .HasOne(r => r.Message)
+                .WithMany(m => m.SeenBy)
+                .HasForeignKey(r => r.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<MessageSeen>()
+                .HasOne(r => r.Contact)
+                .WithMany(c => c.MessageSeens)
+                .HasForeignKey(r => r.ContactId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<MessageSeen>()
+                .HasIndex(r => new { r.MessageId, r.ContactId })
+                .IsUnique();
+
             builder.Entity<Friendship>()
                 .HasOne(f => f.Requester)
                 .WithMany(c => c.SentFriendRequests)
@@ -50,8 +70,6 @@ namespace CalendarApp.Data
             builder.Entity<Friendship>()
                 .HasIndex(f => f.PairKey)
                 .IsUnique();
-
-
         }
     }
 }
