@@ -109,16 +109,21 @@ body {
   flex-direction: column;
 }
 
-.friendship-card--friends .friendship-search .input-group-text {
+.friendship-search-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.friendship-search .input-group-text {
   background: rgba(37, 99, 235, 0.08);
   border: none;
 }
 
-.friendship-card--friends .friendship-search .form-control {
+.friendship-search .form-control {
   border-left: none;
 }
 
-.friendship-card--friends .friendship-search .form-control:focus {
+.friendship-search .form-control:focus {
   box-shadow: none;
 }
 
