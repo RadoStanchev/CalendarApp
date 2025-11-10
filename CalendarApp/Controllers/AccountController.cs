@@ -2,6 +2,7 @@
 using CalendarApp.Data.Models;
 using CalendarApp.Models.Account;
 using CalendarApp.Services.User;
+using CalendarApp.Services.User.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -90,8 +91,57 @@ namespace CalendarApp.Controllers
         {
             var userId = Guid.Parse(userManager.GetUserId(User));
             var user = await userService.GetByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
             var model = mapper.Map<ProfileViewModel>(user);
             return View(model);
+        }
+
+        // ----------------- EDIT PROFILE -----------------
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Edit()
+        {
+            var userId = Guid.Parse(userManager.GetUserId(User));
+            var user = await userService.GetByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            var model = mapper.Map<EditProfileViewModel>(user);
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(EditProfileViewModel model)
+        {
+            var userId = Guid.Parse(userManager.GetUserId(User));
+
+            if (!ModelState.IsValid)
+            {
+                var user = await userService.GetByIdAsync(userId);
+                model.Email = user?.Email ?? model.Email;
+                model.Id = userId;
+                return View(model);
+            }
+
+            var updateDto = mapper.Map<UpdateProfileDto>(model);
+            updateDto.Id = userId;
+
+            var updated = await userService.UpdateProfileAsync(updateDto);
+
+            if (!updated)
+            {
+                model.Id = userId;
+                var user = await userService.GetByIdAsync(userId);
+                model.Email = user?.Email ?? model.Email;
+                ModelState.AddModelError(string.Empty, "Unable to update profile at this time.");
+                return View(model);
+            }
+
+            return RedirectToAction(nameof(Profile));
         }
     }
 }
