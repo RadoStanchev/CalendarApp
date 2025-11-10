@@ -7,12 +7,12 @@ namespace CalendarApp.Data.Models
     {
         [Required]
         public Guid MessageId { get; set; }
-        public Message Message { get; set; } = null!;
+        public Message Message { get; set; }
 
         [Required]
         public Guid ContactId { get; set; }
-        public Contact Contact { get; set; } = null!;
+        public Contact Contact { get; set; }
 
-        public DateTime SeenAt { get; set; }
+        public DateTime SeenAt { get; set; } = DateTime.UtcNow;
     }
 }

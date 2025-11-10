@@ -7,10 +7,10 @@ namespace CalendarApp.Data.Models
     public class Contact : IdentityUser<Guid>
     {
         [Required, StringLength(50)]
-        public string FirstName { get; set; } = string.Empty;
+        public string FirstName { get; set; }
 
         [Required, StringLength(50)]
-        public string LastName { get; set; } = string.Empty;
+        public string LastName { get; set; }
 
         [DataType(DataType.Date)]
         public DateTime? BirthDate { get; set; }

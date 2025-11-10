@@ -20,11 +20,11 @@ namespace CalendarApp.Data.Models
         // Sender (required)
         [Required]
         public Guid SenderId { get; set; }
-        public Contact Sender { get; set; } = null!;
+        public Contact Sender { get; set; }
 
         // Message text
         [Required, StringLength(1000)]
-        public string Content { get; set; } = string.Empty;
+        public string Content { get; set; }
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 

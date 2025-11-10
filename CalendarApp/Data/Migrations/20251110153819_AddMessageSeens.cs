@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -39,6 +39,11 @@ namespace CalendarApp.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MessageSeens_ContactId",
+                table: "MessageSeens",
+                column: "ContactId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MessageSeens_MessageId_ContactId",

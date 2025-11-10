@@ -517,8 +517,6 @@ namespace CalendarApp.Data.Migrations
 
                     b.Navigation("Meeting");
 
-                    b.Navigation("SeenBy");
-
                     b.Navigation("Sender");
                 });
 
@@ -626,6 +624,11 @@ namespace CalendarApp.Data.Migrations
             modelBuilder.Entity("CalendarApp.Data.Models.Meeting", b =>
                 {
                     b.Navigation("Participants");
+                });
+
+            modelBuilder.Entity("CalendarApp.Data.Models.Message", b =>
+                {
+                    b.Navigation("SeenBy");
                 });
 #pragma warning restore 612, 618
         }
