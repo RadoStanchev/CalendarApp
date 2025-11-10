@@ -38,6 +38,7 @@ builder.Services.AddScoped<IMeetingService, MeetingService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IMessageSeenService, MessageSeenService>();
 builder.Services.AddHostedService<MeetingReminderService>();
 
 builder.Services.AddAutoMapper(cfg =>

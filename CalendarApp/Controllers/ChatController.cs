@@ -31,12 +31,14 @@ namespace CalendarApp.Controllers
         private readonly ApplicationDbContext db;
         private readonly UserManager<Contact> userManager;
         private readonly IMessageService messageService;
+        private readonly IMessageSeenService messageSeenService;
 
-        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager, IMessageService messageService)
+        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager, IMessageService messageService, IMessageSeenService messageSeenService)
         {
             this.db = db;
             this.userManager = userManager;
             this.messageService = messageService;
+            this.messageSeenService = messageSeenService;
         }
 
         [HttpGet]
@@ -317,11 +319,11 @@ namespace CalendarApp.Controllers
             {
                 if (threadType == ThreadType.Meeting)
                 {
-                    await messageService.MarkMeetingMessagesAsReadAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
+                    await messageSeenService.MarkMeetingMessagesAsSeenAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
                 }
                 else
                 {
-                    await messageService.MarkFriendshipMessagesAsReadAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
+                    await messageSeenService.MarkFriendshipMessagesAsSeenAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
                 }
             }
             catch (InvalidOperationException)
