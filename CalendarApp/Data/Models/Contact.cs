@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace CalendarApp.Data.Models
@@ -22,6 +23,7 @@ namespace CalendarApp.Data.Models
 
         public ICollection<MeetingParticipant> MeetingParticipants { get; set; } = [];
         public ICollection<Message> SentMessages { get; set; } = [];
+        public ICollection<MessageSeen> MessageSeens { get; set; } = [];
         public ICollection<Friendship> SentFriendRequests { get; set; } = [];
         public ICollection<Friendship> ReceivedFriendRequests { get; set; } = [];
         public ICollection<Notification> Notifications { get; set; } = [];

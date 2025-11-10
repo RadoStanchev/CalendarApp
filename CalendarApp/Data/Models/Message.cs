@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace CalendarApp.Data.Models
 {
@@ -27,6 +28,6 @@ namespace CalendarApp.Data.Models
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
 
-        public bool IsRead { get; set; } = false;
+        public ICollection<MessageSeen> SeenBy { get; set; } = [];
     }
 }
