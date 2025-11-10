@@ -9,6 +9,7 @@ using CalendarApp.Services.Categories;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.User;
 using CalendarApp.Services.Messages;
+using CalendarApp.Services.MessageSeens;
 using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

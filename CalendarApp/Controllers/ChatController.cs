@@ -2,6 +2,7 @@ using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Models.Chat;
 using CalendarApp.Services.Messages;
+using CalendarApp.Services.MessageSeens;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

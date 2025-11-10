@@ -1,12 +1,13 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Services.Messages;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CalendarApp.Services.Messages
+namespace CalendarApp.Services.MessageSeens
 {
     public class MessageSeenService : IMessageSeenService
     {

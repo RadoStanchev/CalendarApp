@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CalendarApp.Services.Messages
+namespace CalendarApp.Services.MessageSeens
 {
     public interface IMessageSeenService
     {
