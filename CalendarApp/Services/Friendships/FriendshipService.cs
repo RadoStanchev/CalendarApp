@@ -199,13 +199,14 @@ namespace CalendarApp.Services.Friendships
                 .Where(f => f.RequesterId == userId || f.ReceiverId == userId)
                 .Select(f => new
                 {
+                    f.Id,
                     f.RequesterId,
                     f.ReceiverId,
                     f.Status
                 })
                 .ToListAsync();
 
-            var statusLookup = new Dictionary<Guid, FriendRelationshipStatus>();
+            var statusLookup = new Dictionary<Guid, (FriendRelationshipStatus Status, Guid FriendshipId, bool IsIncoming)>();
             foreach (var relationship in relationshipStatuses)
             {
                 var otherUserId = relationship.RequesterId == userId ? relationship.ReceiverId : relationship.RequesterId;
@@ -218,7 +219,7 @@ namespace CalendarApp.Services.Friendships
                     _ => FriendRelationshipStatus.None
                 };
 
-                statusLookup[otherUserId] = status;
+                statusLookup[otherUserId] = (status, relationship.Id, relationship.ReceiverId == userId);
             }
 
             var query = db.Users.AsNoTracking();
@@ -246,24 +247,31 @@ namespace CalendarApp.Services.Friendships
                 .ToListAsync();
 
             return matches
-                .Select(match => new FriendSearchResultInfo
+                .Select(match =>
                 {
-                    UserId = match.Id,
-                    FirstName = match.FirstName ?? string.Empty,
-                    LastName = match.LastName ?? string.Empty,
-                    Email = match.Email ?? string.Empty,
-                    RelationshipStatus = statusLookup.TryGetValue(match.Id, out var status)
-                        ? status
-                        : FriendRelationshipStatus.None
+                    var (status, friendshipId, isIncoming) = statusLookup.TryGetValue(match.Id, out var info)
+                        ? info
+                        : (FriendRelationshipStatus.None, Guid.Empty, false);
+
+                    return new FriendSearchResultInfo
+                    {
+                        UserId = match.Id,
+                        FirstName = match.FirstName ?? string.Empty,
+                        LastName = match.LastName ?? string.Empty,
+                        Email = match.Email ?? string.Empty,
+                        RelationshipStatus = status,
+                        FriendshipId = status == FriendRelationshipStatus.None ? null : friendshipId,
+                        IsIncomingRequest = status == FriendRelationshipStatus.IncomingRequest && isIncoming
+                    };
                 })
                 .ToList();
         }
 
-        public async Task<bool> SendFriendRequestAsync(Guid requesterId, Guid receiverId)
+        public async Task<(bool Success, Guid? FriendshipId)> SendFriendRequestAsync(Guid requesterId, Guid receiverId)
         {
             if (requesterId == receiverId)
             {
-                return false;
+                return (false, null);
             }
 
             var pairKey = BuildPairKey(requesterId, receiverId);
@@ -275,17 +283,17 @@ namespace CalendarApp.Services.Friendships
             {
                 if (friendship.Status == FriendshipStatus.Accepted)
                 {
-                    return false;
+                    return (false, friendship.Id);
                 }
 
                 if (friendship.Status == FriendshipStatus.Pending)
                 {
-                    return false;
+                    return (false, friendship.Id);
                 }
 
                 if (friendship.Status == FriendshipStatus.Blocked)
                 {
-                    return false;
+                    return (false, friendship.Id);
                 }
 
                 friendship.RequesterId = requesterId;
@@ -318,7 +326,7 @@ namespace CalendarApp.Services.Friendships
                 Type = NotificationType.Invitation
             });
 
-            return true;
+            return (true, friendship.Id);
         }
 
         public async Task<bool> AcceptFriendRequestAsync(Guid friendshipId, Guid receiverId)

@@ -100,6 +100,21 @@ body {
   background: rgba(37, 99, 235, 0.05);
 }
 
+.friendship-card [data-friend-panel-toggle].active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0.5rem 1.5rem rgba(37, 99, 235, 0.25);
+}
+
+.friendship-panel {
+  transition: opacity 0.2s ease;
+}
+
+.friendship-panel.d-none {
+  opacity: 0;
+}
+
 .friendship-card h2 {
   color: #0f172a;
 }
@@ -109,16 +124,21 @@ body {
   flex-direction: column;
 }
 
-.friendship-card--friends .friendship-search .input-group-text {
+.friendship-search-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.friendship-search .input-group-text {
   background: rgba(37, 99, 235, 0.08);
   border: none;
 }
 
-.friendship-card--friends .friendship-search .form-control {
+.friendship-search .form-control {
   border-left: none;
 }
 
-.friendship-card--friends .friendship-search .form-control:focus {
+.friendship-search .form-control:focus {
   box-shadow: none;
 }
 
@@ -133,6 +153,10 @@ body {
 }
 
 .friendship-search .list-group-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
   border-radius: 0.75rem;
   border: 1px solid rgba(148, 163, 184, 0.25);
   box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.05);
@@ -140,6 +164,33 @@ body {
 
 .friendship-search .list-group-item + .list-group-item {
   margin-top: 0.5rem;
+}
+
+.friendship-search-details {
+  flex: 1 1 auto;
+}
+
+.friendship-search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.friendship-search-actions .btn,
+.friendship-search-actions .badge {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 576px) {
+  .friendship-search .list-group-item {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .friendship-search-actions {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
 }
 
 .requests-section + .requests-section {

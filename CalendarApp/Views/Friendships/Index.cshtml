@@ -41,137 +41,151 @@
         </div>
     }
 
-    <div class="row g-4 friendship-grid">
-        <div class="col-12 col-lg-4">
-            <div class="friendship-card h-100">
-                <h2 class="h5 fw-semibold mb-3">Requests</h2>
-                <div class="requests-section">
-                    <h3 class="h6 text-uppercase text-muted mb-2">Incoming</h3>
-                    @if (!Model.IncomingRequests.Any())
-                    {
-                        <p class="text-muted small">No pending requests.</p>
-                    }
-                    else
-                    {
-                        foreach (var request in Model.IncomingRequests)
-                        {
-                            <div class="friend-item mb-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-3">@BuildInitials(request.DisplayName)</div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold">@request.DisplayName</div>
-                                        <div class="text-muted small">@request.Email</div>
-                                        <div class="text-muted xsmall">Requested @request.RequestedOn.ToLocalTime().ToString("g")</div>
-                                    </div>
-                                </div>
-                                <div class="mt-3 d-flex gap-2">
-                                    <form asp-action="Accept" method="post" class="flex-fill">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                        <button type="submit" class="btn btn-primary w-100">Confirm</button>
-                                    </form>
-                                    <form asp-action="Decline" method="post" class="flex-fill">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                        <button type="submit" class="btn btn-outline-secondary w-100">Ignore</button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
-                </div>
-
-                <div class="requests-section mt-4">
-                    <h3 class="h6 text-uppercase text-muted mb-2">Sent</h3>
-                    @if (!Model.SentRequests.Any())
-                    {
-                        <p class="text-muted small">You have not sent any requests recently.</p>
-                    }
-                    else
-                    {
-                        foreach (var request in Model.SentRequests)
-                        {
-                            <div class="friend-item mb-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-3">@BuildInitials(request.DisplayName)</div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold">@request.DisplayName</div>
-                                        <div class="text-muted small">@request.Email</div>
-                                        <div class="text-muted xsmall">Sent @request.RequestedOn.ToLocalTime().ToString("g")</div>
-                                    </div>
-                                </div>
-                                <div class="mt-3">
-                                    <form asp-action="Cancel" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                        <button type="submit" class="btn btn-outline-danger w-100">Cancel request</button>
-                                    </form>
-                                </div>
-                            </div>
-                        }
-                    }
-                </div>
+    <div class="friendship-card friendship-search-card mb-4">
+        <div class="friendship-search"
+             data-friend-search-root
+             data-search-url="@Url.Action("Search")"
+             data-request-url="@Url.Action("Send")"
+             data-remove-url="@Url.Action("Remove")"
+             data-accept-url="@Url.Action("Accept")"
+             data-decline-url="@Url.Action("Decline")"
+             data-cancel-url="@Url.Action("Cancel")">
+            <label for="friend-search-input" class="form-label text-uppercase small text-muted mb-2">Find people</label>
+            <div class="input-group">
+                <span class="input-group-text" id="friend-search-addon">🔍</span>
+                <input type="search"
+                       class="form-control"
+                       id="friend-search-input"
+                       placeholder="Search by name or email"
+                       autocomplete="off"
+                       data-friend-search
+                       aria-describedby="friend-search-addon" />
             </div>
+            <input type="hidden" value="@antiForgeryTokens.RequestToken" data-friend-antiforgery />
+            <div class="list-group mt-2 d-none" data-friend-search-results></div>
+            <div class="alert alert-info mt-3 d-none" role="status" data-friend-search-feedback></div>
         </div>
+    </div>
 
-        <div class="col-12 col-lg-5">
-            <div class="friendship-card h-100">
-                <h2 class="h5 fw-semibold mb-3">People you may know</h2>
-                <p class="text-muted small mb-4">Suggestions are based on your current network and mutual contacts.</p>
-                @if (!Model.Suggestions.Any())
-                {
-                    <div class="empty-state text-center py-5">
-                        <div class="avatar avatar-lg mx-auto mb-3">🤝</div>
-                        <p class="text-muted mb-0">We will start showing suggestions once you connect with more people.</p>
+    <div class="row g-4 friendship-grid">
+        <div class="col-12 col-lg-8">
+            <div class="friendship-card" data-friend-toggle-root>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+                    <div>
+                        <h2 class="h5 fw-semibold mb-1">Grow your network</h2>
+                        <p class="text-muted small mb-0">Discover new connections and stay on top of your invites.</p>
                     </div>
-                }
-                else
-                {
-                    foreach (var suggestion in Model.Suggestions)
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Friendship filters">
+                        <button type="button" class="btn btn-outline-primary active" data-friend-panel-toggle="suggestions">Suggestions</button>
+                        <button type="button" class="btn btn-outline-primary" data-friend-panel-toggle="requests">Requests</button>
+                    </div>
+                </div>
+
+                <div class="friendship-panel" data-friend-panel="suggestions">
+                    @if (!Model.Suggestions.Any())
                     {
-                        <div class="friend-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="avatar me-3">@BuildInitials(suggestion.DisplayName)</div>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">@suggestion.DisplayName</div>
-                                    <div class="text-muted small">@suggestion.Email</div>
-                                    <div class="text-muted xsmall">@suggestion.MutualFriendCount mutual @(suggestion.MutualFriendCount == 1 ? "friend" : "friends")</div>
-                                </div>
-                                <form asp-action="Send" method="post" class="ms-3">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="receiverId" value="@suggestion.UserId" />
-                                    <button type="submit" class="btn btn-primary">Add friend</button>
-                                </form>
-                            </div>
+                        <div class="empty-state text-center py-5">
+                            <div class="avatar avatar-lg mx-auto mb-3">🤝</div>
+                            <p class="text-muted mb-0">We will start showing suggestions once you connect with more people.</p>
                         </div>
                     }
-                }
+                    else
+                    {
+                        foreach (var suggestion in Model.Suggestions)
+                        {
+                            <div class="friend-item mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">@BuildInitials(suggestion.DisplayName)</div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">@suggestion.DisplayName</div>
+                                        <div class="text-muted small">@suggestion.Email</div>
+                                        <div class="text-muted xsmall">@suggestion.MutualFriendCount mutual @(suggestion.MutualFriendCount == 1 ? "friend" : "friends")</div>
+                                    </div>
+                                    <form asp-action="Send" method="post" class="ms-3">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="receiverId" value="@suggestion.UserId" />
+                                        <button type="submit" class="btn btn-primary">Add friend</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="friendship-panel d-none" data-friend-panel="requests">
+                    <div class="requests-section">
+                        <h3 class="h6 text-uppercase text-muted mb-2">Incoming</h3>
+                        @if (!Model.IncomingRequests.Any())
+                        {
+                            <p class="text-muted small">No pending requests.</p>
+                        }
+                        else
+                        {
+                            foreach (var request in Model.IncomingRequests)
+                            {
+                                <div class="friend-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3">@BuildInitials(request.DisplayName)</div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold">@request.DisplayName</div>
+                                            <div class="text-muted small">@request.Email</div>
+                                            <div class="text-muted xsmall">Requested @request.RequestedOn.ToLocalTime().ToString("g")</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 d-flex gap-2">
+                                        <form asp-action="Accept" method="post" class="flex-fill">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
+                                            <button type="submit" class="btn btn-primary w-100">Confirm</button>
+                                        </form>
+                                        <form asp-action="Decline" method="post" class="flex-fill">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
+                                            <button type="submit" class="btn btn-outline-secondary w-100">Ignore</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div class="requests-section mt-4">
+                        <h3 class="h6 text-uppercase text-muted mb-2">Sent</h3>
+                        @if (!Model.SentRequests.Any())
+                        {
+                            <p class="text-muted small">You have not sent any requests recently.</p>
+                        }
+                        else
+                        {
+                            foreach (var request in Model.SentRequests)
+                            {
+                                <div class="friend-item mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3">@BuildInitials(request.DisplayName)</div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold">@request.DisplayName</div>
+                                            <div class="text-muted small">@request.Email</div>
+                                            <div class="text-muted xsmall">Sent @request.RequestedOn.ToLocalTime().ToString("g")</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <form asp-action="Cancel" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
+                                            <button type="submit" class="btn btn-outline-danger w-100">Cancel request</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="col-12 col-lg-3">
+        <div class="col-12 col-lg-4">
             <div class="friendship-card friendship-card--friends h-100">
                 <h2 class="h5 fw-semibold mb-3">Your friends</h2>
-
-                <div class="friendship-search" data-friend-search-root
-                     data-search-url="@Url.Action("Search")"
-                     data-request-url="@Url.Action("Send")"
-                     data-exclude="@string.Join(',', Model.Friends.Select(f => f.Id))">
-                    <label for="friend-search-input" class="form-label text-uppercase small text-muted mb-2">Find people</label>
-                    <div class="input-group">
-                        <span class="input-group-text" id="friend-search-addon">🔍</span>
-                        <input type="search"
-                               class="form-control"
-                               id="friend-search-input"
-                               placeholder="Search by name or email"
-                               autocomplete="off"
-                               data-friend-search
-                               aria-describedby="friend-search-addon" />
-                    </div>
-                    <input type="hidden" value="@antiForgeryTokens.RequestToken" data-friend-antiforgery />
-                    <div class="list-group mt-2 d-none" data-friend-search-results></div>
-                    <div class="alert alert-info mt-3 d-none" role="status" data-friend-search-feedback></div>
-                </div>
 
                 <div class="friend-list mt-4 flex-grow-1">
                     @if (!Model.Friends.Any())

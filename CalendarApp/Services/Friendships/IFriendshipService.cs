@@ -13,7 +13,7 @@ namespace CalendarApp.Services.Friendships
 
         Task<IReadOnlyCollection<FriendSearchResultInfo>> SearchAsync(Guid userId, string term, IEnumerable<Guid> excludeIds);
 
-        Task<bool> SendFriendRequestAsync(Guid requesterId, Guid receiverId);
+        Task<(bool Success, Guid? FriendshipId)> SendFriendRequestAsync(Guid requesterId, Guid receiverId);
 
         Task<bool> AcceptFriendRequestAsync(Guid friendshipId, Guid receiverId);
 
