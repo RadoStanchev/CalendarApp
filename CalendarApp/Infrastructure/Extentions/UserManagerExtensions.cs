@@ -1,16 +1,18 @@
 using System;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using CalendarApp.Data.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace CalendarApp.Infrastructure.Extentions
 {
     public static class UserManagerExtensions
     {
-        public static Guid GetUserIdGuid<TUser>(this UserManager<TUser> userManager, ClaimsPrincipal principal)
-            where TUser : class
+        public static async Task<Guid> GetUserIdGuidAsync<TUser>(this UserManager<TUser> userManager, ClaimsPrincipal principal)
+            where TUser : Contact
         {
-            var userId = userManager.GetUserId(principal);
-            return Guid.Parse(userId);
+            var user = await userManager.GetUserAsync(principal);
+            return user.Id;
         }
     }
 }

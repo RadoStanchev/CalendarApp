@@ -1,13 +1,10 @@
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Models.Friendships;
 using CalendarApp.Services.Friendships;
-using CalendarApp.Services.Friendships.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CalendarApp.Controllers
 {
@@ -26,7 +23,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var friends = await friendshipService.GetFriendsAsync(userId);
             var pending = await friendshipService.GetPendingRequestsAsync(userId);
             var suggestions = await friendshipService.GetSuggestionsAsync(userId);
@@ -77,7 +74,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Send(Guid receiverId)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var (result, friendshipId) = await friendshipService.SendFriendRequestAsync(userId, receiverId);
             var message = result ? "Friend request sent." : "Unable to send friend request.";
 
@@ -94,7 +91,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Accept(Guid friendshipId)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var result = await friendshipService.AcceptFriendRequestAsync(friendshipId, userId);
             var message = result ? "Friend request accepted." : "Unable to accept this request.";
 
@@ -111,7 +108,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Decline(Guid friendshipId)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var result = await friendshipService.DeclineFriendRequestAsync(friendshipId, userId);
             var message = result ? "Friend request declined." : "Unable to decline this request.";
 
@@ -128,7 +125,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(Guid friendshipId)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var result = await friendshipService.CancelFriendRequestAsync(friendshipId, userId);
             var message = result ? "Friend request cancelled." : "Unable to cancel this request.";
 
@@ -144,7 +141,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Search(string term, string? exclude)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = (await userManager.GetUserAsync(User)).Id;
             var excludeIds = ParseExcludeIds(exclude);
             var results = await friendshipService.SearchAsync(userId, term ?? string.Empty, excludeIds);
 
@@ -165,7 +162,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Remove(Guid friendId)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = (await userManager.GetUserAsync(User)).Id;
             var result = await friendshipService.RemoveFriendAsync(userId, friendId);
             var message = result ? "Friend removed." : "Unable to remove friend.";
 
@@ -176,12 +173,6 @@ namespace CalendarApp.Controllers
 
             TempData["FriendshipMessage"] = message;
             return RedirectToAction(nameof(Index));
-        }
-
-        private async Task<Guid> GetCurrentUserIdAsync()
-        {
-            var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
-            return user.Id;
         }
 
         private bool IsJsonRequest()
