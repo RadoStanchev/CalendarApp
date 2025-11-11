@@ -1,16 +1,12 @@
 using AutoMapper;
 using CalendarApp.Data.Models;
-using CalendarApp.Infrastructure.Formatting;
 using CalendarApp.Infrastructure.Extentions;
+using CalendarApp.Infrastructure.Formatting;
 using CalendarApp.Models.Friendships;
 using CalendarApp.Services.Friendships;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CalendarApp.Controllers
 {

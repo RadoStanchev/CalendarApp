@@ -1,4 +1,5 @@
 using AutoMapper;
+using CalendarApp.Data.Models;
 using CalendarApp.Models.Chat;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.Meetings;
@@ -8,9 +9,6 @@ using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CalendarApp.Controllers
 {

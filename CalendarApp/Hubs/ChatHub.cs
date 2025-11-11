@@ -1,6 +1,10 @@
+using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Extensions;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
@@ -12,6 +16,7 @@ namespace CalendarApp.Hubs
     {
         private readonly IMessageService messageService;
         private readonly IUserPresenceTracker presenceTracker;
+        private readonly UserManager<Contact> userManager;
 
         public ChatHub(IMessageService messageService, IUserPresenceTracker presenceTracker)
         {
@@ -25,7 +30,7 @@ namespace CalendarApp.Hubs
 
             try
             {
-                var userId = GetCurrentUserId();
+                var userId = Context.User.GetUserIdGuid();
                 var becameOnline = await presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
 
                 if (becameOnline)
@@ -39,15 +44,16 @@ namespace CalendarApp.Hubs
             }
             catch (HubException)
             {
-                // Ignore presence updates if the user identifier is not available.
+                
             }
         }
+
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             try
             {
-                var userId = GetCurrentUserId();
+                var userId = Context.User.GetUserIdGuid();
                 var becameOffline = await presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
 
                 if (becameOffline)
@@ -71,7 +77,7 @@ namespace CalendarApp.Hubs
 
         public async Task JoinFriendship(Guid friendshipId)
         {
-            var userId = GetCurrentUserId();
+            var userId = Context.User.GetUserIdGuid();
 
             try
             {
@@ -98,7 +104,7 @@ namespace CalendarApp.Hubs
                 return;
             }
 
-            var userId = GetCurrentUserId();
+            var userId = Context.User.GetUserIdGuid();
             try
             {
                 var chatMessage = await messageService.SaveMessageAsync(userId, friendshipId, trimmedMessage);
@@ -118,7 +124,7 @@ namespace CalendarApp.Hubs
 
         public async Task JoinMeeting(Guid meetingId)
         {
-            var userId = GetCurrentUserId();
+            var userId = Context.User.GetUserIdGuid();
 
             try
             {
@@ -145,7 +151,7 @@ namespace CalendarApp.Hubs
                 return;
             }
 
-            var userId = GetCurrentUserId();
+            var userId = Context.User.GetUserIdGuid();
             try
             {
                 var chatMessage = await messageService.SaveMeetingMessageAsync(userId, meetingId, trimmedMessage);
@@ -161,17 +167,6 @@ namespace CalendarApp.Hubs
             {
                 return;
             }
-        }
-
-        private Guid GetCurrentUserId()
-        {
-            var identifier = Context.UserIdentifier;
-            if (string.IsNullOrWhiteSpace(identifier) || !Guid.TryParse(identifier, out var userId))
-            {
-                throw new HubException("Потребителят не е автентикиран.");
-            }
-
-            return userId;
         }
 
     }

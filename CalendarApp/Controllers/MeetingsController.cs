@@ -1,5 +1,6 @@
 using AutoMapper;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Categories;
 using CalendarApp.Services.Meetings;
@@ -30,7 +31,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> My()
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var meetings = await meetingService.GetMeetingsForUserAsync(userId);
             var model = new MeetingListViewModel
             {
@@ -57,7 +58,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MeetingCreateViewModel model)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
 
             if (!ModelState.IsValid)
             {
@@ -96,7 +97,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var dto = await meetingService.GetMeetingForEditAsync(id, userId);
             if (dto == null)
             {
@@ -117,7 +118,7 @@ namespace CalendarApp.Controllers
                 return BadRequest();
             }
 
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
 
             if (!ModelState.IsValid)
             {
@@ -163,7 +164,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var dto = await meetingService.GetMeetingDetailsAsync(id, userId);
             if (dto == null)
             {
@@ -177,7 +178,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> SearchContacts(string term, string? exclude)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var excludeIds = ParseExcludeIds(exclude);
             var results = await meetingService.SearchContactsAsync(userId, term ?? string.Empty, excludeIds);
             var viewModels = mapper.Map<List<ContactSuggestionViewModel>>(results);
@@ -188,7 +189,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(Guid id, ParticipantStatus status, string? returnUrl)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var updated = await meetingService.UpdateParticipantStatusAsync(id, userId, status);
 
             if (!updated)
@@ -206,12 +207,6 @@ namespace CalendarApp.Controllers
             }
 
             return RedirectToAction(nameof(My));
-        }
-
-        private async Task<Guid> GetCurrentUserIdAsync()
-        {
-            var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
-            return user.Id;
         }
 
         private async Task PopulateParticipantDetailsAsync(List<MeetingParticipantFormModel> participants)
