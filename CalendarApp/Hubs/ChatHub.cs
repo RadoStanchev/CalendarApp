@@ -1,4 +1,5 @@
 using CalendarApp.Services.Messages;
+using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
@@ -10,10 +11,62 @@ namespace CalendarApp.Hubs
     public class ChatHub : Hub
     {
         private readonly IMessageService messageService;
+        private readonly IUserPresenceTracker presenceTracker;
 
-        public ChatHub(IMessageService messageService)
+        public ChatHub(IMessageService messageService, IUserPresenceTracker presenceTracker)
         {
             this.messageService = messageService;
+            this.presenceTracker = presenceTracker;
+        }
+
+        public override async Task OnConnectedAsync()
+        {
+            await base.OnConnectedAsync();
+
+            try
+            {
+                var userId = GetCurrentUserId();
+                var becameOnline = await presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
+
+                if (becameOnline)
+                {
+                    await Clients.Others.SendAsync("PresenceChanged", new
+                    {
+                        userId,
+                        isOnline = true
+                    });
+                }
+            }
+            catch (HubException)
+            {
+                // Ignore presence updates if the user identifier is not available.
+            }
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var becameOffline = await presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
+
+                if (becameOffline)
+                {
+                    await Clients.Others.SendAsync("PresenceChanged", new
+                    {
+                        userId,
+                        isOnline = false
+                    });
+                }
+            }
+            catch (HubException)
+            {
+                // Ignore presence updates if the user identifier is not available.
+            }
+            finally
+            {
+                await base.OnDisconnectedAsync(exception);
+            }
         }
 
         public async Task JoinFriendship(Guid friendshipId)

@@ -3,10 +3,12 @@ using CalendarApp.Data.Models;
 using CalendarApp.Models.Chat;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.MessageSeens;
+using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -33,13 +35,15 @@ namespace CalendarApp.Controllers
         private readonly UserManager<Contact> userManager;
         private readonly IMessageService messageService;
         private readonly IMessageSeenService messageSeenService;
+        private readonly IUserPresenceTracker presenceTracker;
 
-        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager, IMessageService messageService, IMessageSeenService messageSeenService)
+        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager, IMessageService messageService, IMessageSeenService messageSeenService, IUserPresenceTracker presenceTracker)
         {
             this.db = db;
             this.userManager = userManager;
             this.messageService = messageService;
             this.messageSeenService = messageSeenService;
+            this.presenceTracker = presenceTracker;
         }
 
         [HttpGet]
@@ -86,10 +90,14 @@ namespace CalendarApp.Controllers
                 .GroupBy(m => m.FriendshipId)
                 .ToDictionary(g => g.Key, g => g.First());
 
+            var onlineUsers = await presenceTracker.GetOnlineUsersAsync();
+            var onlineUserSet = new HashSet<Guid>(onlineUsers);
+
             var friendshipThreads = friendships
                 .Select(f =>
                 {
                     latestMessageLookup.TryGetValue(f.Id, out var lastMessage);
+                    var isOnline = onlineUserSet.Contains(f.FriendId);
 
                     return new ChatThreadViewModel
                     {
@@ -104,10 +112,12 @@ namespace CalendarApp.Controllers
                         LastMessagePreview = lastMessage?.Content ?? string.Empty,
                         LastMessageAt = lastMessage?.SentAt,
                         LastActivityLabel = BuildActivityLabel(lastMessage?.SentAt),
+                        IsOnline = isOnline,
                         CreatedAt = f.CreatedAt
                     };
                 })
-                .OrderByDescending(t => t.LastMessageAt ?? t.CreatedAt)
+                .OrderByDescending(t => t.IsOnline)
+                .ThenByDescending(t => t.LastMessageAt ?? t.CreatedAt)
                 .ToList();
 
             var meetings = await db.Meetings
@@ -378,6 +388,8 @@ namespace CalendarApp.Controllers
                 .OrderBy(m => m.SentAt)
                 .ToList();
 
+            var isOnline = await presenceTracker.IsOnlineAsync(friendship.FriendId);
+
             var response = new
             {
                 threadId = friendship.Id,
@@ -388,6 +400,7 @@ namespace CalendarApp.Controllers
                 avatar = BuildInitials(friendship.FriendFirstName, friendship.FriendLastName),
                 accent = GetAccentClass(friendship.FriendId),
                 lastActivity = BuildActivityLabel(messages.LastOrDefault()?.SentAt),
+                isOnline,
                 messages = messages.Select(m => new
                 {
                     m.Id,
@@ -457,6 +470,7 @@ namespace CalendarApp.Controllers
                 threadId = meeting.Id,
                 threadType = ThreadType.Meeting.ToString().ToLowerInvariant(),
                 meetingId = meeting.Id,
+                isOnline = false,
                 metadata = new
                 {
                     meetingId = meeting.Id,
