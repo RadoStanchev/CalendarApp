@@ -15,11 +15,11 @@ namespace CalendarApp.Services.Categories
             this.db = db;
         }
 
-        public async Task<IReadOnlyCollection<CategorySummaryDto>> GetAllAsync()
+        public async Task<IReadOnlyCollection<CategoryDetailsDto>> GetAllAsync()
         {
             return await db.Categories
                 .AsNoTracking()
-                .Select(c => new CategorySummaryDto
+                .Select(c => new CategoryDetailsDto
                 {
                     Id = c.Id,
                     Name = c.Name,

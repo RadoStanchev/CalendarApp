@@ -29,7 +29,7 @@ namespace CalendarApp.Infrastructure.Mapping
 
             CreateMap<ContactSuggestionDto, ContactSuggestionViewModel>();
 
-            CreateMap<CategorySummaryDto, CategoryOptionViewModel>();
+            CreateMap<CategoryDetailsDto, CategoryOptionViewModel>();
         }
     }
 }
