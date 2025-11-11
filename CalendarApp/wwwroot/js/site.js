@@ -32,6 +32,7 @@
     })();
 
     let hideTimeoutId = null;
+    let canAutoShowPanel = false;
 
     const typeEmojis = {
         info: 'ℹ️',
@@ -90,7 +91,9 @@
         itemsContainer.classList.toggle('d-none', !hasItems);
 
         if (hasItems) {
-            showPanel();
+            if (canAutoShowPanel) {
+                showPanel();
+            }
         } else {
             hidePanel();
         }
@@ -359,5 +362,8 @@
                 updateBadge(0);
             }
         })
-        .finally(initialiseHub);
+        .finally(() => {
+            canAutoShowPanel = true;
+            initialiseHub();
+        });
 })();
