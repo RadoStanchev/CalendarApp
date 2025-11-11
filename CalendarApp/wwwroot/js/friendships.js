@@ -119,10 +119,6 @@
         const resultsContainer = root.querySelector('[data-friend-search-results]');
         const feedbackElement = root.querySelector('[data-friend-search-feedback]');
         const antiForgeryToken = getAntiForgeryToken(root);
-        const excludeSet = new Set((root.dataset.exclude ?? '')
-            .split(',')
-            .map(value => value.trim())
-            .filter(value => value.length > 0));
 
         if (!searchUrl || !searchInput || !resultsContainer) {
             return;
@@ -164,8 +160,6 @@
                 const payload = await response.json();
                 if (payload?.success) {
                     showFeedback(feedbackElement, payload?.message ?? 'Friend request sent.', 'success');
-                    excludeSet.add(String(suggestion.id));
-                    root.dataset.exclude = Array.from(excludeSet).join(',');
                     const badge = buildStatusBadge('OutgoingRequest');
                     button.replaceWith(badge);
                 } else {
@@ -192,10 +186,6 @@
             const token = ++queryToken;
             const url = new URL(searchUrl, window.location.origin);
             url.searchParams.set('term', term);
-
-            if (excludeSet.size > 0) {
-                url.searchParams.set('exclude', Array.from(excludeSet).join(','));
-            }
 
             try {
                 const response = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
@@ -228,8 +218,64 @@
         });
     }
 
+    function initTogglePanels(root) {
+        if (!root) {
+            return;
+        }
+
+        const buttons = Array.from(root.querySelectorAll('[data-friend-panel-toggle]'));
+        const panels = new Map();
+
+        root.querySelectorAll('[data-friend-panel]').forEach(panel => {
+            const key = panel.dataset.friendPanel;
+            if (key) {
+                panels.set(key, panel);
+            }
+        });
+
+        function activate(targetKey) {
+            panels.forEach((panel, key) => {
+                if (key === targetKey) {
+                    panel.classList.remove('d-none');
+                } else {
+                    panel.classList.add('d-none');
+                }
+            });
+
+            buttons.forEach(button => {
+                if (button.dataset.friendPanelToggle === targetKey) {
+                    button.classList.add('active');
+                    button.setAttribute('aria-pressed', 'true');
+                } else {
+                    button.classList.remove('active');
+                    button.setAttribute('aria-pressed', 'false');
+                }
+            });
+        }
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (button.classList.contains('active')) {
+                    return;
+                }
+
+                const targetKey = button.dataset.friendPanelToggle;
+                if (targetKey && panels.has(targetKey)) {
+                    activate(targetKey);
+                }
+            });
+        });
+
+        const defaultButton = buttons.find(button => button.classList.contains('active')) ?? buttons[0];
+        const defaultKey = defaultButton?.dataset.friendPanelToggle;
+        if (defaultKey && panels.has(defaultKey)) {
+            activate(defaultKey);
+        }
+    }
+
     function initAll() {
         document.querySelectorAll('[data-friend-search-root]').forEach(root => initFriendSearch(root));
+        document.querySelectorAll('[data-friend-toggle-root]').forEach(root => initTogglePanels(root));
     }
 
     if (document.readyState === 'loading') {
