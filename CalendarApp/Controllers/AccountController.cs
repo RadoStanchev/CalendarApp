@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Models.Account;
 using CalendarApp.Services.User;
 using CalendarApp.Services.User.Models;
@@ -89,7 +90,7 @@ namespace CalendarApp.Controllers
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            var userId = Guid.Parse(userManager.GetUserId(User));
+            var userId = userManager.GetUserIdGuid(User);
             var user = await userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -103,7 +104,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
-            var userId = Guid.Parse(userManager.GetUserId(User));
+            var userId = userManager.GetUserIdGuid(User);
             var user = await userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -117,7 +118,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EditProfileViewModel model)
         {
-            var userId = Guid.Parse(userManager.GetUserId(User));
+            var userId = userManager.GetUserIdGuid(User);
 
             if (!ModelState.IsValid)
             {
