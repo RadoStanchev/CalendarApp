@@ -141,6 +141,82 @@ namespace CalendarApp.Services.Messages
             };
         }
 
+        public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentFriendshipMessagesAsync(Guid userId, Guid friendshipId, int take, CancellationToken cancellationToken = default)
+        {
+            await EnsureFriendshipAccessAsync(userId, friendshipId, cancellationToken);
+
+            var messages = await db.Messages
+                .AsNoTracking()
+                .Where(m => m.FriendshipId == friendshipId)
+                .OrderByDescending(m => m.SentAt)
+                .Take(take)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.SenderId,
+                    m.Content,
+                    m.SentAt,
+                    m.FriendshipId,
+                    m.MeetingId,
+                    SenderFirstName = m.Sender.FirstName,
+                    SenderLastName = m.Sender.LastName
+                })
+                .ToListAsync(cancellationToken);
+
+            return messages
+                .Select(m => new ChatMessageDto
+                {
+                    FriendshipId = m.FriendshipId,
+                    MeetingId = m.MeetingId,
+                    MessageId = m.Id,
+                    SenderId = m.SenderId,
+                    SenderName = BuildDisplayName(m.SenderFirstName, m.SenderLastName),
+                    Content = m.Content,
+                    SentAt = m.SentAt,
+                    Metadata = new Dictionary<string, string?>()
+                })
+                .OrderBy(m => m.SentAt)
+                .ToList();
+        }
+
+        public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentMeetingMessagesAsync(Guid userId, Guid meetingId, int take, CancellationToken cancellationToken = default)
+        {
+            await EnsureMeetingAccessAsync(userId, meetingId, cancellationToken);
+
+            var messages = await db.Messages
+                .AsNoTracking()
+                .Where(m => m.MeetingId == meetingId)
+                .OrderByDescending(m => m.SentAt)
+                .Take(take)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.SenderId,
+                    m.Content,
+                    m.SentAt,
+                    m.FriendshipId,
+                    m.MeetingId,
+                    SenderFirstName = m.Sender.FirstName,
+                    SenderLastName = m.Sender.LastName
+                })
+                .ToListAsync(cancellationToken);
+
+            return messages
+                .Select(m => new ChatMessageDto
+                {
+                    FriendshipId = m.FriendshipId,
+                    MeetingId = m.MeetingId,
+                    MessageId = m.Id,
+                    SenderId = m.SenderId,
+                    SenderName = BuildDisplayName(m.SenderFirstName, m.SenderLastName),
+                    Content = m.Content,
+                    SentAt = m.SentAt,
+                    Metadata = new Dictionary<string, string?>()
+                })
+                .OrderBy(m => m.SentAt)
+                .ToList();
+        }
+
         private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId, CancellationToken cancellationToken)
         {
             var sender = await userManager.Users
@@ -154,11 +230,16 @@ namespace CalendarApp.Services.Messages
                 throw new InvalidOperationException("Sender not found.");
             }
 
-            var senderName = string.Join(" ", new[] { sender.FirstName, sender.LastName }
-                .Select(part => part?.Trim())
-                .Where(part => !string.IsNullOrEmpty(part)));
+            var senderName = BuildDisplayName(sender.FirstName, sender.LastName);
 
             return (sender.Id, senderName);
+        }
+
+        private static string BuildDisplayName(string? firstName, string? lastName)
+        {
+            return string.Join(" ", new[] { firstName, lastName }
+                .Select(part => part?.Trim())
+                .Where(part => !string.IsNullOrEmpty(part)));
         }
     }
 }

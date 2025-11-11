@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Meetings
 {
@@ -19,6 +21,91 @@ namespace CalendarApp.Services.Meetings
         {
             this.db = db;
             this.notificationService = notificationService;
+        }
+
+        public async Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            var meetings = await db.Meetings
+                .AsNoTracking()
+                .Where(m => m.CreatedById == userId
+                            || m.Participants.Any(p => p.ContactId == userId && p.Status == ParticipantStatus.Accepted))
+                .Select(m => new
+                {
+                    m.Id,
+                    m.Description,
+                    m.StartTime,
+                    m.Location,
+                    m.CreatedById,
+                    CreatorFirstName = m.CreatedBy.FirstName,
+                    CreatorLastName = m.CreatedBy.LastName,
+                    ParticipantCount = m.Participants.Count(p => p.Status == ParticipantStatus.Accepted)
+                })
+                .ToListAsync(cancellationToken);
+
+            if (meetings.Count == 0)
+            {
+                return Array.Empty<MeetingThreadDto>();
+            }
+
+            var meetingIds = meetings.Select(m => m.Id).ToList();
+
+            var latestMessages = await db.Messages
+                .AsNoTracking()
+                .Where(m => m.MeetingId != null && meetingIds.Contains(m.MeetingId.Value))
+                .OrderByDescending(m => m.SentAt)
+                .Select(m => new
+                {
+                    MeetingId = m.MeetingId!.Value,
+                    m.Content,
+                    m.SentAt
+                })
+                .ToListAsync(cancellationToken);
+
+            var latestMessageLookup = latestMessages
+                .GroupBy(m => m.MeetingId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            return meetings
+                .Select(m =>
+                {
+                    latestMessageLookup.TryGetValue(m.Id, out var lastMessage);
+
+                    return new MeetingThreadDto
+                    {
+                        MeetingId = m.Id,
+                        Description = m.Description,
+                        StartTime = m.StartTime,
+                        Location = m.Location,
+                        CreatedById = m.CreatedById,
+                        CreatorFirstName = m.CreatorFirstName,
+                        CreatorLastName = m.CreatorLastName,
+                        ParticipantCount = m.ParticipantCount,
+                        LastMessageContent = lastMessage?.Content,
+                        LastMessageSentAt = lastMessage?.SentAt
+                    };
+                })
+                .ToList();
+        }
+
+        public async Task<MeetingThreadDto?> GetChatThreadAsync(Guid meetingId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            return await db.Meetings
+                .AsNoTracking()
+                .Where(m => m.Id == meetingId
+                            && (m.CreatedById == userId
+                                || m.Participants.Any(p => p.ContactId == userId && p.Status == ParticipantStatus.Accepted)))
+                .Select(m => new MeetingThreadDto
+                {
+                    MeetingId = m.Id,
+                    Description = m.Description,
+                    StartTime = m.StartTime,
+                    Location = m.Location,
+                    CreatedById = m.CreatedById,
+                    CreatorFirstName = m.CreatedBy.FirstName,
+                    CreatorLastName = m.CreatedBy.LastName,
+                    ParticipantCount = m.Participants.Count(p => p.Status == ParticipantStatus.Accepted)
+                })
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<Guid> CreateMeetingAsync(MeetingCreateDto dto)

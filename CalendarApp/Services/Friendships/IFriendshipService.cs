@@ -1,5 +1,7 @@
 using CalendarApp.Services.Friendships.Models;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Friendships
 {
@@ -22,5 +24,9 @@ namespace CalendarApp.Services.Friendships
         Task<bool> CancelFriendRequestAsync(Guid friendshipId, Guid requesterId);
 
         Task<bool> RemoveFriendAsync(Guid userId, Guid friendId);
+
+        Task<IReadOnlyCollection<FriendshipThreadDto>> GetChatThreadsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+        Task<FriendshipThreadDto?> GetChatThreadAsync(Guid friendshipId, Guid userId, CancellationToken cancellationToken = default);
     }
 }

@@ -4,8 +4,11 @@ using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Friendships
 {
@@ -18,6 +21,84 @@ namespace CalendarApp.Services.Friendships
         {
             this.db = db;
             this.notificationService = notificationService;
+        }
+
+        public async Task<IReadOnlyCollection<FriendshipThreadDto>> GetChatThreadsAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            var friendships = await db.Friendships
+                .AsNoTracking()
+                .Where(f => f.Status == FriendshipStatus.Accepted && (f.RequesterId == userId || f.ReceiverId == userId))
+                .Select(f => new
+                {
+                    f.Id,
+                    f.CreatedAt,
+                    FriendId = f.RequesterId == userId ? f.ReceiverId : f.RequesterId,
+                    FriendFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
+                    FriendLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
+                    FriendEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email
+                })
+                .ToListAsync(cancellationToken);
+
+            if (friendships.Count == 0)
+            {
+                return Array.Empty<FriendshipThreadDto>();
+            }
+
+            var friendshipIds = friendships.Select(f => f.Id).ToList();
+
+            var latestMessages = await db.Messages
+                .AsNoTracking()
+                .Where(m => m.FriendshipId != null && friendshipIds.Contains(m.FriendshipId.Value))
+                .OrderByDescending(m => m.SentAt)
+                .Select(m => new
+                {
+                    FriendshipId = m.FriendshipId!.Value,
+                    m.Content,
+                    m.SentAt
+                })
+                .ToListAsync(cancellationToken);
+
+            var latestMessageLookup = latestMessages
+                .GroupBy(m => m.FriendshipId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            return friendships
+                .Select(f =>
+                {
+                    latestMessageLookup.TryGetValue(f.Id, out var lastMessage);
+
+                    return new FriendshipThreadDto
+                    {
+                        FriendshipId = f.Id,
+                        FriendId = f.FriendId,
+                        FriendFirstName = f.FriendFirstName,
+                        FriendLastName = f.FriendLastName,
+                        FriendEmail = f.FriendEmail,
+                        CreatedAt = f.CreatedAt,
+                        LastMessageContent = lastMessage?.Content,
+                        LastMessageSentAt = lastMessage?.SentAt
+                    };
+                })
+                .ToList();
+        }
+
+        public async Task<FriendshipThreadDto?> GetChatThreadAsync(Guid friendshipId, Guid userId, CancellationToken cancellationToken = default)
+        {
+            return await db.Friendships
+                .AsNoTracking()
+                .Where(f => f.Id == friendshipId
+                            && f.Status == FriendshipStatus.Accepted
+                            && (f.RequesterId == userId || f.ReceiverId == userId))
+                .Select(f => new FriendshipThreadDto
+                {
+                    FriendshipId = f.Id,
+                    FriendId = f.RequesterId == userId ? f.ReceiverId : f.RequesterId,
+                    FriendFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
+                    FriendLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
+                    FriendEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email,
+                    CreatedAt = f.CreatedAt
+                })
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<IReadOnlyCollection<FriendInfo>> GetFriendsAsync(Guid userId)

@@ -1,17 +1,16 @@
-using CalendarApp.Data;
-using CalendarApp.Data.Models;
+using AutoMapper;
 using CalendarApp.Models.Chat;
+using CalendarApp.Services.Friendships;
+using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.MessageSeens;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace CalendarApp.Controllers
 {
@@ -20,30 +19,23 @@ namespace CalendarApp.Controllers
     {
         private const int MessagesPageSize = 100;
 
-        private static readonly string[] AccentPalette =
-        [
-            "accent-blue",
-            "accent-purple",
-            "accent-green",
-            "accent-orange",
-            "accent-teal"
-        ];
-
-        private static readonly CultureInfo BulgarianCulture = CultureInfo.GetCultureInfo("bg-BG");
-
-        private readonly ApplicationDbContext db;
         private readonly UserManager<Contact> userManager;
+        private readonly IFriendshipService friendshipService;
+        private readonly IMeetingService meetingService;
         private readonly IMessageService messageService;
         private readonly IMessageSeenService messageSeenService;
         private readonly IUserPresenceTracker presenceTracker;
+        private readonly IMapper mapper;
 
-        public ChatController(ApplicationDbContext db, UserManager<Contact> userManager, IMessageService messageService, IMessageSeenService messageSeenService, IUserPresenceTracker presenceTracker)
+        public ChatController(UserManager<Contact> userManager, IFriendshipService friendshipService, IMeetingService meetingService, IMessageService messageService, IMessageSeenService messageSeenService, IUserPresenceTracker presenceTracker, IMapper mapper)
         {
-            this.db = db;
             this.userManager = userManager;
+            this.friendshipService = friendshipService;
+            this.meetingService = meetingService;
             this.messageService = messageService;
             this.messageSeenService = messageSeenService;
             this.presenceTracker = presenceTracker;
+            this.mapper = mapper;
         }
 
         [HttpGet]
@@ -57,134 +49,30 @@ namespace CalendarApp.Controllers
 
             var userId = currentUser.Id;
 
-            var friendships = await db.Friendships
-                .Where(f => f.Status == FriendshipStatus.Accepted
-                            && (f.RequesterId == userId || f.ReceiverId == userId))
-                .Select(f => new
-                {
-                    f.Id,
-                    f.CreatedAt,
-                    FriendId = f.RequesterId == userId ? f.ReceiverId : f.RequesterId,
-                    FriendFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
-                    FriendLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
-                    FriendEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email
-                })
-                .AsNoTracking()
-                .ToListAsync();
-
-            var friendshipIds = friendships.Select(f => f.Id).ToList();
-
-            var latestMessages = await db.Messages
-                .Where(m => m.FriendshipId != null && friendshipIds.Contains(m.FriendshipId.Value))
-                .OrderByDescending(m => m.SentAt)
-                .Select(m => new
-                {
-                    FriendshipId = m.FriendshipId!.Value,
-                    m.Content,
-                    m.SentAt
-                })
-                .AsNoTracking()
-                .ToListAsync();
-
-            var latestMessageLookup = latestMessages
-                .GroupBy(m => m.FriendshipId)
-                .ToDictionary(g => g.Key, g => g.First());
+            var friendshipThreadDtos = await friendshipService.GetChatThreadsAsync(userId, HttpContext.RequestAborted);
 
             var onlineUsers = await presenceTracker.GetOnlineUsersAsync();
             var onlineUserSet = new HashSet<Guid>(onlineUsers);
 
-            var friendshipThreads = friendships
-                .Select(f =>
-                {
-                    latestMessageLookup.TryGetValue(f.Id, out var lastMessage);
-                    var isOnline = onlineUserSet.Contains(f.FriendId);
+            var friendshipThreads = mapper.Map<List<ChatThreadViewModel>>(friendshipThreadDtos);
 
-                    return new ChatThreadViewModel
-                    {
-                        ThreadId = f.Id,
-                        Type = ThreadType.Friendship,
-                        FriendshipId = f.Id,
-                        FriendId = f.FriendId,
-                        DisplayName = BuildFullName(f.FriendFirstName, f.FriendLastName),
-                        SecondaryLabel = f.FriendEmail ?? string.Empty,
-                        AvatarInitials = BuildInitials(f.FriendFirstName, f.FriendLastName),
-                        AccentClass = GetAccentClass(f.FriendId),
-                        LastMessagePreview = lastMessage?.Content ?? string.Empty,
-                        LastMessageAt = lastMessage?.SentAt,
-                        LastActivityLabel = BuildActivityLabel(lastMessage?.SentAt),
-                        IsOnline = isOnline,
-                        CreatedAt = f.CreatedAt
-                    };
-                })
+            foreach (var thread in friendshipThreads)
+            {
+                if (thread.FriendId.HasValue)
+                {
+                    thread.IsOnline = onlineUserSet.Contains(thread.FriendId.Value);
+                }
+            }
+
+            friendshipThreads = friendshipThreads
                 .OrderByDescending(t => t.IsOnline)
                 .ThenByDescending(t => t.LastMessageAt ?? t.CreatedAt)
                 .ToList();
 
-            var meetings = await db.Meetings
-                .Where(m => m.CreatedById == userId
-                            || m.Participants.Any(p => p.ContactId == userId && p.Status == ParticipantStatus.Accepted))
-                .Select(m => new
-                {
-                    m.Id,
-                    m.Description,
-                    m.StartTime,
-                    m.Location,
-                    m.CreatedById,
-                    CreatorFirstName = m.CreatedBy.FirstName,
-                    CreatorLastName = m.CreatedBy.LastName,
-                    ParticipantCount = m.Participants.Count(p => p.Status == ParticipantStatus.Accepted)
-                })
-                .AsNoTracking()
-                .ToListAsync();
+            var meetingThreadDtos = await meetingService.GetChatThreadsAsync(userId, HttpContext.RequestAborted);
 
-            var meetingIds = meetings.Select(m => m.Id).ToList();
-
-            var latestMeetingMessages = await db.Messages
-                .Where(m => m.MeetingId != null && meetingIds.Contains(m.MeetingId.Value))
-                .OrderByDescending(m => m.SentAt)
-                .Select(m => new
-                {
-                    MeetingId = m.MeetingId!.Value,
-                    m.Content,
-                    m.SentAt
-                })
-                .AsNoTracking()
-                .ToListAsync();
-
-            var latestMeetingLookup = latestMeetingMessages
-                .GroupBy(m => m.MeetingId)
-                .ToDictionary(g => g.Key, g => g.First());
-
-            var meetingThreads = meetings
-                .Select(m =>
-                {
-                    latestMeetingLookup.TryGetValue(m.Id, out var lastMessage);
-                    var title = BuildMeetingTitle(m.Description, m.StartTime);
-                    var subtitle = BuildMeetingSubtitle(m.StartTime, m.Location);
-
-                    return new ChatThreadViewModel
-                    {
-                        ThreadId = m.Id,
-                        Type = ThreadType.Meeting,
-                        DisplayName = title,
-                        SecondaryLabel = subtitle,
-                        AvatarInitials = BuildInitials(title, null),
-                        AccentClass = GetAccentClass(m.Id),
-                        LastMessagePreview = lastMessage?.Content ?? string.Empty,
-                        LastMessageAt = lastMessage?.SentAt,
-                        LastActivityLabel = BuildActivityLabel(lastMessage?.SentAt),
-                        CreatedAt = m.StartTime,
-                        Meeting = new MeetingThreadMetadata
-                        {
-                            MeetingId = m.Id,
-                            Title = title,
-                            StartTimeUtc = DateTime.SpecifyKind(m.StartTime, DateTimeKind.Utc),
-                            Location = m.Location,
-                            IsOrganizer = m.CreatedById == userId,
-                            ParticipantCount = m.ParticipantCount
-                        }
-                    };
-                })
+            var meetingThreads = mapper.Map<List<ChatThreadViewModel>>(meetingThreadDtos, opts =>
+                opts.Items["CurrentUserId"] = userId)
                 .OrderByDescending(t => t.LastMessageAt ?? t.CreatedAt)
                 .ToList();
 
@@ -233,55 +121,21 @@ namespace CalendarApp.Controllers
 
             if (activeThreadType == ThreadType.Friendship && activeThreadId.HasValue)
             {
-                var messageItems = await db.Messages
-                    .Where(m => m.FriendshipId == activeThreadId.Value)
-                    .OrderByDescending(m => m.SentAt)
-                    .Take(MessagesPageSize)
-                    .Select(m => new ChatMessageViewModel
-                    {
-                        Id = m.Id,
-                        SenderId = m.SenderId,
-                        SenderName = BuildFullName(m.Sender.FirstName, m.Sender.LastName),
-                        Content = m.Content,
-                        SentAt = m.SentAt,
-                        FriendshipId = m.FriendshipId,
-                        MeetingId = m.MeetingId
-                    })
-                    .AsNoTracking()
-                    .ToListAsync();
+                var messageItems = await messageService.GetRecentFriendshipMessagesAsync(userId, activeThreadId.Value, MessagesPageSize, HttpContext.RequestAborted);
 
-                messages = messageItems
-                    .OrderBy(m => m.SentAt)
-                    .ToList();
+                messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
             }
             else if (activeThreadType == ThreadType.Meeting && activeThreadId.HasValue)
             {
-                var messageItems = await db.Messages
-                    .Where(m => m.MeetingId == activeThreadId.Value)
-                    .OrderByDescending(m => m.SentAt)
-                    .Take(MessagesPageSize)
-                    .Select(m => new ChatMessageViewModel
-                    {
-                        Id = m.Id,
-                        SenderId = m.SenderId,
-                        SenderName = BuildFullName(m.Sender.FirstName, m.Sender.LastName),
-                        Content = m.Content,
-                        SentAt = m.SentAt,
-                        FriendshipId = m.FriendshipId,
-                        MeetingId = m.MeetingId
-                    })
-                    .AsNoTracking()
-                    .ToListAsync();
+                var messageItems = await messageService.GetRecentMeetingMessagesAsync(userId, activeThreadId.Value, MessagesPageSize, HttpContext.RequestAborted);
 
-                messages = messageItems
-                    .OrderBy(m => m.SentAt)
-                    .ToList();
+                messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
             }
 
             var model = new ChatViewModel
             {
                 CurrentUserId = userId,
-                CurrentUserName = BuildFullName(currentUser.FirstName, currentUser.LastName),
+                CurrentUserName = ChatViewModelHelper.BuildFullName(currentUser.FirstName, currentUser.LastName),
                 FriendshipThreads = friendshipThreads,
                 MeetingThreads = meetingThreads,
                 ActiveThreadType = activeThreadType,
@@ -347,60 +201,31 @@ namespace CalendarApp.Controllers
 
         private async Task<IActionResult> BuildFriendshipThreadResponse(Guid friendshipId, Guid userId)
         {
-            var friendship = await db.Friendships
-                .Where(f => f.Id == friendshipId
-                            && f.Status == FriendshipStatus.Accepted
-                            && (f.RequesterId == userId || f.ReceiverId == userId))
-                .Select(f => new
-                {
-                    f.Id,
-                    FriendId = f.RequesterId == userId ? f.ReceiverId : f.RequesterId,
-                    FriendFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
-                    FriendLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
-                    FriendEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email
-                })
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            var friendship = await friendshipService.GetChatThreadAsync(friendshipId, userId, HttpContext.RequestAborted);
 
             if (friendship == null)
             {
                 return NotFound();
             }
 
-            var messageItems = await db.Messages
-                .Where(m => m.FriendshipId == friendship.Id)
-                .OrderByDescending(m => m.SentAt)
-                .Take(MessagesPageSize)
-                .Select(m => new ChatMessageViewModel
-                {
-                    Id = m.Id,
-                    SenderId = m.SenderId,
-                    SenderName = BuildFullName(m.Sender.FirstName, m.Sender.LastName),
-                    Content = m.Content,
-                    SentAt = m.SentAt,
-                    FriendshipId = m.FriendshipId,
-                    MeetingId = m.MeetingId
-                })
-                .AsNoTracking()
-                .ToListAsync();
+            var messageItems = await messageService.GetRecentFriendshipMessagesAsync(userId, friendshipId, MessagesPageSize, HttpContext.RequestAborted);
 
-            var messages = messageItems
-                .OrderBy(m => m.SentAt)
-                .ToList();
+            var messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
 
-            var isOnline = await presenceTracker.IsOnlineAsync(friendship.FriendId);
+            var thread = mapper.Map<ChatThreadViewModel>(friendship);
+            thread.IsOnline = await presenceTracker.IsOnlineAsync(friendship.FriendId);
 
             var response = new
             {
-                threadId = friendship.Id,
+                threadId = thread.ThreadId,
                 threadType = ThreadType.Friendship.ToString().ToLowerInvariant(),
-                friendshipId = friendship.Id,
-                displayName = BuildFullName(friendship.FriendFirstName, friendship.FriendLastName),
-                secondaryLabel = friendship.FriendEmail ?? string.Empty,
-                avatar = BuildInitials(friendship.FriendFirstName, friendship.FriendLastName),
-                accent = GetAccentClass(friendship.FriendId),
-                lastActivity = BuildActivityLabel(messages.LastOrDefault()?.SentAt),
-                isOnline,
+                friendshipId = thread.FriendshipId,
+                displayName = thread.DisplayName,
+                secondaryLabel = thread.SecondaryLabel,
+                avatar = thread.AvatarInitials,
+                accent = thread.AccentClass,
+                lastActivity = ChatViewModelHelper.BuildActivityLabel(messages.LastOrDefault()?.SentAt),
+                isOnline = thread.IsOnline,
                 messages = messages.Select(m => new
                 {
                     m.Id,
@@ -418,74 +243,32 @@ namespace CalendarApp.Controllers
 
         private async Task<IActionResult> BuildMeetingThreadResponse(Guid meetingId, Guid userId)
         {
-            var meeting = await db.Meetings
-                .Where(m => m.Id == meetingId
-                            && (m.CreatedById == userId
-                                || m.Participants.Any(p => p.ContactId == userId && p.Status == ParticipantStatus.Accepted)))
-                .Select(m => new
-                {
-                    m.Id,
-                    m.Description,
-                    m.StartTime,
-                    m.Location,
-                    m.CreatedById,
-                    CreatorFirstName = m.CreatedBy.FirstName,
-                    CreatorLastName = m.CreatedBy.LastName,
-                    ParticipantCount = m.Participants.Count(p => p.Status == ParticipantStatus.Accepted)
-                })
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            var meeting = await meetingService.GetChatThreadAsync(meetingId, userId, HttpContext.RequestAborted);
 
             if (meeting == null)
             {
                 return NotFound();
             }
 
-            var messageItems = await db.Messages
-                .Where(m => m.MeetingId == meeting.Id)
-                .OrderByDescending(m => m.SentAt)
-                .Take(MessagesPageSize)
-                .Select(m => new ChatMessageViewModel
-                {
-                    Id = m.Id,
-                    SenderId = m.SenderId,
-                    SenderName = BuildFullName(m.Sender.FirstName, m.Sender.LastName),
-                    Content = m.Content,
-                    SentAt = m.SentAt,
-                    FriendshipId = m.FriendshipId,
-                    MeetingId = m.MeetingId
-                })
-                .AsNoTracking()
-                .ToListAsync();
+            var messageItems = await messageService.GetRecentMeetingMessagesAsync(userId, meetingId, MessagesPageSize, HttpContext.RequestAborted);
 
-            var messages = messageItems
-                .OrderBy(m => m.SentAt)
-                .ToList();
+            var messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
 
-            var title = BuildMeetingTitle(meeting.Description, meeting.StartTime);
-            var subtitle = BuildMeetingSubtitle(meeting.StartTime, meeting.Location);
+            var thread = mapper.Map<ChatThreadViewModel>(meeting, opts =>
+                opts.Items["CurrentUserId"] = userId);
 
             var response = new
             {
-                threadId = meeting.Id,
+                threadId = thread.ThreadId,
                 threadType = ThreadType.Meeting.ToString().ToLowerInvariant(),
-                meetingId = meeting.Id,
+                meetingId = thread.Meeting?.MeetingId,
                 isOnline = false,
-                metadata = new
-                {
-                    meetingId = meeting.Id,
-                    title,
-                    subtitle,
-                    startTimeUtc = DateTime.SpecifyKind(meeting.StartTime, DateTimeKind.Utc),
-                    location = meeting.Location,
-                    isOrganizer = meeting.CreatedById == userId,
-                    participantCount = meeting.ParticipantCount
-                },
-                displayName = title,
-                secondaryLabel = subtitle,
-                avatar = BuildInitials(title, null),
-                accent = GetAccentClass(meeting.Id),
-                lastActivity = BuildActivityLabel(messages.LastOrDefault()?.SentAt),
+                metadata = thread.Meeting,
+                displayName = thread.DisplayName,
+                secondaryLabel = thread.SecondaryLabel,
+                avatar = thread.AvatarInitials,
+                accent = thread.AccentClass,
+                lastActivity = ChatViewModelHelper.BuildActivityLabel(messages.LastOrDefault()?.SentAt),
                 messages = messages.Select(m => new
                 {
                     m.Id,
@@ -501,75 +284,5 @@ namespace CalendarApp.Controllers
             return Json(response);
         }
 
-        private static string GetAccentClass(Guid key)
-        {
-            var index = Math.Abs(key.GetHashCode()) % AccentPalette.Length;
-            return AccentPalette[index];
-        }
-
-        private static string BuildInitials(string? firstName, string? lastName)
-        {
-            var builder = new StringBuilder();
-
-            if (!string.IsNullOrWhiteSpace(firstName))
-            {
-                builder.Append(char.ToUpper(firstName![0], BulgarianCulture));
-            }
-
-            if (!string.IsNullOrWhiteSpace(lastName))
-            {
-                builder.Append(char.ToUpper(lastName![0], BulgarianCulture));
-            }
-
-            return builder.Length == 0 ? "?" : builder.ToString();
-        }
-
-        private static string BuildFullName(string? firstName, string? lastName)
-        {
-            var first = firstName?.Trim() ?? string.Empty;
-            var last = lastName?.Trim() ?? string.Empty;
-
-            if (string.IsNullOrEmpty(first) && string.IsNullOrEmpty(last))
-            {
-                return string.Empty;
-            }
-
-            return string.Join(" ", new[] { first, last }.Where(part => !string.IsNullOrEmpty(part)));
-        }
-
-        private static string BuildActivityLabel(DateTime? sentAtUtc)
-        {
-            if (!sentAtUtc.HasValue)
-            {
-                return "Няма изпратени съобщения";
-            }
-
-            var localTime = DateTime.SpecifyKind(sentAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
-            return $"Последно съобщение: {localTime.ToString("g", BulgarianCulture)}";
-        }
-
-        private static string BuildMeetingTitle(string? description, DateTime startTimeUtc)
-        {
-            if (!string.IsNullOrWhiteSpace(description))
-            {
-                return description.Trim();
-            }
-
-            var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-            return $"Събитие на {local:dd MMM yyyy}";
-        }
-
-        private static string BuildMeetingSubtitle(DateTime startTimeUtc, string? location)
-        {
-            var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-            var formatted = local.ToString("g", BulgarianCulture);
-
-            if (string.IsNullOrWhiteSpace(location))
-            {
-                return formatted;
-            }
-
-            return $"{formatted} • {location.Trim()}";
-        }
     }
 }
