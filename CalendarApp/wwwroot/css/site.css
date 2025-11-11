@@ -21,42 +21,6 @@ body {
   margin-bottom: 60px;
 }
 
-.navbar-inner {
-  width: 100%;
-}
-
-@media (min-width: 992px) {
-  .navbar-inner {
-    width: auto;
-  }
-}
-
-.navbar-inner .navbar-nav,
-.navbar-inner .user-nav {
-  gap: 0.75rem;
-}
-
-@media (min-width: 992px) {
-  .navbar-inner .navbar-nav,
-  .navbar-inner .user-nav {
-    gap: 1.5rem;
-  }
-}
-
-.user-nav .nav-link {
-  display: inline-flex;
-  align-items: center;
-}
-
-.user-nav .form-inline {
-  align-items: center;
-}
-
-.bell-icon {
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;

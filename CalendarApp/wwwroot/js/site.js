@@ -11,12 +11,25 @@
 
     const itemsContainer = panel.querySelector('[data-notification-items]');
     const emptyState = panel.querySelector('[data-notification-empty]');
-    const countBadge = panel.querySelector('[data-notification-count]');
+    const countBadges = document.querySelectorAll('[data-notification-count]');
     const closeButton = panel.querySelector('[data-notification-close]');
     const recentUrl = panel.getAttribute('data-recent-url');
     const markUrl = panel.getAttribute('data-mark-url');
     const listUrl = panel.getAttribute('data-list-url');
     const antiForgeryToken = document.querySelector('#notification-antiforgery-form input[name="__RequestVerificationToken"]')?.value ?? '';
+    const notificationLinks = document.querySelectorAll('[data-notification-link]');
+    const listPathname = (() => {
+        if (!listUrl) {
+            return null;
+        }
+
+        try {
+            return new URL(listUrl, window.location.origin).pathname.toLowerCase();
+        } catch (error) {
+            console.warn('Failed to parse notifications list URL', error);
+            return null;
+        }
+    })();
 
     let hideTimeoutId = null;
 
@@ -56,13 +69,15 @@
     }
 
     function updateBadge(unreadCount) {
-        if (!countBadge) {
+        if (!countBadges || countBadges.length === 0) {
             return;
         }
 
         const value = Number.isFinite(unreadCount) ? unreadCount : 0;
-        countBadge.textContent = value.toString();
-        countBadge.classList.toggle('d-none', value === 0);
+        countBadges.forEach((badge) => {
+            badge.textContent = value.toString();
+            badge.classList.toggle('d-none', value === 0);
+        });
     }
 
     function updateEmptyState() {
@@ -192,6 +207,42 @@
         }
     }
 
+    function markAllLocalAsRead() {
+        if (!itemsContainer) {
+            return;
+        }
+
+        itemsContainer.querySelectorAll('.notification-preview-item').forEach((item) => {
+            item.classList.add('is-read');
+        });
+    }
+
+    function handleNotificationLinkInteractions() {
+        if (!notificationLinks || notificationLinks.length === 0) {
+            return;
+        }
+
+        notificationLinks.forEach((link) => {
+            link.addEventListener('click', () => {
+                markAllLocalAsRead();
+                updateBadge(0);
+            });
+        });
+    }
+
+    function isOnNotificationListPage() {
+        if (!listPathname) {
+            return false;
+        }
+
+        try {
+            return window.location.pathname.toLowerCase() === listPathname;
+        } catch (error) {
+            console.warn('Failed to determine current path', error);
+            return false;
+        }
+    }
+
     function bindInteractions() {
         panel.addEventListener('click', (event) => {
             const item = event.target.closest('.notification-preview-item');
@@ -294,5 +345,19 @@
     }
 
     bindInteractions();
-    loadInitialAsync().then(initialiseHub);
+    handleNotificationLinkInteractions();
+
+    if (isOnNotificationListPage()) {
+        markAllLocalAsRead();
+        updateBadge(0);
+    }
+
+    loadInitialAsync()
+        .then(() => {
+            if (isOnNotificationListPage()) {
+                markAllLocalAsRead();
+                updateBadge(0);
+            }
+        })
+        .finally(initialiseHub);
 })();
