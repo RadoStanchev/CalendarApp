@@ -1,9 +1,9 @@
 ﻿@model CalendarApp.Models.Account.RegisterViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Регистрация";
 }
 
-<h2 class="text-center mt-4">Create Account</h2>
+<h2 class="text-center mt-4">Създаване на акаунт</h2>
 
 <form asp-action="Register" method="post" class="w-50 mx-auto mt-4">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -38,10 +38,10 @@
         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary w-100">Register</button>
+    <button type="submit" class="btn btn-primary w-100">Регистрация</button>
 </form>
 
 <p class="text-center mt-3">
-    Already have an account?
-    <a asp-action="@nameof(AccountController.Login)">Login</a>
+    Вече имате акаунт?
+    <a asp-action="@nameof(AccountController.Login)">Вход</a>
 </p>

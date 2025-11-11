@@ -89,7 +89,7 @@ namespace CalendarApp.Controllers
 
         private async Task<Guid> GetCurrentUserIdAsync()
         {
-            var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("User not found.");
+            var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("Потребителят не е намерен.");
             return user.Id;
         }
     }

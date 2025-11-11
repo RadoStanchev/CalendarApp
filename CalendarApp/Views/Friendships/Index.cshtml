@@ -1,7 +1,7 @@
 @model CalendarApp.Models.Friendships.FriendshipsDashboardViewModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
-    ViewData["Title"] = "Community";
+    ViewData["Title"] = "Общност";
     var antiForgeryTokens = Antiforgery.GetAndStoreTokens(Context);
     string BuildInitials(string name)
     {
@@ -23,12 +23,12 @@
 <div class="friendship-page">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h1 class="h3 fw-bold mb-1">Stay connected</h1>
-            <p class="text-muted mb-0">Manage your friend requests, contacts and discover new people.</p>
+            <h1 class="h3 fw-bold mb-1">Поддържайте връзка</h1>
+            <p class="text-muted mb-0">Управлявайте поканите си, контактите и откривайте нови хора.</p>
         </div>
         <div class="text-end">
             <span class="badge rounded-pill bg-primary-subtle text-primary fs-6 px-3 py-2 shadow-sm">
-                @Model.TotalFriends friends
+                @Model.TotalFriends @(Model.TotalFriends == 1 ? "приятел" : "приятели")
             </span>
         </div>
     </div>
@@ -37,7 +37,7 @@
     {
         <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
             <span>@message</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Затвори"></button>
         </div>
     }
 
@@ -50,13 +50,13 @@
              data-accept-url="@Url.Action("Accept")"
              data-decline-url="@Url.Action("Decline")"
              data-cancel-url="@Url.Action("Cancel")">
-            <label for="friend-search-input" class="form-label text-uppercase small text-muted mb-2">Find people</label>
+            <label for="friend-search-input" class="form-label text-uppercase small text-muted mb-2">Намерете хора</label>
             <div class="input-group">
                 <span class="input-group-text" id="friend-search-addon">🔍</span>
                 <input type="search"
                        class="form-control"
                        id="friend-search-input"
-                       placeholder="Search by name or email"
+                       placeholder="Търсене по име или имейл"
                        autocomplete="off"
                        data-friend-search
                        aria-describedby="friend-search-addon" />
@@ -72,12 +72,12 @@
             <div class="friendship-card" data-friend-toggle-root>
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
                     <div>
-                        <h2 class="h5 fw-semibold mb-1">Grow your network</h2>
-                        <p class="text-muted small mb-0">Discover new connections and stay on top of your invites.</p>
+                        <h2 class="h5 fw-semibold mb-1">Разширете мрежата си</h2>
+                        <p class="text-muted small mb-0">Откривайте нови контакти и следете поканите си.</p>
                     </div>
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Friendship filters">
-                        <button type="button" class="btn btn-outline-primary active" data-friend-panel-toggle="suggestions">Suggestions</button>
-                        <button type="button" class="btn btn-outline-primary" data-friend-panel-toggle="requests">Requests</button>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Филтри за приятели">
+                        <button type="button" class="btn btn-outline-primary active" data-friend-panel-toggle="suggestions">Предложения</button>
+                        <button type="button" class="btn btn-outline-primary" data-friend-panel-toggle="requests">Покани</button>
                     </div>
                 </div>
 
@@ -86,7 +86,7 @@
                     {
                         <div class="empty-state text-center py-5">
                             <div class="avatar avatar-lg mx-auto mb-3">🤝</div>
-                            <p class="text-muted mb-0">We will start showing suggestions once you connect with more people.</p>
+                            <p class="text-muted mb-0">Ще започнем да показваме предложения, щом се свържете с повече хора.</p>
                         </div>
                     }
                     else
@@ -99,12 +99,12 @@
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold">@suggestion.DisplayName</div>
                                         <div class="text-muted small">@suggestion.Email</div>
-                                        <div class="text-muted xsmall">@suggestion.MutualFriendCount mutual @(suggestion.MutualFriendCount == 1 ? "friend" : "friends")</div>
+                                        <div class="text-muted xsmall">@suggestion.MutualFriendCount @(suggestion.MutualFriendCount == 1 ? "общ приятел" : "общи приятели")</div>
                                     </div>
                                     <form asp-action="Send" method="post" class="ms-3">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="receiverId" value="@suggestion.UserId" />
-                                        <button type="submit" class="btn btn-outline-primary">Add friend</button>
+                                        <button type="submit" class="btn btn-outline-primary">Добави приятел</button>
                                     </form>
                                 </div>
                             </div>
@@ -114,10 +114,10 @@
 
                 <div class="friendship-panel d-none" data-friend-panel="requests">
                     <div class="requests-section">
-                        <h3 class="h6 text-uppercase text-muted mb-2">Incoming</h3>
+                        <h3 class="h6 text-uppercase text-muted mb-2">Входящи</h3>
                         @if (!Model.IncomingRequests.Any())
                         {
-                            <p class="text-muted small">No pending requests.</p>
+                            <p class="text-muted small">Няма чакащи покани.</p>
                         }
                         else
                         {
@@ -129,19 +129,19 @@
                                         <div class="flex-grow-1">
                                             <div class="fw-semibold">@request.DisplayName</div>
                                             <div class="text-muted small">@request.Email</div>
-                                            <div class="text-muted xsmall">Requested @request.RequestedOn.ToLocalTime().ToString("g")</div>
+                                            <div class="text-muted xsmall">Заявка: @request.RequestedOn.ToLocalTime().ToString("g")</div>
                                         </div>
                                     </div>
                                     <div class="mt-3 d-flex gap-2">
                                         <form asp-action="Accept" method="post" class="flex-fill">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                            <button type="submit" class="btn btn-outline-primary w-100">Confirm</button>
+                                            <button type="submit" class="btn btn-outline-primary w-100">Потвърди</button>
                                         </form>
                                         <form asp-action="Decline" method="post" class="flex-fill">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                            <button type="submit" class="btn btn-outline-secondary w-100">Ignore</button>
+                                            <button type="submit" class="btn btn-outline-secondary w-100">Игнорирай</button>
                                         </form>
                                     </div>
                                 </div>
@@ -150,10 +150,10 @@
                     </div>
 
                     <div class="requests-section mt-4">
-                        <h3 class="h6 text-uppercase text-muted mb-2">Sent</h3>
+                        <h3 class="h6 text-uppercase text-muted mb-2">Изпратени</h3>
                         @if (!Model.SentRequests.Any())
                         {
-                            <p class="text-muted small">You have not sent any requests recently.</p>
+                            <p class="text-muted small">Не сте изпратили покани напоследък.</p>
                         }
                         else
                         {
@@ -165,14 +165,14 @@
                                         <div class="flex-grow-1">
                                             <div class="fw-semibold">@request.DisplayName</div>
                                             <div class="text-muted small">@request.Email</div>
-                                            <div class="text-muted xsmall">Sent @request.RequestedOn.ToLocalTime().ToString("g")</div>
+                                            <div class="text-muted xsmall">Изпратено: @request.RequestedOn.ToLocalTime().ToString("g")</div>
                                         </div>
                                     </div>
                                     <div class="mt-3">
                                         <form asp-action="Cancel" method="post">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                            <button type="submit" class="btn btn-outline-danger w-100">Cancel request</button>
+                                            <button type="submit" class="btn btn-outline-danger w-100">Отмени поканата</button>
                                         </form>
                                     </div>
                                 </div>
@@ -185,12 +185,12 @@
 
         <div class="col-12 col-lg-7">
             <div class="friendship-card friendship-card--friends h-100">
-                <h2 class="h5 fw-semibold mb-3">Your friends</h2>
+                <h2 class="h5 fw-semibold mb-3">Вашите приятели</h2>
 
                 <div class="friend-list mt-4 flex-grow-1">
                     @if (!Model.Friends.Any())
                     {
-                        <p class="text-muted small mb-0">You have no friends yet. Start by sending a request!</p>
+                        <p class="text-muted small mb-0">Все още нямате приятели. Започнете, като изпратите покана!</p>
                     }
                     else
                     {
@@ -206,7 +206,7 @@
                                     <form asp-action="Remove" method="post" class="ms-auto">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="friendId" value="@friend.Id" />
-                                        <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                        <button type="submit" class="btn btn-outline-danger">Премахни</button>
                                     </form>
                                 </div>
                             </div>

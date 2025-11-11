@@ -178,7 +178,7 @@
                 }
             });
         } catch (error) {
-            console.warn('Failed to mark conversation as read:', error);
+            console.warn('Неуспешно отбелязване на разговора като прочетен:', error);
         }
     };
 
@@ -247,7 +247,7 @@
                 minute: "2-digit"
             }).format(date);
         } catch (error) {
-            console.error("Failed to format message time", error);
+            console.error("Грешка при форматиране на часа на съобщението", error);
             return "";
         }
     };
@@ -531,7 +531,7 @@
 
             await markThreadAsRead(threadId, threadType);
         } catch (error) {
-            console.error("Failed to load conversation:", error);
+            console.error("Неуспешно зареждане на разговора:", error);
             currentThreadId = previousThreadId;
             currentThreadType = previousThreadType;
             messagesContainer.dataset.threadId = previousThreadId ?? "";
@@ -651,7 +651,7 @@
             }
         })
         .catch(error => {
-            console.error("Failed to connect to chat hub:", error);
+            console.error("Неуспешно свързване с чат хъба:", error);
             const errorAlert = document.createElement("div");
             errorAlert.className = "alert alert-danger";
             errorAlert.textContent = "Неуспешно свързване с чат услугата. Опитайте по-късно.";

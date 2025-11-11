@@ -160,7 +160,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(p => new NotificationCreateDto
                 {
                     UserId = p.ContactId,
-                    Message = $"{creatorName} invited you to a meeting on {startTime}{locationSuffix}.",
+                    Message = $"{creatorName} ви покани на среща на {startTime}{locationSuffix}.",
                     Type = NotificationType.Invitation
                 })
                 .ToList();
@@ -461,7 +461,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(id => new NotificationCreateDto
                 {
                     UserId = id,
-                    Message = $"{updaterName} added you to a meeting on {startTime}{locationSuffix}.",
+                    Message = $"{updaterName} ви добави към среща на {startTime}{locationSuffix}.",
                     Type = NotificationType.Invitation
                 })
                 .ToList();
@@ -478,7 +478,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(id => new NotificationCreateDto
                 {
                     UserId = id,
-                    Message = $"{updaterName} updated the meeting on {startTime}{locationSuffix}.",
+                    Message = $"{updaterName} актуализира срещата на {startTime}{locationSuffix}.",
                     Type = NotificationType.Info
                 })
                 .ToList();
@@ -516,7 +516,7 @@ namespace CalendarApp.Services.Meetings
         {
             if (categoryId == Guid.Empty)
             {
-                throw new ArgumentException("A category is required.", nameof(categoryId));
+                throw new ArgumentException("Изисква се категория.", nameof(categoryId));
             }
 
             var exists = await db.Categories
@@ -525,7 +525,7 @@ namespace CalendarApp.Services.Meetings
 
             if (!exists)
             {
-                throw new ArgumentException("The selected category does not exist.", nameof(categoryId));
+                throw new ArgumentException("Избраната категория не съществува.", nameof(categoryId));
             }
 
             return categoryId;
@@ -536,7 +536,7 @@ namespace CalendarApp.Services.Meetings
             var parts = new[] { firstName, lastName }
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .ToArray();
-            return parts.Length > 0 ? string.Join(" ", parts) : "Unknown";
+            return parts.Length > 0 ? string.Join(" ", parts) : "Неизвестен";
         }
 
         private async Task<string> GetUserDisplayNameAsync(Guid userId)
@@ -557,7 +557,7 @@ namespace CalendarApp.Services.Meetings
                 return string.Empty;
             }
 
-            return $" at {location.Trim()}";
+            return $" на {location.Trim()}";
         }
     }
 }
