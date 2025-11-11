@@ -155,6 +155,10 @@
                     {
                         var isActive = Model.ActiveThreadType == ThreadType.Friendship && Model.ActiveThreadId == thread.ThreadId;
                         var fetchUrl = Url.Action("Thread", "Chat", new { id = thread.ThreadId, type = ThreadType.Friendship });
+                        var lastActivity = thread.LastMessageAt ?? thread.CreatedAt;
+                        var lastActivityIso = lastActivity.HasValue
+                            ? DateTime.SpecifyKind(lastActivity.Value, DateTimeKind.Utc).ToString("o")
+                            : string.Empty;
                         <button class="messenger-thread@(thread.IsOnline ? " messenger-thread--online" : string.Empty) @(isActive ? "active" : string.Empty)" type="button"
                                 data-thread-id="@thread.ThreadId"
                                 data-thread-type="friendship"
@@ -165,6 +169,7 @@
                                 data-avatar="@thread.AvatarInitials"
                                 data-accent="@thread.AccentClass"
                                 data-last-message="@thread.LastMessagePreview"
+                                data-last-activity="@lastActivityIso"
                                 data-is-online="@(thread.IsOnline ? "true" : "false")"
                                 data-friend-id="@(thread.FriendId?.ToString() ?? string.Empty)">
                             <span class="messenger-avatar @thread.AccentClass">@thread.AvatarInitials</span>

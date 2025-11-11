@@ -33,6 +33,7 @@
     const getCurrentUserId = () => messagesContainer.dataset.currentUserId ?? "";
 
     const threadButtons = () => Array.from(document.querySelectorAll(".messenger-thread"));
+    const friendThreadContainer = document.getElementById("chatThreads");
 
     const findThreadButton = (threadId, threadType) => {
         const normalisedType = normaliseThreadType(threadType);
@@ -44,6 +45,44 @@
 
     const sidebarSections = Array.from(document.querySelectorAll('[data-thread-section]'));
     const sidebarToggleButtons = Array.from(document.querySelectorAll('[data-thread-filter]'));
+
+    const parseActivityTimestamp = (value) => {
+        if (!value) {
+            return 0;
+        }
+
+        const time = Date.parse(value);
+        return Number.isNaN(time) ? 0 : time;
+    };
+
+    const reorderFriendThreads = () => {
+        if (!friendThreadContainer) {
+            return;
+        }
+
+        const buttons = Array.from(friendThreadContainer.querySelectorAll('.messenger-thread[data-thread-type]'))
+            .filter(button => normaliseThreadType(button.dataset.threadType) === THREAD_TYPES.FRIENDSHIP);
+
+        if (buttons.length < 2) {
+            return;
+        }
+
+        buttons.sort((a, b) => {
+            const onlineA = a.dataset.isOnline === "true" ? 1 : 0;
+            const onlineB = b.dataset.isOnline === "true" ? 1 : 0;
+
+            if (onlineA !== onlineB) {
+                return onlineB - onlineA;
+            }
+
+            const activityA = parseActivityTimestamp(a.dataset.lastActivity);
+            const activityB = parseActivityTimestamp(b.dataset.lastActivity);
+
+            return activityB - activityA;
+        });
+
+        buttons.forEach(button => friendThreadContainer.appendChild(button));
+    };
 
     const updateThreadOnlineState = (button, isOnline) => {
         if (!button) {
@@ -69,6 +108,10 @@
             const statusText = secondary || (isOnline ? "Онлайн" : status);
             activeContactStatus.textContent = statusText;
             activeContactStatus.classList.toggle("text-muted", !statusText);
+        }
+
+        if (normaliseThreadType(button.dataset.threadType) === THREAD_TYPES.FRIENDSHIP) {
+            reorderFriendThreads();
         }
     };
 
@@ -243,11 +286,11 @@
         }
 
         const preview = button.querySelector(".messenger-thread__preview");
+        const sentAt = message.sentAt ? new Date(message.sentAt) : new Date();
+
         if (preview) {
             preview.textContent = message.content || "";
         }
-
-        const sentAt = message.sentAt ? new Date(message.sentAt) : new Date();
 
         const meta = button.querySelector(".messenger-thread__meta");
         if (meta) {
@@ -256,6 +299,11 @@
 
         button.dataset.lastMessage = message.content || "";
         button.dataset.status = formatRelativeTime(sentAt);
+        button.dataset.lastActivity = sentAt.toISOString();
+
+        if (normaliseThreadType(button.dataset.threadType) === THREAD_TYPES.FRIENDSHIP) {
+            reorderFriendThreads();
+        }
     };
 
     const applyActiveThread = (button) => {
@@ -564,7 +612,9 @@
 
         document
             .querySelectorAll(`.messenger-thread[data-friend-id="${friendId}"]`)
-            .forEach(button => updateThreadOnlineState(button, isOnline));
+            .forEach(button => {
+                updateThreadOnlineState(button, isOnline);
+            });
     });
 
     connection.onreconnecting(() => {
