@@ -78,7 +78,7 @@ namespace CalendarApp.Services.Categories
             return true;
         }
 
-        public async Task<CategoryDeletionResult> DeleteAsync(Guid categoryId)
+        public async Task<bool> DeleteAsync(Guid categoryId)
         {
             var category = await db.Categories
                 .Include(c => c.Meetings)
@@ -86,15 +86,13 @@ namespace CalendarApp.Services.Categories
 
             if (category == null)
             {
-                return CategoryDeletionResult.Missing();
+                return false;
             }
-
-            var meetingsUpdated = 0;
 
             db.Categories.Remove(category);
             await db.SaveChangesAsync();
 
-            return CategoryDeletionResult.Success(meetingsUpdated);
+            return true;
         }
 
         public async Task<bool> IsInUseAsync(Guid categoryId)
