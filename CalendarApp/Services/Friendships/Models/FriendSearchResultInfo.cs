@@ -13,5 +13,9 @@ namespace CalendarApp.Services.Friendships.Models
         public string Email { get; set; } = string.Empty;
 
         public FriendRelationshipStatus RelationshipStatus { get; set; }
+
+        public Guid? FriendshipId { get; set; }
+
+        public bool IsIncomingRequest { get; set; }
     }
 }

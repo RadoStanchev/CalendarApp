@@ -78,12 +78,12 @@ namespace CalendarApp.Controllers
         public async Task<IActionResult> Send(Guid receiverId)
         {
             var userId = await GetCurrentUserIdAsync();
-            var result = await friendshipService.SendFriendRequestAsync(userId, receiverId);
+            var (result, friendshipId) = await friendshipService.SendFriendRequestAsync(userId, receiverId);
             var message = result ? "Friend request sent." : "Unable to send friend request.";
 
             if (IsJsonRequest())
             {
-                return Json(new { success = result, message });
+                return Json(new { success = result, message, friendshipId });
             }
 
             TempData["FriendshipMessage"] = message;
@@ -96,7 +96,14 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
             var result = await friendshipService.AcceptFriendRequestAsync(friendshipId, userId);
-            TempData["FriendshipMessage"] = result ? "Friend request accepted." : "Unable to accept this request.";
+            var message = result ? "Friend request accepted." : "Unable to accept this request.";
+
+            if (IsJsonRequest())
+            {
+                return Json(new { success = result, message });
+            }
+
+            TempData["FriendshipMessage"] = message;
             return RedirectToAction(nameof(Index));
         }
 
@@ -106,7 +113,14 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
             var result = await friendshipService.DeclineFriendRequestAsync(friendshipId, userId);
-            TempData["FriendshipMessage"] = result ? "Friend request declined." : "Unable to decline this request.";
+            var message = result ? "Friend request declined." : "Unable to decline this request.";
+
+            if (IsJsonRequest())
+            {
+                return Json(new { success = result, message });
+            }
+
+            TempData["FriendshipMessage"] = message;
             return RedirectToAction(nameof(Index));
         }
 
@@ -116,7 +130,14 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
             var result = await friendshipService.CancelFriendRequestAsync(friendshipId, userId);
-            TempData["FriendshipMessage"] = result ? "Friend request cancelled." : "Unable to cancel this request.";
+            var message = result ? "Friend request cancelled." : "Unable to cancel this request.";
+
+            if (IsJsonRequest())
+            {
+                return Json(new { success = result, message });
+            }
+
+            TempData["FriendshipMessage"] = message;
             return RedirectToAction(nameof(Index));
         }
 
@@ -132,7 +153,9 @@ namespace CalendarApp.Controllers
                 id = result.UserId,
                 displayName = FormatName(result.FirstName, result.LastName),
                 email = result.Email,
-                status = result.RelationshipStatus.ToString()
+                status = result.RelationshipStatus.ToString(),
+                friendshipId = result.FriendshipId,
+                isIncomingRequest = result.IsIncomingRequest
             });
 
             return Json(payload);
@@ -144,7 +167,14 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
             var result = await friendshipService.RemoveFriendAsync(userId, friendId);
-            TempData["FriendshipMessage"] = result ? "Friend removed." : "Unable to remove friend.";
+            var message = result ? "Friend removed." : "Unable to remove friend.";
+
+            if (IsJsonRequest())
+            {
+                return Json(new { success = result, message });
+            }
+
+            TempData["FriendshipMessage"] = message;
             return RedirectToAction(nameof(Index));
         }
 

@@ -82,24 +82,91 @@
             }
 
             const item = document.createElement('div');
-            item.className = 'list-group-item d-flex align-items-start justify-content-between gap-3';
+            item.className = 'list-group-item';
 
             const content = document.createElement('div');
+            content.className = 'friendship-search-details';
             content.innerHTML = `
                 <div class="fw-semibold">${suggestion.displayName ?? ''}</div>
                 <div class="text-muted small">${suggestion.email ?? ''}</div>
             `;
             item.appendChild(content);
 
-            if (suggestion.status && suggestion.status !== 'None') {
-                item.appendChild(buildStatusBadge(suggestion.status));
-            } else {
-                const actionButton = document.createElement('button');
-                actionButton.type = 'button';
-                actionButton.className = 'btn btn-sm btn-primary';
-                actionButton.textContent = 'Add friend';
-                actionButton.addEventListener('click', () => handlers.onSend?.(suggestion, actionButton));
-                item.appendChild(actionButton);
+            const actionContainer = document.createElement('div');
+            actionContainer.className = 'friendship-search-actions d-flex flex-wrap align-items-center gap-2 ms-sm-auto';
+
+            const status = suggestion.status ?? 'None';
+            const hasStatus = status && status !== 'None';
+            const statusBadge = hasStatus ? buildStatusBadge(status) : null;
+
+            switch (status) {
+                case 'Friend':
+                    if (statusBadge) {
+                        actionContainer.appendChild(statusBadge);
+                    }
+                    if (typeof handlers?.onRemove === 'function') {
+                        const removeButton = document.createElement('button');
+                        removeButton.type = 'button';
+                        removeButton.className = 'btn btn-sm btn-outline-danger';
+                        removeButton.textContent = 'Remove friend';
+                        removeButton.addEventListener('click', () => handlers.onRemove(suggestion, removeButton));
+                        actionContainer.appendChild(removeButton);
+                    }
+                    break;
+                case 'IncomingRequest':
+                    if (statusBadge) {
+                        actionContainer.appendChild(statusBadge);
+                    }
+                    if (typeof handlers?.onAccept === 'function' && typeof handlers?.onDecline === 'function' && suggestion.friendshipId) {
+                        const confirmButton = document.createElement('button');
+                        confirmButton.type = 'button';
+                        confirmButton.className = 'btn btn-sm btn-primary';
+                        confirmButton.textContent = 'Confirm';
+
+                        const ignoreButton = document.createElement('button');
+                        ignoreButton.type = 'button';
+                        ignoreButton.className = 'btn btn-sm btn-outline-secondary';
+                        ignoreButton.textContent = 'Ignore';
+
+                        confirmButton.addEventListener('click', () => handlers.onAccept(suggestion, { confirmButton, ignoreButton }));
+                        ignoreButton.addEventListener('click', () => handlers.onDecline(suggestion, { confirmButton, ignoreButton }));
+
+                        actionContainer.appendChild(confirmButton);
+                        actionContainer.appendChild(ignoreButton);
+                    }
+                    break;
+                case 'OutgoingRequest':
+                    if (statusBadge) {
+                        actionContainer.appendChild(statusBadge);
+                    }
+                    if (typeof handlers?.onCancel === 'function' && suggestion.friendshipId) {
+                        const cancelButton = document.createElement('button');
+                        cancelButton.type = 'button';
+                        cancelButton.className = 'btn btn-sm btn-outline-danger';
+                        cancelButton.textContent = 'Cancel request';
+                        cancelButton.addEventListener('click', () => handlers.onCancel(suggestion, cancelButton));
+                        actionContainer.appendChild(cancelButton);
+                    }
+                    break;
+                case 'Blocked':
+                    if (statusBadge) {
+                        actionContainer.appendChild(statusBadge);
+                    }
+                    break;
+                default:
+                    if (typeof handlers?.onSend === 'function') {
+                        const actionButton = document.createElement('button');
+                        actionButton.type = 'button';
+                        actionButton.className = 'btn btn-sm btn-primary';
+                        actionButton.textContent = 'Add friend';
+                        actionButton.addEventListener('click', () => handlers.onSend(suggestion, actionButton));
+                        actionContainer.appendChild(actionButton);
+                    }
+                    break;
+            }
+
+            if (actionContainer.childElementCount > 0) {
+                item.appendChild(actionContainer);
             }
 
             resultsContainer.appendChild(item);
@@ -115,6 +182,10 @@
 
         const searchUrl = root.dataset.searchUrl;
         const requestUrl = root.dataset.requestUrl;
+        const removeUrl = root.dataset.removeUrl;
+        const acceptUrl = root.dataset.acceptUrl;
+        const declineUrl = root.dataset.declineUrl;
+        const cancelUrl = root.dataset.cancelUrl;
         const searchInput = root.querySelector('[data-friend-search]');
         const resultsContainer = root.querySelector('[data-friend-search-results]');
         const feedbackElement = root.querySelector('[data-friend-search-feedback]');
@@ -126,14 +197,79 @@
 
         let queryToken = 0;
 
-        async function sendFriendRequest(suggestion, button) {
-            if (!requestUrl || !suggestion?.id) {
+        let latestResults = [];
+        const actionHandlers = {};
+
+        function refreshResults() {
+            renderResults(resultsContainer, latestResults, actionHandlers);
+        }
+
+        function updateSuggestion(suggestion, status, friendshipId, isIncoming) {
+            if (!suggestion) {
                 return;
             }
 
-            const token = antiForgeryToken;
-            if (!token) {
-                showFeedback(feedbackElement, 'We could not validate your request. Please refresh and try again.', 'danger');
+            suggestion.status = status ?? 'None';
+            suggestion.friendshipId = friendshipId ?? null;
+            suggestion.isIncomingRequest = Boolean(isIncoming);
+            refreshResults();
+        }
+
+        async function postAction(url, payload, options = {}) {
+            const { successMessage, errorMessage } = options;
+
+            if (!url) {
+                return {
+                    success: false,
+                    message: errorMessage ?? 'This action is not available right now.'
+                };
+            }
+
+            if (!antiForgeryToken) {
+                return {
+                    success: false,
+                    message: 'We could not validate your request. Please refresh and try again.'
+                };
+            }
+
+            const body = new URLSearchParams();
+            Object.entries(payload ?? {}).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    body.append(key, value.toString());
+                }
+            });
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': antiForgeryToken
+                    },
+                    body
+                });
+
+                if (!response.ok) {
+                    throw new Error('Request failed');
+                }
+
+                const data = await response.json();
+                const success = Boolean(data?.success);
+                const message = data?.message ?? (success ? successMessage : errorMessage) ?? '';
+                return { ...data, success, message };
+            } catch (error) {
+                console.warn('Friendship action failed', error);
+                return {
+                    success: false,
+                    message: errorMessage ?? 'Unable to complete this action. Please try again.'
+                };
+            }
+        }
+
+        async function sendFriendRequest(suggestion, button) {
+            if (!button || !suggestion?.id) {
                 return;
             }
 
@@ -141,45 +277,160 @@
             const originalLabel = button.textContent;
             button.textContent = 'Sending…';
 
-            try {
-                const response = await fetch(requestUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'RequestVerificationToken': token
-                    },
-                    body: new URLSearchParams({ receiverId: suggestion.id })
-                });
+            const result = await postAction(requestUrl, { receiverId: suggestion.id }, {
+                successMessage: 'Friend request sent.',
+                errorMessage: 'Unable to send friend request.'
+            });
 
-                if (!response.ok) {
-                    throw new Error('Request failed');
-                }
-
-                const payload = await response.json();
-                if (payload?.success) {
-                    showFeedback(feedbackElement, payload?.message ?? 'Friend request sent.', 'success');
-                    const badge = buildStatusBadge('OutgoingRequest');
-                    button.replaceWith(badge);
-                } else {
-                    showFeedback(feedbackElement, payload?.message ?? 'Unable to send friend request.', 'danger');
-                    button.disabled = false;
-                    button.textContent = originalLabel;
-                }
-            } catch (error) {
-                console.warn('Failed to send friend request', error);
-                showFeedback(feedbackElement, 'Unable to send friend request right now.', 'danger');
+            if (result.success) {
+                showFeedback(feedbackElement, result.message, 'success');
+                updateSuggestion(suggestion, 'OutgoingRequest', result.friendshipId ?? suggestion.friendshipId ?? null, false);
+            } else {
+                showFeedback(feedbackElement, result.message, 'danger');
                 button.disabled = false;
                 button.textContent = originalLabel;
             }
         }
+
+        async function removeFriend(suggestion, button) {
+            if (!button || !suggestion?.id) {
+                return;
+            }
+
+            const originalLabel = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Removing…';
+
+            const result = await postAction(removeUrl, { friendId: suggestion.id }, {
+                successMessage: 'Friend removed.',
+                errorMessage: 'Unable to remove friend.'
+            });
+
+            if (result.success) {
+                showFeedback(feedbackElement, result.message, 'success');
+                updateSuggestion(suggestion, 'None', null, false);
+            } else {
+                showFeedback(feedbackElement, result.message, 'danger');
+                button.disabled = false;
+                button.textContent = originalLabel;
+            }
+        }
+
+        async function cancelFriendRequest(suggestion, button) {
+            if (!button || !suggestion?.friendshipId) {
+                showFeedback(feedbackElement, 'We could not find this request. Please refresh and try again.', 'danger');
+                return;
+            }
+
+            const originalLabel = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Cancelling…';
+
+            const result = await postAction(cancelUrl, { friendshipId: suggestion.friendshipId }, {
+                successMessage: 'Friend request cancelled.',
+                errorMessage: 'Unable to cancel this request.'
+            });
+
+            if (result.success) {
+                showFeedback(feedbackElement, result.message, 'success');
+                updateSuggestion(suggestion, 'None', null, false);
+            } else {
+                showFeedback(feedbackElement, result.message, 'danger');
+                button.disabled = false;
+                button.textContent = originalLabel;
+            }
+        }
+
+        async function acceptFriendRequest(suggestion, controls) {
+            if (!suggestion?.friendshipId) {
+                showFeedback(feedbackElement, 'We could not find this request. Please refresh and try again.', 'danger');
+                return;
+            }
+
+            const confirmButton = controls?.confirmButton;
+            const ignoreButton = controls?.ignoreButton;
+            const originalConfirmLabel = confirmButton?.textContent ?? '';
+
+            if (confirmButton) {
+                confirmButton.disabled = true;
+                confirmButton.textContent = 'Confirming…';
+            }
+
+            if (ignoreButton) {
+                ignoreButton.disabled = true;
+            }
+
+            const result = await postAction(acceptUrl, { friendshipId: suggestion.friendshipId }, {
+                successMessage: 'Friend request accepted.',
+                errorMessage: 'Unable to accept this request.'
+            });
+
+            if (result.success) {
+                showFeedback(feedbackElement, result.message, 'success');
+                updateSuggestion(suggestion, 'Friend', null, false);
+            } else {
+                showFeedback(feedbackElement, result.message, 'danger');
+                if (confirmButton) {
+                    confirmButton.disabled = false;
+                    confirmButton.textContent = originalConfirmLabel;
+                }
+                if (ignoreButton) {
+                    ignoreButton.disabled = false;
+                }
+            }
+        }
+
+        async function declineFriendRequest(suggestion, controls) {
+            if (!suggestion?.friendshipId) {
+                showFeedback(feedbackElement, 'We could not find this request. Please refresh and try again.', 'danger');
+                return;
+            }
+
+            const ignoreButton = controls?.ignoreButton;
+            const confirmButton = controls?.confirmButton;
+            const originalIgnoreLabel = ignoreButton?.textContent ?? '';
+
+            if (ignoreButton) {
+                ignoreButton.disabled = true;
+                ignoreButton.textContent = 'Ignoring…';
+            }
+
+            if (confirmButton) {
+                confirmButton.disabled = true;
+            }
+
+            const result = await postAction(declineUrl, { friendshipId: suggestion.friendshipId }, {
+                successMessage: 'Friend request declined.',
+                errorMessage: 'Unable to decline this request.'
+            });
+
+            if (result.success) {
+                showFeedback(feedbackElement, result.message, 'success');
+                updateSuggestion(suggestion, 'None', null, false);
+            } else {
+                showFeedback(feedbackElement, result.message, 'danger');
+                if (ignoreButton) {
+                    ignoreButton.disabled = false;
+                    ignoreButton.textContent = originalIgnoreLabel;
+                }
+                if (confirmButton) {
+                    confirmButton.disabled = false;
+                }
+            }
+        }
+
+        actionHandlers.onSend = sendFriendRequest;
+        actionHandlers.onRemove = removeFriend;
+        actionHandlers.onCancel = cancelFriendRequest;
+        actionHandlers.onAccept = acceptFriendRequest;
+        actionHandlers.onDecline = declineFriendRequest;
 
         const performSearch = debounce(async () => {
             const term = searchInput.value.trim();
             if (term.length < 2) {
                 hideResults(resultsContainer);
                 clearFeedback(feedbackElement);
+                latestResults = [];
                 return;
             }
 
@@ -194,9 +445,8 @@
                 }
 
                 const suggestions = await response.json();
-                renderResults(resultsContainer, suggestions, {
-                    onSend: sendFriendRequest
-                });
+                latestResults = Array.isArray(suggestions) ? suggestions : [];
+                refreshResults();
             } catch (error) {
                 console.warn('Unable to search for people', error);
                 showFeedback(feedbackElement, 'Something went wrong while searching. Please try again.', 'danger');

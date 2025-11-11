@@ -45,7 +45,11 @@
         <div class="friendship-search"
              data-friend-search-root
              data-search-url="@Url.Action("Search")"
-             data-request-url="@Url.Action("Send")">
+             data-request-url="@Url.Action("Send")"
+             data-remove-url="@Url.Action("Remove")"
+             data-accept-url="@Url.Action("Accept")"
+             data-decline-url="@Url.Action("Decline")"
+             data-cancel-url="@Url.Action("Cancel")">
             <label for="friend-search-input" class="form-label text-uppercase small text-muted mb-2">Find people</label>
             <div class="input-group">
                 <span class="input-group-text" id="friend-search-addon">🔍</span>
