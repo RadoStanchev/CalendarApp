@@ -1,4 +1,6 @@
+using AutoMapper;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Formatting;
 using CalendarApp.Models.Friendships;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.Friendships.Models;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CalendarApp.Controllers
 {
@@ -16,11 +19,13 @@ namespace CalendarApp.Controllers
     {
         private readonly IFriendshipService friendshipService;
         private readonly UserManager<Contact> userManager;
+        private readonly IMapper mapper;
 
-        public FriendshipsController(IFriendshipService friendshipService, UserManager<Contact> userManager)
+        public FriendshipsController(IFriendshipService friendshipService, UserManager<Contact> userManager, IMapper mapper)
         {
             this.friendshipService = friendshipService;
             this.userManager = userManager;
+            this.mapper = mapper;
         }
 
         [HttpGet]
@@ -33,41 +38,10 @@ namespace CalendarApp.Controllers
 
             var model = new FriendshipsDashboardViewModel
             {
-                Friends = friends.Select(f => new FriendViewModel
-                {
-                    Id = f.UserId,
-                    DisplayName = FormatName(f.FirstName, f.LastName),
-                    Email = f.Email
-                }).ToList(),
-                IncomingRequests = pending
-                    .Where(r => r.IsIncoming)
-                    .Select(r => new FriendRequestViewModel
-                    {
-                        FriendshipId = r.FriendshipId,
-                        UserId = r.TargetUserId,
-                        DisplayName = FormatName(r.TargetFirstName, r.TargetLastName),
-                        Email = r.TargetEmail,
-                        RequestedOn = r.CreatedAt,
-                        IsIncoming = true
-                    }).ToList(),
-                SentRequests = pending
-                    .Where(r => !r.IsIncoming)
-                    .Select(r => new FriendRequestViewModel
-                    {
-                        FriendshipId = r.FriendshipId,
-                        UserId = r.TargetUserId,
-                        DisplayName = FormatName(r.TargetFirstName, r.TargetLastName),
-                        Email = r.TargetEmail,
-                        RequestedOn = r.CreatedAt,
-                        IsIncoming = false
-                    }).ToList(),
-                Suggestions = suggestions.Select(s => new FriendSuggestionViewModel
-                {
-                    UserId = s.UserId,
-                    DisplayName = FormatName(s.FirstName, s.LastName),
-                    Email = s.Email,
-                    MutualFriendCount = s.MutualFriendCount
-                }).ToList()
+                Friends = mapper.Map<List<FriendViewModel>>(friends),
+                IncomingRequests = mapper.Map<List<FriendRequestViewModel>>(pending.Where(r => r.IsIncoming)),
+                SentRequests = mapper.Map<List<FriendRequestViewModel>>(pending.Where(r => !r.IsIncoming)),
+                Suggestions = mapper.Map<List<FriendSuggestionViewModel>>(suggestions)
             };
 
             return View(model);
@@ -151,7 +125,7 @@ namespace CalendarApp.Controllers
             var payload = results.Select(result => new
             {
                 id = result.UserId,
-                displayName = FormatName(result.FirstName, result.LastName),
+                displayName = NameFormatter.Format(result.FirstName, result.LastName),
                 email = result.Email,
                 status = result.RelationshipStatus.ToString(),
                 friendshipId = result.FriendshipId,
@@ -219,12 +193,5 @@ namespace CalendarApp.Controllers
             return ids;
         }
 
-        private static string FormatName(string firstName, string lastName)
-        {
-            var parts = new[] { firstName, lastName }
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .ToArray();
-            return parts.Length > 0 ? string.Join(" ", parts) : "Unknown";
-        }
     }
 }
