@@ -2,7 +2,7 @@
 @using CalendarApp.Models.Chat
 @using System.Globalization
 @{
-    ViewData["Title"] = "Meeting details";
+    ViewData["Title"] = "Детайли за срещата";
     var message = TempData["MeetingMessage"] as string;
     var error = TempData["MeetingError"] as string;
     var statusOptions = Enum.GetValues<ParticipantStatus>();
@@ -14,9 +14,9 @@
     };
     string FormatStatusLabel(ParticipantStatus status) => status switch
     {
-        ParticipantStatus.Accepted => "Accepted",
-        ParticipantStatus.Declined => "Declined",
-        _ => "Pending"
+        ParticipantStatus.Accepted => "Прието",
+        ParticipantStatus.Declined => "Отказано",
+        _ => "Чака отговор"
     };
 
     string BuildCategoryBadgeStyle(string? color)
@@ -77,27 +77,27 @@
 <div class="meeting-details-page">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold mb-1">Meeting overview</h1>
+            <h1 class="h3 fw-bold mb-1">Преглед на срещата</h1>
             <p class="text-muted mb-0">@Model.StartTime.ToLocalTime().ToString("f")</p>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
             @if (Model.ViewerIsCreator)
             {
-                <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Edit meeting</a>
+                <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Редактирай срещата</a>
             }
             else if (Model.ViewerIsParticipant && Model.ViewerStatus.HasValue)
             {
                 <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex align-items-center gap-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Meetings", new { id = Model.Id })" />
-                    <label class="form-label mb-0 me-1" for="viewer-status">Your status</label>
+                    <label class="form-label mb-0 me-1" for="viewer-status">Вашият статус</label>
                     <select class="form-select form-select-sm" id="viewer-status" name="status">
                         @foreach (var status in statusOptions)
                         {
                             <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? true : false)">@FormatStatusLabel(status)</option>
                         }
                     </select>
-                    <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Запази</button>
                 </form>
             }
         </div>
@@ -107,14 +107,14 @@
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <span>@message</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Затвори"></button>
         </div>
     }
     @if (!string.IsNullOrWhiteSpace(error))
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <span>@error</span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Затвори"></button>
         </div>
     }
 
@@ -122,15 +122,15 @@
         <div class="col-12 col-lg-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h2 class="h5 fw-semibold mb-3">Details</h2>
+                    <h2 class="h5 fw-semibold mb-3">Подробности</h2>
                     <dl class="row mb-0">
-                        <dt class="col-sm-4 text-muted">Organizer</dt>
+                        <dt class="col-sm-4 text-muted">Организатор</dt>
                         <dd class="col-sm-8">@Model.CreatedByName</dd>
-                        <dt class="col-sm-4 text-muted">When</dt>
+                        <dt class="col-sm-4 text-muted">Кога</dt>
                         <dd class="col-sm-8">@Model.StartTime.ToLocalTime().ToString("f")</dd>
-                        <dt class="col-sm-4 text-muted">Location</dt>
-                        <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Location) ? Model.Location : "No location set")</dd>
-                        <dt class="col-sm-4 text-muted">Category</dt>
+                        <dt class="col-sm-4 text-muted">Място</dt>
+                        <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Location) ? Model.Location : "Няма посочено място")</dd>
+                        <dt class="col-sm-4 text-muted">Категория</dt>
                         <dd class="col-sm-8">
                             @if (!string.IsNullOrWhiteSpace(Model.CategoryName))
                             {
@@ -138,11 +138,11 @@
                             }
                             else
                             {
-                                <span class="text-muted">Unknown category</span>
+                                <span class="text-muted">Няма категория</span>
                             }
                         </dd>
-                        <dt class="col-sm-4 text-muted">Description</dt>
-                        <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "No description provided")</dd>
+                        <dt class="col-sm-4 text-muted">Описание</dt>
+                        <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Description) ? Model.Description : "Няма добавено описание")</dd>
                     </dl>
                 </div>
             </div>
@@ -153,14 +153,14 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <h2 class="h5 fw-semibold mb-0">Participants</h2>
-                            <p class="text-muted small mb-0">@Model.Participants.Count participant@(Model.Participants.Count == 1 ? string.Empty : "s")</p>
+                            <h2 class="h5 fw-semibold mb-0">Участници</h2>
+                            <p class="text-muted small mb-0">@Model.Participants.Count @(Model.Participants.Count == 1 ? "участник" : "участници")</p>
                         </div>
                     </div>
 
                     @if (!Model.Participants.Any())
                     {
-                        <p class="text-muted mb-0">No participants yet.</p>
+                        <p class="text-muted mb-0">Все още няма участници.</p>
                     }
                     else
                     {
@@ -171,7 +171,7 @@
                                 <div class="list-group-item px-0">
                                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                         <div>
-                                            <div class="fw-semibold">@participant.DisplayName @if (participant.IsCreator) { <span class="badge bg-primary ms-1">Organizer</span> }</div>
+                                            <div class="fw-semibold">@participant.DisplayName @if (participant.IsCreator) { <span class="badge bg-primary ms-1">Организатор</span> }</div>
                                             <div class="text-muted small">@participant.Email</div>
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
@@ -184,7 +184,7 @@
                                                 <form asp-controller="Friendships" asp-action="Send" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="receiverId" value="@participant.ContactId" />
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm">Add friend</button>
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm">Добави приятел</button>
                                                 </form>
                                             }
                                         </div>
@@ -204,11 +204,11 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <div>
-                        <h2 class="h5 fw-semibold mb-1">Meeting chat</h2>
-                        <p class="text-muted small mb-0">Chat with organizers and confirmed attendees.</p>
+                        <h2 class="h5 fw-semibold mb-1">Чат на срещата</h2>
+                        <p class="text-muted small mb-0">Комуникирайте с организаторите и потвърдените участници.</p>
                     </div>
                     <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#meetingChatModal">
-                        Open chat
+                        Отвори чата
                     </button>
                 </div>
             </div>
@@ -218,8 +218,8 @@
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title fs-5" id="meetingChatModalLabel">Meeting chat</h2>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h2 class="modal-title fs-5" id="meetingChatModalLabel">Чат на срещата</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
                     </div>
                     <div class="modal-body">
                         <div class="messenger-layout messenger-layout--embedded">

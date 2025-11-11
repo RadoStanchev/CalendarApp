@@ -8,14 +8,14 @@
     }
 
     const STATUS_METADATA = {
-        Friend: { text: 'Already friends', className: 'badge rounded-pill bg-success-subtle text-success fw-semibold' },
-        IncomingRequest: { text: 'Incoming request', className: 'badge rounded-pill bg-warning-subtle text-warning fw-semibold' },
-        OutgoingRequest: { text: 'Request sent', className: 'badge rounded-pill bg-primary-subtle text-primary fw-semibold' },
-        Blocked: { text: 'Unavailable', className: 'badge rounded-pill bg-secondary-subtle text-secondary fw-semibold' }
+        Friend: { text: 'Вече сте приятели', className: 'badge rounded-pill bg-success-subtle text-success fw-semibold' },
+        IncomingRequest: { text: 'Входяща покана', className: 'badge rounded-pill bg-warning-subtle text-warning fw-semibold' },
+        OutgoingRequest: { text: 'Покана изпратена', className: 'badge rounded-pill bg-primary-subtle text-primary fw-semibold' },
+        Blocked: { text: 'Недостъпно', className: 'badge rounded-pill bg-secondary-subtle text-secondary fw-semibold' }
     };
 
     function buildStatusBadge(status) {
-        const meta = STATUS_METADATA[status] ?? { text: status ?? 'Unavailable', className: 'badge rounded-pill bg-secondary-subtle text-secondary fw-semibold' };
+        const meta = STATUS_METADATA[status] ?? { text: status ?? 'Недостъпно', className: 'badge rounded-pill bg-secondary-subtle text-secondary fw-semibold' };
         const badge = document.createElement('span');
         badge.className = meta.className;
         badge.textContent = meta.text;
@@ -70,7 +70,7 @@
         if (!Array.isArray(suggestions) || suggestions.length === 0) {
             const emptyItem = document.createElement('div');
             emptyItem.className = 'list-group-item text-muted small';
-            emptyItem.textContent = 'No matches found.';
+            emptyItem.textContent = 'Няма намерени съвпадения.';
             resultsContainer.appendChild(emptyItem);
             resultsContainer.classList.remove('d-none');
             return;
@@ -108,7 +108,7 @@
                         const removeButton = document.createElement('button');
                         removeButton.type = 'button';
                         removeButton.className = 'btn btn-sm btn-outline-danger';
-                        removeButton.textContent = 'Remove friend';
+                        removeButton.textContent = 'Премахни приятел';
                         removeButton.addEventListener('click', () => handlers.onRemove(suggestion, removeButton));
                         actionContainer.appendChild(removeButton);
                     }
@@ -121,12 +121,12 @@
                         const confirmButton = document.createElement('button');
                         confirmButton.type = 'button';
                         confirmButton.className = 'btn btn-sm btn-primary';
-                        confirmButton.textContent = 'Confirm';
+                        confirmButton.textContent = 'Потвърди';
 
                         const ignoreButton = document.createElement('button');
                         ignoreButton.type = 'button';
                         ignoreButton.className = 'btn btn-sm btn-outline-secondary';
-                        ignoreButton.textContent = 'Ignore';
+                        ignoreButton.textContent = 'Игнорирай';
 
                         confirmButton.addEventListener('click', () => handlers.onAccept(suggestion, { confirmButton, ignoreButton }));
                         ignoreButton.addEventListener('click', () => handlers.onDecline(suggestion, { confirmButton, ignoreButton }));
@@ -143,7 +143,7 @@
                         const cancelButton = document.createElement('button');
                         cancelButton.type = 'button';
                         cancelButton.className = 'btn btn-sm btn-outline-danger';
-                        cancelButton.textContent = 'Cancel request';
+                        cancelButton.textContent = 'Отмени поканата';
                         cancelButton.addEventListener('click', () => handlers.onCancel(suggestion, cancelButton));
                         actionContainer.appendChild(cancelButton);
                     }
@@ -158,7 +158,7 @@
                         const actionButton = document.createElement('button');
                         actionButton.type = 'button';
                         actionButton.className = 'btn btn-sm btn-primary';
-                        actionButton.textContent = 'Add friend';
+                        actionButton.textContent = 'Добави приятел';
                         actionButton.addEventListener('click', () => handlers.onSend(suggestion, actionButton));
                         actionContainer.appendChild(actionButton);
                     }
@@ -221,14 +221,14 @@
             if (!url) {
                 return {
                     success: false,
-                    message: errorMessage ?? 'This action is not available right now.'
+                    message: errorMessage ?? 'Действието не е налично в момента.'
                 };
             }
 
             if (!antiForgeryToken) {
                 return {
                     success: false,
-                    message: 'We could not validate your request. Please refresh and try again.'
+                    message: 'Не успяхме да валидираме заявката. Опреснете страницата и опитайте отново.'
                 };
             }
 
@@ -252,7 +252,7 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Request failed');
+                    throw new Error('Заявката беше неуспешна');
                 }
 
                 const data = await response.json();
@@ -260,10 +260,10 @@
                 const message = data?.message ?? (success ? successMessage : errorMessage) ?? '';
                 return { ...data, success, message };
             } catch (error) {
-                console.warn('Friendship action failed', error);
+                console.warn('Неуспешно действие за приятелство', error);
                 return {
                     success: false,
-                    message: errorMessage ?? 'Unable to complete this action. Please try again.'
+                    message: errorMessage ?? 'Действието не можа да бъде изпълнено. Моля, опитайте отново.'
                 };
             }
         }
@@ -275,11 +275,11 @@
 
             button.disabled = true;
             const originalLabel = button.textContent;
-            button.textContent = 'Sending…';
+            button.textContent = 'Изпращане…';
 
             const result = await postAction(requestUrl, { receiverId: suggestion.id }, {
-                successMessage: 'Friend request sent.',
-                errorMessage: 'Unable to send friend request.'
+                successMessage: 'Поканата за приятелство е изпратена.',
+                errorMessage: 'Поканата за приятелство не може да бъде изпратена.'
             });
 
             if (result.success) {
@@ -299,11 +299,11 @@
 
             const originalLabel = button.textContent;
             button.disabled = true;
-            button.textContent = 'Removing…';
+            button.textContent = 'Премахване…';
 
             const result = await postAction(removeUrl, { friendId: suggestion.id }, {
-                successMessage: 'Friend removed.',
-                errorMessage: 'Unable to remove friend.'
+                successMessage: 'Приятелят беше премахнат.',
+                errorMessage: 'Приятелят не може да бъде премахнат.'
             });
 
             if (result.success) {
@@ -318,17 +318,17 @@
 
         async function cancelFriendRequest(suggestion, button) {
             if (!button || !suggestion?.friendshipId) {
-                showFeedback(feedbackElement, 'We could not find this request. Please refresh and try again.', 'danger');
+                showFeedback(feedbackElement, 'Не успяхме да намерим тази покана. Опреснете страницата и опитайте отново.', 'danger');
                 return;
             }
 
             const originalLabel = button.textContent;
             button.disabled = true;
-            button.textContent = 'Cancelling…';
+            button.textContent = 'Отмяна…';
 
             const result = await postAction(cancelUrl, { friendshipId: suggestion.friendshipId }, {
-                successMessage: 'Friend request cancelled.',
-                errorMessage: 'Unable to cancel this request.'
+                successMessage: 'Поканата за приятелство е отменена.',
+                errorMessage: 'Тази покана не може да бъде отменена.'
             });
 
             if (result.success) {
@@ -343,7 +343,7 @@
 
         async function acceptFriendRequest(suggestion, controls) {
             if (!suggestion?.friendshipId) {
-                showFeedback(feedbackElement, 'We could not find this request. Please refresh and try again.', 'danger');
+                showFeedback(feedbackElement, 'Не успяхме да намерим тази покана. Опреснете страницата и опитайте отново.', 'danger');
                 return;
             }
 
@@ -353,7 +353,7 @@
 
             if (confirmButton) {
                 confirmButton.disabled = true;
-                confirmButton.textContent = 'Confirming…';
+                confirmButton.textContent = 'Потвърждаване…';
             }
 
             if (ignoreButton) {
@@ -361,8 +361,8 @@
             }
 
             const result = await postAction(acceptUrl, { friendshipId: suggestion.friendshipId }, {
-                successMessage: 'Friend request accepted.',
-                errorMessage: 'Unable to accept this request.'
+                successMessage: 'Поканата за приятелство е приета.',
+                errorMessage: 'Тази покана не може да бъде приета.'
             });
 
             if (result.success) {
@@ -382,7 +382,7 @@
 
         async function declineFriendRequest(suggestion, controls) {
             if (!suggestion?.friendshipId) {
-                showFeedback(feedbackElement, 'We could not find this request. Please refresh and try again.', 'danger');
+                showFeedback(feedbackElement, 'Не успяхме да намерим тази покана. Опреснете страницата и опитайте отново.', 'danger');
                 return;
             }
 
@@ -392,7 +392,7 @@
 
             if (ignoreButton) {
                 ignoreButton.disabled = true;
-                ignoreButton.textContent = 'Ignoring…';
+                ignoreButton.textContent = 'Игнориране…';
             }
 
             if (confirmButton) {
@@ -400,8 +400,8 @@
             }
 
             const result = await postAction(declineUrl, { friendshipId: suggestion.friendshipId }, {
-                successMessage: 'Friend request declined.',
-                errorMessage: 'Unable to decline this request.'
+                successMessage: 'Поканата за приятелство е отказана.',
+                errorMessage: 'Тази покана не може да бъде отказана.'
             });
 
             if (result.success) {
@@ -448,8 +448,8 @@
                 latestResults = Array.isArray(suggestions) ? suggestions : [];
                 refreshResults();
             } catch (error) {
-                console.warn('Unable to search for people', error);
-                showFeedback(feedbackElement, 'Something went wrong while searching. Please try again.', 'danger');
+                console.warn('Неуспешно търсене на хора', error);
+                showFeedback(feedbackElement, 'Възникна проблем при търсенето. Моля, опитайте отново.', 'danger');
             }
         }, 250);
 

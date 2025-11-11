@@ -37,7 +37,7 @@ namespace CalendarApp.Services.Messages
 
             if (!hasAccess)
             {
-                throw new InvalidOperationException("Friendship not found or access denied.");
+                throw new InvalidOperationException("Приятелството не е намерено или достъпът е отказан.");
             }
         }
 
@@ -52,7 +52,7 @@ namespace CalendarApp.Services.Messages
 
             if (!hasAccess)
             {
-                throw new InvalidOperationException("Meeting not found or access denied.");
+                throw new InvalidOperationException("Срещата не е намерена или достъпът е отказан.");
             }
         }
 
@@ -60,7 +60,7 @@ namespace CalendarApp.Services.Messages
         {
             if (string.IsNullOrWhiteSpace(content))
             {
-                throw new ArgumentException("Message content must not be empty.", nameof(content));
+                throw new ArgumentException("Съдържанието на съобщението не може да бъде празно.", nameof(content));
             }
 
             await EnsureFriendshipAccessAsync(userId, friendshipId, cancellationToken);
@@ -94,7 +94,7 @@ namespace CalendarApp.Services.Messages
         {
             if (string.IsNullOrWhiteSpace(content))
             {
-                throw new ArgumentException("Message content must not be empty.", nameof(content));
+                throw new ArgumentException("Съдържанието на съобщението не може да бъде празно.", nameof(content));
             }
 
             await EnsureMeetingAccessAsync(userId, meetingId, cancellationToken);
@@ -109,7 +109,7 @@ namespace CalendarApp.Services.Messages
 
             if (meeting == null)
             {
-                throw new InvalidOperationException("Meeting not found.");
+                throw new InvalidOperationException("Срещата не беше намерена.");
             }
 
             var entity = new Message
@@ -227,7 +227,7 @@ namespace CalendarApp.Services.Messages
 
             if (sender == null)
             {
-                throw new InvalidOperationException("Sender not found.");
+                throw new InvalidOperationException("Подателят не е намерен.");
             }
 
             var senderName = BuildDisplayName(sender.FirstName, sender.LastName);

@@ -1,20 +1,20 @@
 @model CalendarApp.Models.Notifications.NotificationListViewModel
 @using CalendarApp.Services.Notifications.Models
 @{
-    ViewData["Title"] = "Notifications";
+    ViewData["Title"] = "Известия";
     string FilterClass(NotificationReadFilter option) => Model.Filter == option ? "btn btn-primary" : "btn btn-outline-secondary";
 }
 
 <section class="notifications-page">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h1 class="h3 mb-1">Notifications</h1>
-            <p class="text-muted mb-0">@Model.UnreadCount unread</p>
+            <h1 class="h3 mb-1">Известия</h1>
+            <p class="text-muted mb-0">@Model.UnreadCount непрочетени</p>
         </div>
-        <div class="btn-group" role="group" aria-label="Filter notifications">
-            <a asp-action="Index" asp-route-filter="@NotificationReadFilter.All" class="@FilterClass(NotificationReadFilter.All)">All</a>
-            <a asp-action="Index" asp-route-filter="@NotificationReadFilter.Unread" class="@FilterClass(NotificationReadFilter.Unread)">Unread</a>
-            <a asp-action="Index" asp-route-filter="@NotificationReadFilter.Read" class="@FilterClass(NotificationReadFilter.Read)">Read</a>
+        <div class="btn-group" role="group" aria-label="Филтриране на известията">
+            <a asp-action="Index" asp-route-filter="@NotificationReadFilter.All" class="@FilterClass(NotificationReadFilter.All)">Всички</a>
+            <a asp-action="Index" asp-route-filter="@NotificationReadFilter.Unread" class="@FilterClass(NotificationReadFilter.Unread)">Непрочетени</a>
+            <a asp-action="Index" asp-route-filter="@NotificationReadFilter.Read" class="@FilterClass(NotificationReadFilter.Read)">Прочетени</a>
         </div>
     </div>
 
@@ -22,7 +22,7 @@
         <div class="card-body">
             @if (Model.Notifications == null || Model.Notifications.Count == 0)
             {
-                <div class="notification-empty">You're all caught up!</div>
+                <div class="notification-empty">Всички известия са разгледани!</div>
             }
             else
             {
@@ -38,7 +38,7 @@
                                     <time datetime="@notification.CreatedAt.ToString("o")" class="notification-item__time">@notification.CreatedAt.ToLocalTime().ToString("g")</time>
                                     @if (!notification.IsRead)
                                     {
-                                        <span class="badge rounded-pill bg-primary">New</span>
+                                        <span class="badge rounded-pill bg-primary">Ново</span>
                                     }
                                 </div>
                             </div>

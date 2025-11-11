@@ -9,18 +9,18 @@
 <div id="notification-panel" class="notification-panel notification-panel--hidden" data-notification-panel data-recent-url="@recentUrl" data-mark-url="@markUrl" data-list-url="@listUrl">
     <div class="notification-panel__island">
         <div class="notification-panel__headline">
-            <a class="notification-panel__headline-link" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.Index)" aria-label="View notifications">
-                <span class="notification-panel__title">Notifications</span>
+            <a class="notification-panel__headline-link" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.Index)" aria-label="Преглед на известията">
+                <span class="notification-panel__title">Известия</span>
                 <span class="notification-panel__count badge bg-danger d-none" data-notification-count>0</span>
             </a>
-            <button type="button" class="notification-panel__close" data-notification-close aria-label="Dismiss notifications">&times;</button>
+            <button type="button" class="notification-panel__close" data-notification-close aria-label="Затвори известията">&times;</button>
         </div>
         <div class="notification-panel__body">
             <ul class="notification-preview-list" data-notification-items></ul>
-            <div class="notification-panel__empty" data-notification-empty>You're all caught up!</div>
+            <div class="notification-panel__empty" data-notification-empty>Всички известия са разгледани!</div>
         </div>
         <div class="notification-panel__footer">
-            <a class="notification-panel__view-all" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.Index)">View all</a>
+            <a class="notification-panel__view-all" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.Index)">Виж всички</a>
         </div>
     </div>
     <form id="notification-antiforgery-form" class="d-none" method="post" asp-controller="@controllerName" asp-action="@nameof(NotificationsController.MarkAsRead)">

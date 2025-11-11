@@ -70,7 +70,7 @@ namespace CalendarApp.Controllers
             var category = await categoryService.GetByIdAsync(model.CategoryId!.Value);
             if (category == null)
             {
-                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                ModelState.AddModelError(nameof(model.CategoryId), "Избраната категория не е налична.");
                 await PopulateParticipantDetailsAsync(model.Participants);
                 model.Categories = await GetCategoryOptionsAsync();
                 return View(model);
@@ -82,12 +82,12 @@ namespace CalendarApp.Controllers
             try
             {
                 var meetingId = await meetingService.CreateMeetingAsync(dto);
-                TempData["MeetingMessage"] = "Meeting created successfully.";
+                TempData["MeetingMessage"] = "Срещата беше създадена успешно.";
                 return RedirectToAction(nameof(Details), new { id = meetingId });
             }
             catch (ArgumentException ex) when (string.Equals(ex.ParamName, nameof(dto.CategoryId), StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                ModelState.AddModelError(nameof(model.CategoryId), "Избраната категория не е налична.");
                 await PopulateParticipantDetailsAsync(model.Participants);
                 model.Categories = await GetCategoryOptionsAsync();
                 return View(model);
@@ -130,7 +130,7 @@ namespace CalendarApp.Controllers
             var category = await categoryService.GetByIdAsync(model.CategoryId!.Value);
             if (category == null)
             {
-                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                ModelState.AddModelError(nameof(model.CategoryId), "Избраната категория не е налична.");
                 await PopulateParticipantDetailsAsync(model.Participants);
                 model.Categories = await GetCategoryOptionsAsync();
                 return View(model);
@@ -146,7 +146,7 @@ namespace CalendarApp.Controllers
             }
             catch (ArgumentException ex) when (string.Equals(ex.ParamName, nameof(dto.CategoryId), StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(nameof(model.CategoryId), "The selected category is not available.");
+                ModelState.AddModelError(nameof(model.CategoryId), "Избраната категория не е налична.");
                 await PopulateParticipantDetailsAsync(model.Participants);
                 model.Categories = await GetCategoryOptionsAsync();
                 return View(model);
@@ -157,7 +157,7 @@ namespace CalendarApp.Controllers
                 return NotFound();
             }
 
-            TempData["MeetingMessage"] = "Meeting updated.";
+            TempData["MeetingMessage"] = "Срещата беше обновена.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -194,11 +194,11 @@ namespace CalendarApp.Controllers
 
             if (!updated)
             {
-                TempData["MeetingError"] = "We couldn't update your response for that meeting.";
+                TempData["MeetingError"] = "Не успяхме да обновим отговора ви за тази среща.";
             }
             else
             {
-                TempData["MeetingMessage"] = "Your meeting response was updated.";
+                TempData["MeetingMessage"] = "Отговорът ви за срещата беше обновен.";
             }
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))

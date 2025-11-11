@@ -1,8 +1,8 @@
 (function () {
     const STATUS_OPTIONS = [
-        { value: '0', label: 'Pending' },
-        { value: '1', label: 'Accepted' },
-        { value: '2', label: 'Declined' }
+        { value: '0', label: 'Чака отговор' },
+        { value: '1', label: 'Прието' },
+        { value: '2', label: 'Отказано' }
     ];
 
     function debounce(fn, delay) {
@@ -14,7 +14,7 @@
     }
 
     function createEmptyNotice(container) {
-        const text = container.dataset.emptyText || 'Add participants to this meeting.';
+        const text = container.dataset.emptyText || 'Добавете участници към тази среща.';
         const notice = document.createElement('p');
         notice.className = 'text-muted small mb-0';
         notice.dataset.meetingEmpty = '';
@@ -193,7 +193,7 @@
 
                 const suggestions = await response.json();
                 if (!Array.isArray(suggestions) || suggestions.length === 0) {
-                    resultsContainer.innerHTML = '<div class="list-group-item text-muted">No matches found.</div>';
+                    resultsContainer.innerHTML = '<div class="list-group-item text-muted">Няма намерени съвпадения.</div>';
                     resultsContainer.classList.remove('d-none');
                     return;
                 }
@@ -213,7 +213,7 @@
                             <div class="fw-semibold">${suggestion.displayName}</div>
                             <div class="text-muted small">${suggestion.email}</div>
                         </div>
-                        <span class="badge bg-primary">Add</span>
+                        <span class="badge bg-primary">Добави</span>
                     `;
                     item.addEventListener('click', () => addParticipant({
                         id: String(suggestion.id),
@@ -225,7 +225,7 @@
 
                 resultsContainer.classList.remove('d-none');
             } catch (error) {
-                console.error('Unable to search contacts', error);
+                console.error('Неуспешно търсене на контакти', error);
             }
         }, 250);
 
