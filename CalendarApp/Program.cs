@@ -1,19 +1,20 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Hubs;
 using CalendarApp.Infrastructure.Background;
 using CalendarApp.Infrastructure.Extensions;
 using CalendarApp.Infrastructure.Mapping;
-using CalendarApp.Services.Meetings;
-using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Categories;
 using CalendarApp.Services.Friendships;
-using CalendarApp.Services.User;
+using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.MessageSeens;
+using CalendarApp.Services.Notifications;
+using CalendarApp.Services.User;
 using CalendarApp.Services.UserPresence;
-using CalendarApp.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,8 +54,16 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<FriendshipProfile>();
 });
 
-builder.Services.AddControllersWithViews();
-builder.Services.AddSignalR();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    }); ;
 
 var app = builder.Build();
 

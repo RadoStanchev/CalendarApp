@@ -4,7 +4,7 @@ namespace CalendarApp.Services.Categories
 {
     public interface ICategoryService
     {
-        Task<IReadOnlyCollection<CategorySummaryDto>> GetAllAsync();
+        Task<IReadOnlyCollection<CategoryDetailsDto>> GetAllAsync();
 
         Task<CategoryDetailsDto?> GetByIdAsync(Guid categoryId);
 
@@ -12,7 +12,7 @@ namespace CalendarApp.Services.Categories
 
         Task<bool> UpdateAsync(CategoryUpdateDto dto);
 
-        Task<CategoryDeletionResult> DeleteAsync(Guid categoryId);
+        Task<bool> DeleteAsync(Guid categoryId);
 
         Task<bool> IsInUseAsync(Guid categoryId);
 

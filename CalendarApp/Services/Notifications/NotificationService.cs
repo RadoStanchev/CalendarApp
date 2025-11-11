@@ -190,16 +190,11 @@ namespace CalendarApp.Services.Notifications
                 throw new ArgumentNullException(nameof(notification));
             }
 
-            var notifications = await CreateNotificationsInternalAsync(new[] { notification }, cancellationToken);
+            var notifications = await CreateNotificationsAsync([notification], cancellationToken);
             return notifications.First();
         }
 
         public async Task<IReadOnlyCollection<NotificationDto>> CreateNotificationsAsync(IEnumerable<NotificationCreateDto> notifications, CancellationToken cancellationToken = default)
-        {
-            return await CreateNotificationsInternalAsync(notifications, cancellationToken);
-        }
-
-        private async Task<IReadOnlyCollection<NotificationDto>> CreateNotificationsInternalAsync(IEnumerable<NotificationCreateDto> notifications, CancellationToken cancellationToken)
         {
             if (notifications == null)
             {
@@ -230,7 +225,8 @@ namespace CalendarApp.Services.Notifications
                 .ToList();
 
             var broadcastTasks = results
-                .Select(result => hubContext.Clients.User(result.Id.ToString())
+                .Select(result => hubContext.Clients
+                    .User(result.UserId.ToString())
                     .SendAsync("ReceiveNotification", result, cancellationToken))
                 .ToList();
 
