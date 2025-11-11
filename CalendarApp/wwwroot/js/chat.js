@@ -33,6 +33,7 @@
     const getCurrentUserId = () => messagesContainer.dataset.currentUserId ?? "";
 
     const threadButtons = () => Array.from(document.querySelectorAll(".messenger-thread"));
+    const friendThreadContainer = document.getElementById("chatThreads");
 
     const findThreadButton = (threadId, threadType) => {
         const normalisedType = normaliseThreadType(threadType);
@@ -40,6 +41,101 @@
             item.dataset.threadId === threadId
             && normaliseThreadType(item.dataset.threadType) === normalisedType
         ) ?? null;
+    };
+
+    const sidebarSections = Array.from(document.querySelectorAll('[data-thread-section]'));
+    const sidebarToggleButtons = Array.from(document.querySelectorAll('[data-thread-filter]'));
+
+    const parseActivityTimestamp = (value) => {
+        if (!value) {
+            return 0;
+        }
+
+        const time = Date.parse(value);
+        return Number.isNaN(time) ? 0 : time;
+    };
+
+    const reorderFriendThreads = () => {
+        if (!friendThreadContainer) {
+            return;
+        }
+
+        const buttons = Array.from(friendThreadContainer.querySelectorAll('.messenger-thread[data-thread-type]'))
+            .filter(button => normaliseThreadType(button.dataset.threadType) === THREAD_TYPES.FRIENDSHIP);
+
+        if (buttons.length < 2) {
+            return;
+        }
+
+        buttons.sort((a, b) => {
+            const onlineA = a.dataset.isOnline === "true" ? 1 : 0;
+            const onlineB = b.dataset.isOnline === "true" ? 1 : 0;
+
+            if (onlineA !== onlineB) {
+                return onlineB - onlineA;
+            }
+
+            const activityA = parseActivityTimestamp(a.dataset.lastActivity);
+            const activityB = parseActivityTimestamp(b.dataset.lastActivity);
+
+            return activityB - activityA;
+        });
+
+        buttons.forEach(button => friendThreadContainer.appendChild(button));
+    };
+
+    const updateThreadOnlineState = (button, isOnline) => {
+        if (!button) {
+            return;
+        }
+
+        button.dataset.isOnline = isOnline ? "true" : "false";
+        button.classList.toggle("messenger-thread--online", Boolean(isOnline));
+
+        const indicator = button.querySelector('[data-online-indicator]');
+        if (indicator) {
+            indicator.classList.toggle("is-hidden", !isOnline);
+        }
+
+        const onlineLabel = button.querySelector('[data-online-label]');
+        if (onlineLabel) {
+            onlineLabel.textContent = isOnline ? "Онлайн" : "";
+        }
+
+        if (button.classList.contains("active") && activeContactStatus) {
+            const secondary = button.dataset.secondary || "";
+            const status = button.dataset.status || "";
+            const statusText = secondary || (isOnline ? "Онлайн" : status);
+            activeContactStatus.textContent = statusText;
+            activeContactStatus.classList.toggle("text-muted", !statusText);
+        }
+
+        if (normaliseThreadType(button.dataset.threadType) === THREAD_TYPES.FRIENDSHIP) {
+            reorderFriendThreads();
+        }
+    };
+
+    let activeSidebarFilter = null;
+
+    const applySidebarFilter = (filter) => {
+        if (!sidebarSections.length && !sidebarToggleButtons.length) {
+            return;
+        }
+
+        const normalised = normaliseThreadType(filter);
+        activeSidebarFilter = normalised;
+
+        sidebarSections.forEach(section => {
+            const sectionType = normaliseThreadType(section.dataset.threadSection);
+            section.classList.toggle("is-collapsed", sectionType !== normalised);
+        });
+
+        sidebarToggleButtons.forEach(button => {
+            const buttonType = normaliseThreadType(button.dataset.threadFilter);
+            const isActive = buttonType === normalised;
+            button.classList.toggle("is-active", isActive);
+            button.setAttribute("aria-pressed", isActive ? "true" : "false");
+        });
     };
 
     const getAntiForgeryToken = () => chatForm.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
@@ -95,6 +191,14 @@
     let currentThreadType = currentThreadId ? normaliseThreadType(messagesContainer.dataset.threadType) : null;
     if (!currentThreadId) {
         currentThreadType = null;
+    }
+
+    if (sidebarSections.length || sidebarToggleButtons.length) {
+        const initialFilterButton = sidebarToggleButtons.find(button => button.classList.contains("is-active"));
+        const initialFilter = initialFilterButton
+            ? normaliseThreadType(initialFilterButton.dataset.threadFilter)
+            : (currentThreadType ?? THREAD_TYPES.FRIENDSHIP);
+        applySidebarFilter(initialFilter);
     }
 
     let connectionStarted = false;
@@ -182,18 +286,24 @@
         }
 
         const preview = button.querySelector(".messenger-thread__preview");
+        const sentAt = message.sentAt ? new Date(message.sentAt) : new Date();
+
         if (preview) {
             preview.textContent = message.content || "";
         }
 
         const meta = button.querySelector(".messenger-thread__meta");
         if (meta) {
-            const sentAt = message.sentAt ? new Date(message.sentAt) : new Date();
             meta.textContent = formatRelativeTime(sentAt);
         }
 
         button.dataset.lastMessage = message.content || "";
-        button.dataset.status = button.dataset.status || "";
+        button.dataset.status = formatRelativeTime(sentAt);
+        button.dataset.lastActivity = sentAt.toISOString();
+
+        if (normaliseThreadType(button.dataset.threadType) === THREAD_TYPES.FRIENDSHIP) {
+            reorderFriendThreads();
+        }
     };
 
     const applyActiveThread = (button) => {
@@ -221,6 +331,11 @@
             return;
         }
 
+        const threadType = normaliseThreadType(button.dataset.threadType);
+        if (threadType && (sidebarSections.length || sidebarToggleButtons.length)) {
+            applySidebarFilter(threadType);
+        }
+
         button.classList.add("active");
 
         const name = button.dataset.displayName || "Разговор";
@@ -228,13 +343,14 @@
         const status = button.dataset.status || "";
         const initials = button.dataset.avatar || name.substring(0, 2).toUpperCase();
         const accent = button.dataset.accent;
+        const isOnline = button.dataset.isOnline === "true";
 
         if (activeContactName) {
             activeContactName.textContent = name;
         }
 
         if (activeContactStatus) {
-            const statusText = secondary || status;
+            const statusText = secondary || (isOnline ? "Онлайн" : status);
             activeContactStatus.textContent = statusText;
             activeContactStatus.classList.toggle("text-muted", !statusText);
         }
@@ -246,7 +362,7 @@
         }
 
         messagesContainer.dataset.threadId = button.dataset.threadId || "";
-        messagesContainer.dataset.threadType = normaliseThreadType(button.dataset.threadType);
+        messagesContainer.dataset.threadType = threadType;
         setComposerState(connectionStarted && Boolean(button.dataset.threadId));
     };
 
@@ -383,6 +499,10 @@
                 button.dataset.status = payload.lastActivity;
             }
 
+            if (Object.prototype.hasOwnProperty.call(payload, "isOnline")) {
+                updateThreadOnlineState(button, Boolean(payload.isOnline));
+            }
+
             applyActiveThread(button);
 
             if (Array.isArray(payload.messages) && payload.messages.length > 0) {
@@ -475,6 +595,26 @@
         if (senderId && senderId.toString() !== getCurrentUserId()) {
             markThreadAsRead(threadId, threadType);
         }
+    });
+
+    connection.on("PresenceChanged", payload => {
+        if (!payload) {
+            return;
+        }
+
+        const rawId = payload.userId ?? payload.UserId;
+        if (!rawId) {
+            return;
+        }
+
+        const friendId = rawId.toString();
+        const isOnline = Boolean(payload.isOnline ?? payload.IsOnline);
+
+        document
+            .querySelectorAll(`.messenger-thread[data-friend-id="${friendId}"]`)
+            .forEach(button => {
+                updateThreadOnlineState(button, isOnline);
+            });
     });
 
     connection.onreconnecting(() => {
@@ -573,6 +713,13 @@
     threadButtons().forEach(button => {
         button.addEventListener("click", () => {
             loadThread(button);
+        });
+    });
+
+    sidebarToggleButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            const filter = normaliseThreadType(button.dataset.threadFilter);
+            applySidebarFilter(filter);
         });
     });
 

@@ -90,14 +90,19 @@ body {
   padding-inline: 1.25rem;
 }
 
-.friendship-grid .btn-outline-secondary,
-.friendship-grid .btn-outline-danger {
-  background: rgba(15, 23, 42, 0.02);
+.friendship-card [data-friend-panel-toggle].active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0.5rem 1.5rem rgba(37, 99, 235, 0.25);
 }
 
-.friendship-grid .btn-outline-secondary:hover,
-.friendship-grid .btn-outline-danger:hover {
-  background: rgba(37, 99, 235, 0.05);
+.friendship-panel {
+  transition: opacity 0.2s ease;
+}
+
+.friendship-panel.d-none {
+  opacity: 0;
 }
 
 .friendship-card [data-friend-panel-toggle].active {

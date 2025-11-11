@@ -68,7 +68,7 @@
     </div>
 
     <div class="row g-4 friendship-grid">
-        <div class="col-12 col-lg-8">
+        <div class="col-12 col-lg-5">
             <div class="friendship-card" data-friend-toggle-root>
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
                     <div>
@@ -104,7 +104,7 @@
                                     <form asp-action="Send" method="post" class="ms-3">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="receiverId" value="@suggestion.UserId" />
-                                        <button type="submit" class="btn btn-primary">Add friend</button>
+                                        <button type="submit" class="btn btn-outline-primary">Add friend</button>
                                     </form>
                                 </div>
                             </div>
@@ -136,7 +136,7 @@
                                         <form asp-action="Accept" method="post" class="flex-fill">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="friendshipId" value="@request.FriendshipId" />
-                                            <button type="submit" class="btn btn-primary w-100">Confirm</button>
+                                            <button type="submit" class="btn btn-outline-primary w-100">Confirm</button>
                                         </form>
                                         <form asp-action="Decline" method="post" class="flex-fill">
                                             @Html.AntiForgeryToken()
@@ -183,7 +183,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-lg-4">
+        <div class="col-12 col-lg-7">
             <div class="friendship-card friendship-card--friends h-100">
                 <h2 class="h5 fw-semibold mb-3">Your friends</h2>
 
@@ -206,7 +206,7 @@
                                     <form asp-action="Remove" method="post" class="ms-auto">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="friendId" value="@friend.Id" />
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                                        <button type="submit" class="btn btn-outline-danger">Remove</button>
                                     </form>
                                 </div>
                             </div>
