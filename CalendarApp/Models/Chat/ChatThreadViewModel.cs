@@ -26,6 +26,8 @@ namespace CalendarApp.Models.Chat
 
         public string LastActivityLabel { get; set; } = string.Empty;
 
+        public bool IsOnline { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public MeetingThreadMetadata? Meeting { get; set; }
