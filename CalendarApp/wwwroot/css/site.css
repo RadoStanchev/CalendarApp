@@ -90,14 +90,19 @@ body {
   padding-inline: 1.25rem;
 }
 
-.friendship-grid .btn-outline-secondary,
-.friendship-grid .btn-outline-danger {
-  background: rgba(15, 23, 42, 0.02);
+.friendship-card [data-friend-panel-toggle].active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0.5rem 1.5rem rgba(37, 99, 235, 0.25);
 }
 
-.friendship-grid .btn-outline-secondary:hover,
-.friendship-grid .btn-outline-danger:hover {
-  background: rgba(37, 99, 235, 0.05);
+.friendship-panel {
+  transition: opacity 0.2s ease;
+}
+
+.friendship-panel.d-none {
+  opacity: 0;
 }
 
 .friendship-card h2 {
@@ -109,16 +114,21 @@ body {
   flex-direction: column;
 }
 
-.friendship-card--friends .friendship-search .input-group-text {
+.friendship-search-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.friendship-search .input-group-text {
   background: rgba(37, 99, 235, 0.08);
   border: none;
 }
 
-.friendship-card--friends .friendship-search .form-control {
+.friendship-search .form-control {
   border-left: none;
 }
 
-.friendship-card--friends .friendship-search .form-control:focus {
+.friendship-search .form-control:focus {
   box-shadow: none;
 }
 
