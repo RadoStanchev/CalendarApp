@@ -147,6 +147,10 @@
     color: #1f2937;
 }
 
+.is-hidden {
+    display: none !important;
+}
+
 .messenger-thread.is-hidden {
     display: none;
 }
@@ -194,10 +198,6 @@
     border-radius: 999px;
     background: #22c55e;
     box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-}
-
-.messenger-thread--online .messenger-thread__name-text {
-    color: #047857;
 }
 
 .messenger-thread__preview {
