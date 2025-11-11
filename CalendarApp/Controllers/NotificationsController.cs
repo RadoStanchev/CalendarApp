@@ -33,6 +33,8 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
 
+            await notificationService.MarkAllAsReadAsync(userId);
+
             var query = new NotificationQuery
             {
                 Filter = filter

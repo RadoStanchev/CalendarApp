@@ -20,31 +20,33 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Chat" asp-action="Index">Live Chat</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated ?? false)
-                        {
+                <div class="navbar-collapse collapse justify-content-center">
+                    <div class="navbar-inner d-flex flex-column flex-lg-row align-items-center gap-3 mx-auto">
+                        <ul class="navbar-nav flex-column flex-lg-row align-items-lg-center justify-content-center gap-lg-3 mb-2 mb-lg-0">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="My">My Meetings</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="Create">Create Meeting</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Friendships" asp-action="Index">Friends</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Chat" asp-action="Index">Live Chat</a>
                             </li>
-                        }
-                    </ul>
-                    <partial name="_LoginPartial" />
+                            @if (User.Identity?.IsAuthenticated ?? false)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="My">My Meetings</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="Create">Create Meeting</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Friendships" asp-action="Index">Friends</a>
+                                </li>
+                            }
+                        </ul>
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
             </div>
         </nav>
