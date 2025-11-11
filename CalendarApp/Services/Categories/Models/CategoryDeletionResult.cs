@@ -21,7 +21,7 @@ namespace CalendarApp.Services.Categories.Models
             => new CategoryDeletionResult
             {
                 NotFound = true,
-                ErrorMessage = "Category not found."
+                ErrorMessage = "Категорията не беше намерена."
             };
 
         public static CategoryDeletionResult Failure(string? message = null)

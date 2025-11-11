@@ -177,10 +177,10 @@ namespace CalendarApp.Services.Notifications
         private static string BuildReminderMessage(Meeting meeting)
         {
             var description = string.IsNullOrWhiteSpace(meeting.Description)
-                ? "Upcoming meeting"
+                ? "Предстояща среща"
                 : meeting.Description;
 
-            return $"Reminder: {description} starts at {meeting.StartTime:dddd, MMM d yyyy h:mm tt}.";
+            return $"Напомняне: {description} започва на {meeting.StartTime:dddd, MMM d yyyy h:mm tt}.";
         }
 
         public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification, CancellationToken cancellationToken = default)

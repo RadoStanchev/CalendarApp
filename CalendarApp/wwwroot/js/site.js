@@ -26,7 +26,7 @@
         try {
             return new URL(listUrl, window.location.origin).pathname.toLowerCase();
         } catch (error) {
-            console.warn('Failed to parse notifications list URL', error);
+            console.warn('Неуспешен анализ на адреса за списъка с известия', error);
             return null;
         }
     })();
@@ -108,21 +108,22 @@
 
         const diff = (Date.now() - date.getTime()) / 1000;
         if (diff < 60) {
-            return 'Just now';
+            return 'Току-що';
         }
 
         if (diff < 3600) {
             const minutes = Math.floor(diff / 60);
-            return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+            return `преди ${minutes} мин`;
         }
 
         if (diff < 86400) {
             const hours = Math.floor(diff / 3600);
-            return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+            return `преди ${hours} ч`;
         }
 
         const days = Math.floor(diff / 86400);
-        return `${days} day${days === 1 ? '' : 's'} ago`;
+        const dayLabel = days === 1 ? 'ден' : 'дни';
+        return `преди ${days} ${dayLabel}`;
     }
 
     function buildPreviewItem(notification) {
@@ -203,7 +204,7 @@
             element?.classList.add('is-read');
             updateBadge(payload.unreadCount);
         } catch (error) {
-            console.warn('Failed to mark notification as read', error);
+            console.warn('Неуспешно отбелязване на известието като прочетено', error);
         }
     }
 
@@ -238,7 +239,7 @@
         try {
             return window.location.pathname.toLowerCase() === listPathname;
         } catch (error) {
-            console.warn('Failed to determine current path', error);
+            console.warn('Неуспешно определяне на текущия път', error);
             return false;
         }
     }
@@ -304,7 +305,7 @@
             setNotifications(notifications);
             updateBadge(payload?.unreadCount ?? 0);
         } catch (error) {
-            console.warn('Failed to load notifications', error);
+            console.warn('Неуспешно зареждане на известията', error);
         }
     }
 
@@ -340,7 +341,7 @@
         });
 
         connection.start().catch((error) => {
-            console.warn('SignalR connection failed', error);
+            console.warn('Неуспешна връзка със SignalR', error);
         });
     }
 

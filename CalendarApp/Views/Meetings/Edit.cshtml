@@ -1,6 +1,6 @@
 @model MeetingEditViewModel
 @{
-    ViewData["Title"] = "Edit meeting";
+    ViewData["Title"] = "Редакция на среща";
     var startValue = Model.StartTime?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
     var statuses = Enum.GetValues(typeof(ParticipantStatus)).Cast<ParticipantStatus>().ToArray();
 }
@@ -8,10 +8,10 @@
 <div class="meeting-form-page">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold mb-1">Edit meeting</h1>
-            <p class="text-muted mb-0">Update meeting details and review participant responses.</p>
+            <h1 class="h3 fw-bold mb-1">Редактирайте срещата</h1>
+            <p class="text-muted mb-0">Актуализирайте информацията и прегледайте отговорите на участниците.</p>
         </div>
-        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Back to details</a>
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Назад към детайлите</a>
     </div>
 
     <form asp-action="Edit" method="post" class="meeting-form" data-meeting-form>
@@ -31,8 +31,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Location" class="form-label">Location</label>
-                            <input asp-for="Location" class="form-control" placeholder="Update the location" />
+                            <label asp-for="Location" class="form-label">Място</label>
+                            <input asp-for="Location" class="form-control" placeholder="Актуализирайте мястото" />
                             <span asp-validation-for="Location" class="text-danger"></span>
                         </div>
 
@@ -48,7 +48,7 @@
                         </div>
 
                         <div class="mb-0">
-                            <label asp-for="Description" class="form-label">Description</label>
+                            <label asp-for="Description" class="form-label">Описание</label>
                             <textarea asp-for="Description" class="form-control" rows="5"></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
@@ -61,46 +61,51 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h2 class="h5 fw-semibold mb-0">Participants</h2>
-                                <p class="text-muted small mb-0">Adjust attendance and invite more people instantly.</p>
+                                <h2 class="h5 fw-semibold mb-0">Участници</h2>
+                                <p class="text-muted small mb-0">Управлявайте присъствието и поканете още хора за секунди.</p>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <div class="input-group">
                                 <span class="input-group-text">🔍</span>
-                                <input type="search" class="form-control" placeholder="Search by name or email" data-meeting-search />
+                                <input type="search" class="form-control" placeholder="Търсене по име или имейл" data-meeting-search />
                             </div>
                             <div class="list-group mt-2 d-none" data-meeting-search-results></div>
                         </div>
 
                         <div>
-                            <h3 class="h6 text-muted text-uppercase mb-2">Attendance</h3>
-                            <div class="selected-participants" data-meeting-selected data-empty-text="No one has been invited yet.">
+                            <h3 class="h6 text-muted text-uppercase mb-2">Присъствие</h3>
+                            <div class="selected-participants" data-meeting-selected data-empty-text="Все още няма поканени.">
                                 @if (!Model.Participants.Any())
                                 {
-                                    <p class="text-muted small mb-0" data-meeting-empty>No one has been invited yet.</p>
+                                    <p class="text-muted small mb-0" data-meeting-empty>Все още няма поканени.</p>
                                 }
                                 @for (var i = 0; i < Model.Participants.Count; i++)
                                 {
                                     var participant = Model.Participants[i];
                                     var isCreator = participant.ContactId == Model.CreatedById;
                                     <div class="border rounded p-3 mb-2" data-participant data-contact-id="@participant.ContactId" data-is-creator="@(isCreator.ToString().ToLowerInvariant())">
-                                        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                                            <div>
-                                                <div class="fw-semibold">@participant.DisplayName @if (isCreator) { <span class="badge bg-primary ms-1">Organizer</span> }</div>
-                                                <div class="text-muted small">@participant.Email</div>
+                                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                                <div>
+                                                    <div class="fw-semibold">@participant.DisplayName @if (isCreator) { <span class="badge bg-primary ms-1">Организатор</span> }</div>
+                                                    <div class="text-muted small">@participant.Email</div>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <select class="form-select form-select-sm" data-status-select name="Participants[@i].Status">
+                                                        @foreach (var status in statuses)
+                                                        {
+                                                            <option value="@((int)status)" selected="@(participant.Status == status ? true : false)">@(status switch
+                                                            {
+                                                                ParticipantStatus.Accepted => "Прието",
+                                                                ParticipantStatus.Declined => "Отказано",
+                                                                _ => "Чака отговор"
+                                                            })</option>
+                                                        }
+                                                    </select>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-remove-participant @(isCreator ? "disabled" : string.Empty)>&times;</button>
+                                                </div>
                                             </div>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <select class="form-select form-select-sm" data-status-select name="Participants[@i].Status">
-                                                    @foreach (var status in statuses)
-                                                    {
-                                                        <option value="@((int)status)" selected="@(participant.Status == status ? true : false)">@status</option>
-                                                    }
-                                                </select>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" data-remove-participant @(isCreator ? "disabled" : string.Empty)>&times;</button>
-                                            </div>
-                                        </div>
                                         <input type="hidden" data-contact-input name="Participants[@i].ContactId" value="@participant.ContactId" />
                                     </div>
                                 }
@@ -112,8 +117,8 @@
         </div>
 
         <div class="mt-4 d-flex justify-content-end gap-2">
-            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancel</a>
-            <button type="submit" class="btn btn-primary">Save changes</button>
+            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Отказ</a>
+            <button type="submit" class="btn btn-primary">Запази промените</button>
         </div>
     </form>
 </div>

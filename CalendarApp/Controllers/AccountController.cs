@@ -71,7 +71,7 @@ namespace CalendarApp.Controllers
             if (result.Succeeded)
                 return RedirectToAction(nameof(Profile));
 
-            ModelState.AddModelError("", "Invalid login attempt.");
+            ModelState.AddModelError("", "Невалиден опит за вход.");
             return View(model);
         }
 
@@ -133,7 +133,7 @@ namespace CalendarApp.Controllers
                 model.Id = userId;
                 var user = await userService.GetByIdAsync(userId);
                 model.Email = user?.Email ?? model.Email;
-                ModelState.AddModelError(string.Empty, "Unable to update profile at this time.");
+                ModelState.AddModelError(string.Empty, "Профилът не може да бъде обновен в момента.");
                 return View(model);
             }
 

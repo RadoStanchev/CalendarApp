@@ -49,7 +49,7 @@ namespace CalendarApp.Controllers
         {
             var userId = await userManager.GetUserIdGuidAsync(User);
             var (result, friendshipId) = await friendshipService.SendFriendRequestAsync(userId, receiverId);
-            var message = result ? "Friend request sent." : "Unable to send friend request.";
+            var message = result ? "Поканата за приятелство е изпратена." : "Поканата за приятелство не може да бъде изпратена.";
 
             if (IsJsonRequest())
             {
@@ -66,7 +66,7 @@ namespace CalendarApp.Controllers
         {
             var userId = await userManager.GetUserIdGuidAsync(User);
             var result = await friendshipService.AcceptFriendRequestAsync(friendshipId, userId);
-            var message = result ? "Friend request accepted." : "Unable to accept this request.";
+            var message = result ? "Поканата за приятелство е приета." : "Тази покана не може да бъде приета.";
 
             if (IsJsonRequest())
             {
@@ -83,7 +83,7 @@ namespace CalendarApp.Controllers
         {
             var userId = await userManager.GetUserIdGuidAsync(User);
             var result = await friendshipService.DeclineFriendRequestAsync(friendshipId, userId);
-            var message = result ? "Friend request declined." : "Unable to decline this request.";
+            var message = result ? "Поканата за приятелство е отказана." : "Тази покана не може да бъде отказана.";
 
             if (IsJsonRequest())
             {
@@ -100,7 +100,7 @@ namespace CalendarApp.Controllers
         {
             var userId = await userManager.GetUserIdGuidAsync(User);
             var result = await friendshipService.CancelFriendRequestAsync(friendshipId, userId);
-            var message = result ? "Friend request cancelled." : "Unable to cancel this request.";
+            var message = result ? "Поканата за приятелство е отменена." : "Тази покана не може да бъде отменена.";
 
             if (IsJsonRequest())
             {
@@ -137,7 +137,7 @@ namespace CalendarApp.Controllers
         {
             var userId = (await userManager.GetUserAsync(User)).Id;
             var result = await friendshipService.RemoveFriendAsync(userId, friendId);
-            var message = result ? "Friend removed." : "Unable to remove friend.";
+            var message = result ? "Приятелят беше премахнат." : "Приятелят не може да бъде премахнат.";
 
             if (IsJsonRequest())
             {

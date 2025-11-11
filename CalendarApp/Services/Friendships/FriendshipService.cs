@@ -403,7 +403,7 @@ namespace CalendarApp.Services.Friendships
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = receiverId,
-                Message = $"{requesterName} sent you a friend request.",
+                Message = $"{requesterName} ви изпрати покана за приятелство.",
                 Type = NotificationType.Invitation
             });
 
@@ -426,7 +426,7 @@ namespace CalendarApp.Services.Friendships
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = friendship.RequesterId,
-                Message = $"{receiverName} accepted your friend request.",
+                Message = $"{receiverName} прие вашата покана за приятелство.",
                 Type = NotificationType.Info
             });
 
@@ -449,7 +449,7 @@ namespace CalendarApp.Services.Friendships
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = friendship.RequesterId,
-                Message = $"{receiverName} declined your friend request.",
+                Message = $"{receiverName} отказа вашата покана за приятелство.",
                 Type = NotificationType.Warning
             });
 
@@ -472,7 +472,7 @@ namespace CalendarApp.Services.Friendships
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = receiverId,
-                Message = $"{requesterName} canceled the friend request.",
+                Message = $"{requesterName} отмени поканата за приятелство.",
                 Type = NotificationType.Info
             });
 
@@ -513,7 +513,7 @@ namespace CalendarApp.Services.Friendships
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .ToArray();
 
-            return parts.Length > 0 ? string.Join(" ", parts) : "Unknown";
+            return parts.Length > 0 ? string.Join(" ", parts) : "Неизвестен";
         }
 
         private static string BuildPairKey(Guid first, Guid second)

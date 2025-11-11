@@ -1,14 +1,14 @@
 @model MeetingCreateViewModel
 @{
-    ViewData["Title"] = "Plan a meeting";
+    ViewData["Title"] = "Планирай среща";
     var startValue = Model.StartTime?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
 }
 
 <div class="meeting-form-page">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h3 fw-bold mb-1">Plan a meeting</h1>
-            <p class="text-muted mb-0">Create a new meeting and invite people without leaving this page.</p>
+            <h1 class="h3 fw-bold mb-1">Планирайте среща</h1>
+            <p class="text-muted mb-0">Създайте нова среща и поканете хора, без да напускате тази страница.</p>
         </div>
     </div>
 
@@ -27,8 +27,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Location" class="form-label">Location</label>
-                            <input asp-for="Location" class="form-control" placeholder="Add a location" />
+                            <label asp-for="Location" class="form-label">Място</label>
+                            <input asp-for="Location" class="form-control" placeholder="Добавете място" />
                             <span asp-validation-for="Location" class="text-danger"></span>
                         </div>
 
@@ -44,8 +44,8 @@
                         </div>
 
                         <div class="mb-0">
-                            <label asp-for="Description" class="form-label">Description</label>
-                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Share meeting goals, agenda or context"></textarea>
+                            <label asp-for="Description" class="form-label">Описание</label>
+                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Споделете целите, дневния ред или контекста на срещата"></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
                         </div>
                     </div>
@@ -57,25 +57,25 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <h2 class="h5 fw-semibold mb-0">Invite participants</h2>
-                                <p class="text-muted small mb-0">Search your network and add them instantly.</p>
+                                <h2 class="h5 fw-semibold mb-0">Поканете участници</h2>
+                                <p class="text-muted small mb-0">Претърсете мрежата си и ги добавете за секунди.</p>
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <div class="input-group">
                                 <span class="input-group-text">🔍</span>
-                                <input type="search" class="form-control" placeholder="Search by name or email" data-meeting-search />
+                                <input type="search" class="form-control" placeholder="Търсене по име или имейл" data-meeting-search />
                             </div>
                             <div class="list-group mt-2 d-none" data-meeting-search-results></div>
                         </div>
 
                         <div>
-                            <h3 class="h6 text-muted text-uppercase mb-2">Participants</h3>
-                            <div class="selected-participants" data-meeting-selected data-empty-text="Start typing to invite people.">
+                            <h3 class="h6 text-muted text-uppercase mb-2">Участници</h3>
+                            <div class="selected-participants" data-meeting-selected data-empty-text="Започнете да пишете, за да поканите хора.">
                                 @if (!Model.Participants.Any())
                                 {
-                                    <p class="text-muted small mb-0" data-meeting-empty>Start typing to invite people.</p>
+                                    <p class="text-muted small mb-0" data-meeting-empty>Започнете да пишете, за да поканите хора.</p>
                                 }
                                 @for (var i = 0; i < Model.Participants.Count; i++)
                                 {
@@ -100,8 +100,8 @@
         </div>
 
         <div class="mt-4 d-flex justify-content-end gap-2">
-            <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Cancel</a>
-            <button type="submit" class="btn btn-primary">Create meeting</button>
+            <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Отказ</a>
+            <button type="submit" class="btn btn-primary">Създай среща</button>
         </div>
     </form>
 </div>
