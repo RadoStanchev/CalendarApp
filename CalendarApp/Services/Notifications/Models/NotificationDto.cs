@@ -9,6 +9,8 @@ namespace CalendarApp.Services.Notifications.Models
 
         public string Message { get; set; } = string.Empty;
 
+        public Guid UserId { get; set; }
+
         public NotificationType Type { get; set; }
 
         public bool IsRead { get; set; }

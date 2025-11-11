@@ -52,7 +52,7 @@ namespace CalendarApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Recent(int count = 5, bool includeRead = true)
+        public async Task<IActionResult> Recent(int count = 3, bool includeRead = true)
         {
             var userId = await GetCurrentUserIdAsync();
             var notifications = await notificationService.GetRecentAsync(userId, count, includeRead);
