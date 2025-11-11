@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Models.Account;
 using CalendarApp.Services.User;
 using CalendarApp.Services.User.Models;
@@ -28,7 +29,6 @@ namespace CalendarApp.Controllers
             this.mapper = mapper;
         }
 
-        // ----------------- REGISTER -----------------
         [HttpGet]
         public IActionResult Register() => View();
 
@@ -56,7 +56,6 @@ namespace CalendarApp.Controllers
             return View(model);
         }
 
-        // ----------------- LOGIN -----------------
         [HttpGet]
         public IActionResult Login() => View();
 
@@ -76,7 +75,6 @@ namespace CalendarApp.Controllers
             return View(model);
         }
 
-        // ----------------- LOGOUT -----------------
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> Logout()
@@ -85,11 +83,10 @@ namespace CalendarApp.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // ----------------- PROFILE -----------------
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            var userId = Guid.Parse(userManager.GetUserId(User));
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var user = await userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -98,12 +95,11 @@ namespace CalendarApp.Controllers
             return View(model);
         }
 
-        // ----------------- EDIT PROFILE -----------------
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
-            var userId = Guid.Parse(userManager.GetUserId(User));
+            var userId = await userManager.GetUserIdGuidAsync(User);
             var user = await userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -117,7 +113,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EditProfileViewModel model)
         {
-            var userId = Guid.Parse(userManager.GetUserId(User));
+            var userId = await userManager.GetUserIdGuidAsync(User);
 
             if (!ModelState.IsValid)
             {

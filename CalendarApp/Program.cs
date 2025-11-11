@@ -50,6 +50,7 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<MeetingProfile>();
     cfg.AddProfile<NotificationProfile>();
     cfg.AddProfile<ChatProfile>();
+    cfg.AddProfile<FriendshipProfile>();
 });
 
 builder.Services.AddControllersWithViews();
