@@ -96,6 +96,27 @@ namespace CalendarApp.Services.Notifications
             return true;
         }
 
+        public async Task<int> MarkAllAsReadAsync(Guid userId)
+        {
+            var notifications = await db.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ToListAsync();
+
+            if (notifications.Count == 0)
+            {
+                return 0;
+            }
+
+            foreach (var notification in notifications)
+            {
+                notification.IsRead = true;
+            }
+
+            await db.SaveChangesAsync();
+
+            return notifications.Count;
+        }
+
         public async Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(meeting);

@@ -13,6 +13,8 @@ namespace CalendarApp.Services.Notifications
 
         Task<bool> MarkAsReadAsync(Guid userId, Guid notificationId);
 
+        Task<int> MarkAllAsReadAsync(Guid userId);
+
         Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds, CancellationToken cancellationToken = default);
         Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification, CancellationToken cancellationToken = default);
 

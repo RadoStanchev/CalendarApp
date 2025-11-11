@@ -1,4 +1,5 @@
-﻿@using CalendarApp.Infrastructure.Extentions
+@using CalendarApp.Controllers
+@using CalendarApp.Infrastructure.Extentions
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<Contact> SignInManager
 @inject UserManager<Contact> UserManager
@@ -7,21 +8,28 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Profile)">Hello @User.Identity?.Name!</a>
+        <a class="nav-link text-dark d-inline-flex align-items-center" asp-area="" asp-controller="@typeof(NotificationsController).GetControllerName()" asp-action="@nameof(NotificationsController.Index)" data-notification-link title="View notifications">
+            <span aria-hidden="true">&#128276;</span>
+            <span class="badge bg-danger ms-1 d-none" data-notification-count>0</span>
+            <span class="visually-hidden">Notifications</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Profile)">Hello @User.Identity?.Name!</a>
     </li>
     <li class="nav-item">
         <form  class="form-inline" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Logout)">
-            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+            <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
         </form>
     </li>
 }
 else
 {
     <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Register)">Register</a>
+        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Register)">Register</a>
     </li>
     <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Login)">Login</a>
+        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Login)">Login</a>
     </li>
 }
 </ul>
