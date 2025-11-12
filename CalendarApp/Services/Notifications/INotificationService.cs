@@ -2,6 +2,9 @@ namespace CalendarApp.Services.Notifications
 {
     using CalendarApp.Data.Models;
     using CalendarApp.Services.Notifications.Models;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     public interface INotificationService
     {
@@ -15,9 +18,9 @@ namespace CalendarApp.Services.Notifications
 
         Task<int> MarkAllAsReadAsync(Guid userId);
 
-        Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds, CancellationToken cancellationToken = default);
-        Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification, CancellationToken cancellationToken = default);
+        Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds);
+        Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification);
 
-        Task<IReadOnlyCollection<NotificationDto>> CreateNotificationsAsync(IEnumerable<NotificationCreateDto> notifications, CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<NotificationDto>> CreateNotificationsAsync(IEnumerable<NotificationCreateDto> notifications);
     }
 }

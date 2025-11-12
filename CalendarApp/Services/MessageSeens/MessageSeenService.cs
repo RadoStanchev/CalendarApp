@@ -4,7 +4,6 @@ using CalendarApp.Services.Messages;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalendarApp.Services.MessageSeens
@@ -20,9 +19,9 @@ namespace CalendarApp.Services.MessageSeens
             this.messageService = messageService;
         }
 
-        public async Task MarkFriendshipMessagesAsSeenAsync(Guid userId, Guid friendshipId, CancellationToken cancellationToken = default)
+        public async Task MarkFriendshipMessagesAsSeenAsync(Guid userId, Guid friendshipId)
         {
-            await messageService.EnsureFriendshipAccessAsync(userId, friendshipId, cancellationToken);
+            await messageService.EnsureFriendshipAccessAsync(userId, friendshipId);
 
             var now = DateTime.UtcNow;
 
@@ -30,7 +29,7 @@ namespace CalendarApp.Services.MessageSeens
                 .Where(m => m.FriendshipId == friendshipId && m.SenderId != userId)
                 .Where(m => !db.MessageSeens.Any(r => r.MessageId == m.Id && r.ContactId == userId))
                 .Select(m => m.Id)
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             if (unseenMessageIds.Count == 0)
             {
@@ -47,12 +46,12 @@ namespace CalendarApp.Services.MessageSeens
                 .ToList();
 
             db.MessageSeens.AddRange(receipts);
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveChangesAsync();
         }
 
-        public async Task MarkMeetingMessagesAsSeenAsync(Guid userId, Guid meetingId, CancellationToken cancellationToken = default)
+        public async Task MarkMeetingMessagesAsSeenAsync(Guid userId, Guid meetingId)
         {
-            await messageService.EnsureMeetingAccessAsync(userId, meetingId, cancellationToken);
+            await messageService.EnsureMeetingAccessAsync(userId, meetingId);
 
             var now = DateTime.UtcNow;
 
@@ -60,7 +59,7 @@ namespace CalendarApp.Services.MessageSeens
                 .Where(m => m.MeetingId == meetingId && m.SenderId != userId)
                 .Where(m => !db.MessageSeens.Any(r => r.MessageId == m.Id && r.ContactId == userId))
                 .Select(m => m.Id)
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             if (unseenMessageIds.Count == 0)
             {
@@ -77,7 +76,7 @@ namespace CalendarApp.Services.MessageSeens
                 .ToList();
 
             db.MessageSeens.AddRange(receipts);
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveChangesAsync();
         }
     }
 }

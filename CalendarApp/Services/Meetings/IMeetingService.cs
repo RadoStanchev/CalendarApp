@@ -1,7 +1,6 @@
 using CalendarApp.Data.Models;
 using CalendarApp.Services.Meetings.Models;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Meetings
@@ -24,8 +23,8 @@ namespace CalendarApp.Services.Meetings
 
         Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status);
 
-        Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId);
 
-        Task<MeetingThreadDto?> GetChatThreadAsync(Guid meetingId, Guid userId, CancellationToken cancellationToken = default);
+        Task<MeetingThreadDto?> GetChatThreadAsync(Guid meetingId, Guid userId);
     }
 }

@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Messages
@@ -26,14 +25,14 @@ namespace CalendarApp.Services.Messages
 
         public string BuildMeetingGroupName(Guid meetingId) => $"meeting:{meetingId}";
 
-        public async Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId, CancellationToken cancellationToken = default)
+        public async Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId)
         {
             var hasAccess = await db.Friendships
                 .AsNoTracking()
                 .Where(f => f.Id == friendshipId
                             && f.Status == FriendshipStatus.Accepted
                             && (f.RequesterId == userId || f.ReceiverId == userId))
-                .AnyAsync(cancellationToken);
+                .AnyAsync();
 
             if (!hasAccess)
             {
@@ -41,14 +40,14 @@ namespace CalendarApp.Services.Messages
             }
         }
 
-        public async Task EnsureMeetingAccessAsync(Guid userId, Guid meetingId, CancellationToken cancellationToken = default)
+        public async Task EnsureMeetingAccessAsync(Guid userId, Guid meetingId)
         {
             var hasAccess = await db.Meetings
                 .AsNoTracking()
                 .Where(m => m.Id == meetingId
                             && (m.CreatedById == userId
                                 || m.Participants.Any(p => p.ContactId == userId && p.Status == ParticipantStatus.Accepted)))
-                .AnyAsync(cancellationToken);
+                .AnyAsync();
 
             if (!hasAccess)
             {
@@ -56,16 +55,16 @@ namespace CalendarApp.Services.Messages
             }
         }
 
-        public async Task<ChatMessageDto> SaveMessageAsync(Guid userId, Guid friendshipId, string content, CancellationToken cancellationToken = default)
+        public async Task<ChatMessageDto> SaveMessageAsync(Guid userId, Guid friendshipId, string content)
         {
             if (string.IsNullOrWhiteSpace(content))
             {
                 throw new ArgumentException("Съдържанието на съобщението не може да бъде празно.", nameof(content));
             }
 
-            await EnsureFriendshipAccessAsync(userId, friendshipId, cancellationToken);
+            await EnsureFriendshipAccessAsync(userId, friendshipId);
 
-            var sender = await GetSenderAsync(userId, cancellationToken);
+            var sender = await GetSenderAsync(userId);
 
             var entity = new Message
             {
@@ -76,7 +75,7 @@ namespace CalendarApp.Services.Messages
             };
 
             db.Messages.Add(entity);
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveChangesAsync();
 
             return new ChatMessageDto
             {
@@ -90,22 +89,22 @@ namespace CalendarApp.Services.Messages
             };
         }
 
-        public async Task<ChatMessageDto> SaveMeetingMessageAsync(Guid userId, Guid meetingId, string content, CancellationToken cancellationToken = default)
+        public async Task<ChatMessageDto> SaveMeetingMessageAsync(Guid userId, Guid meetingId, string content)
         {
             if (string.IsNullOrWhiteSpace(content))
             {
                 throw new ArgumentException("Съдържанието на съобщението не може да бъде празно.", nameof(content));
             }
 
-            await EnsureMeetingAccessAsync(userId, meetingId, cancellationToken);
+            await EnsureMeetingAccessAsync(userId, meetingId);
 
-            var sender = await GetSenderAsync(userId, cancellationToken);
+            var sender = await GetSenderAsync(userId);
 
             var meeting = await db.Meetings
                 .AsNoTracking()
                 .Where(m => m.Id == meetingId)
                 .Select(m => new { m.Id, m.StartTime, m.Location })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync();
 
             if (meeting == null)
             {
@@ -121,7 +120,7 @@ namespace CalendarApp.Services.Messages
             };
 
             db.Messages.Add(entity);
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveChangesAsync();
 
             var metadata = new Dictionary<string, string?>
             {
@@ -141,9 +140,9 @@ namespace CalendarApp.Services.Messages
             };
         }
 
-        public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentFriendshipMessagesAsync(Guid userId, Guid friendshipId, int take, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentFriendshipMessagesAsync(Guid userId, Guid friendshipId, int take)
         {
-            await EnsureFriendshipAccessAsync(userId, friendshipId, cancellationToken);
+            await EnsureFriendshipAccessAsync(userId, friendshipId);
 
             var messages = await db.Messages
                 .AsNoTracking()
@@ -161,7 +160,7 @@ namespace CalendarApp.Services.Messages
                     SenderFirstName = m.Sender.FirstName,
                     SenderLastName = m.Sender.LastName
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             return messages
                 .Select(m => new ChatMessageDto
@@ -179,9 +178,9 @@ namespace CalendarApp.Services.Messages
                 .ToList();
         }
 
-        public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentMeetingMessagesAsync(Guid userId, Guid meetingId, int take, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentMeetingMessagesAsync(Guid userId, Guid meetingId, int take)
         {
-            await EnsureMeetingAccessAsync(userId, meetingId, cancellationToken);
+            await EnsureMeetingAccessAsync(userId, meetingId);
 
             var messages = await db.Messages
                 .AsNoTracking()
@@ -199,7 +198,7 @@ namespace CalendarApp.Services.Messages
                     SenderFirstName = m.Sender.FirstName,
                     SenderLastName = m.Sender.LastName
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             return messages
                 .Select(m => new ChatMessageDto
@@ -217,13 +216,13 @@ namespace CalendarApp.Services.Messages
                 .ToList();
         }
 
-        private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId, CancellationToken cancellationToken)
+        private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId)
         {
             var sender = await userManager.Users
                 .Where(u => u.Id == userId)
                 .Select(u => new { u.Id, u.FirstName, u.LastName })
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync();
 
             if (sender == null)
             {
