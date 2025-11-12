@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 
 namespace CalendarApp.Controllers
 {
@@ -29,13 +30,26 @@ namespace CalendarApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> My()
+        public async Task<IActionResult> My(string? search)
         {
             var userId = await userManager.GetUserIdGuidAsync(User);
-            var meetings = await meetingService.GetMeetingsForUserAsync(userId);
+            var trimmedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+            var meetings = await meetingService.GetMeetingsForUserAsync(userId, trimmedSearch);
+            var meetingViewModels = mapper.Map<List<MeetingListItemViewModel>>(meetings);
+
+            var now = DateTime.UtcNow;
+
             var model = new MeetingListViewModel
             {
-                Meetings = mapper.Map<List<MeetingListItemViewModel>>(meetings)
+                SearchTerm = trimmedSearch,
+                UpcomingMeetings = meetingViewModels
+                    .Where(m => m.StartTime >= now)
+                    .OrderBy(m => m.StartTime)
+                    .ToList(),
+                PastMeetings = meetingViewModels
+                    .Where(m => m.StartTime < now)
+                    .OrderByDescending(m => m.StartTime)
+                    .ToList()
             };
 
             return View(model);

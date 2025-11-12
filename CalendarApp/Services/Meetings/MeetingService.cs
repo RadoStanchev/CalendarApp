@@ -321,11 +321,22 @@ namespace CalendarApp.Services.Meetings
             return contacts;
         }
 
-        public async Task<IReadOnlyCollection<MeetingSummaryDto>> GetMeetingsForUserAsync(Guid userId)
+        public async Task<IReadOnlyCollection<MeetingSummaryDto>> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null)
         {
-            var meetings = await db.Meetings
+            var query = db.Meetings
                 .AsNoTracking()
-                .Where(m => m.CreatedById == userId || m.Participants.Any(p => p.ContactId == userId))
+                .Where(m => m.CreatedById == userId || m.Participants.Any(p => p.ContactId == userId));
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var trimmed = searchTerm.Trim();
+                var pattern = $"%{trimmed}%";
+                query = query.Where(m =>
+                    EF.Functions.Like(m.Description ?? string.Empty, pattern) ||
+                    EF.Functions.Like(m.Location ?? string.Empty, pattern));
+            }
+
+            var meetings = await query
                 .Select(m => new
                 {
                     m.Id,
