@@ -67,9 +67,6 @@ namespace CalendarApp.Data
                 .HasForeignKey(f => f.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Friendship>()
-                .HasIndex(f => f.PairKey)
-                .IsUnique();
         }
     }
 }

@@ -108,6 +108,7 @@ namespace CalendarApp.Services.Friendships
                 .Where(f => f.Status == FriendshipStatus.Accepted && (f.RequesterId == userId || f.ReceiverId == userId))
                 .Select(f => new FriendInfo
                 {
+                    FriendshipId = f.Id,
                     UserId = f.RequesterId == userId ? f.Receiver.Id : f.Requester.Id,
                     FirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
                     LastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
@@ -355,10 +356,10 @@ namespace CalendarApp.Services.Friendships
                 return (false, null);
             }
 
-            var pairKey = BuildPairKey(requesterId, receiverId);
-
             var friendship = await db.Friendships
-                .FirstOrDefaultAsync(f => f.PairKey == pairKey);
+                .FirstOrDefaultAsync(f =>
+                    (f.RequesterId == requesterId && f.ReceiverId == receiverId) ||
+                    (f.RequesterId == receiverId && f.ReceiverId == requesterId));
 
             if (friendship != null)
             {
@@ -381,7 +382,6 @@ namespace CalendarApp.Services.Friendships
                 friendship.ReceiverId = receiverId;
                 friendship.Status = FriendshipStatus.Pending;
                 friendship.CreatedAt = DateTime.UtcNow;
-                friendship.PairKey = pairKey;
             }
             else
             {
@@ -390,8 +390,7 @@ namespace CalendarApp.Services.Friendships
                     RequesterId = requesterId,
                     ReceiverId = receiverId,
                     Status = FriendshipStatus.Pending,
-                    CreatedAt = DateTime.UtcNow,
-                    PairKey = pairKey
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 await db.Friendships.AddAsync(friendship);
@@ -479,14 +478,17 @@ namespace CalendarApp.Services.Friendships
             return true;
         }
 
-        public async Task<bool> RemoveFriendAsync(Guid userId, Guid friendId)
+        public async Task<bool> RemoveFriendAsync(Guid friendshipId, Guid cancelerId)
         {
-            var pairKey = BuildPairKey(userId, friendId);
-
             var friendship = await db.Friendships
-                .FirstOrDefaultAsync(f => f.PairKey == pairKey && f.Status == FriendshipStatus.Accepted);
+                .FirstOrDefaultAsync(f => f.Id == friendshipId);
 
-            if (friendship == null)
+            if (friendship == null || friendship.Status != FriendshipStatus.Accepted)
+            {
+                return false;
+            }
+
+            if (friendship.RequesterId != cancelerId && friendship.ReceiverId != cancelerId)
             {
                 return false;
             }
@@ -516,11 +518,5 @@ namespace CalendarApp.Services.Friendships
             return parts.Length > 0 ? string.Join(" ", parts) : "Неизвестен";
         }
 
-        private static string BuildPairKey(Guid first, Guid second)
-        {
-            return first.CompareTo(second) < 0
-                ? $"{first:D}_{second:D}"
-                : $"{second:D}_{first:D}";
-        }
     }
 }

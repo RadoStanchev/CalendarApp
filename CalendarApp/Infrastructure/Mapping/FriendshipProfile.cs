@@ -10,6 +10,7 @@ namespace CalendarApp.Infrastructure.Mapping
         public FriendshipProfile()
         {
             CreateMap<FriendInfo, FriendViewModel>()
+                .ForMember(dest => dest.FriendshipId, opt => opt.MapFrom(src => src.FriendshipId))
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => NameFormatter.Format(src.FirstName, src.LastName)));
 

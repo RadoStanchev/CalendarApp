@@ -2,6 +2,8 @@ namespace CalendarApp.Models.Friendships
 {
     public class FriendViewModel
     {
+        public Guid FriendshipId { get; set; }
+
         public Guid Id { get; set; }
 
         public string DisplayName { get; set; } = string.Empty;

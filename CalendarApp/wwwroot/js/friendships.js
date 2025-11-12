@@ -293,7 +293,7 @@
         }
 
         async function removeFriend(suggestion, button) {
-            if (!button || !suggestion?.id) {
+            if (!button || !suggestion?.friendshipId) {
                 return;
             }
 
@@ -301,7 +301,7 @@
             button.disabled = true;
             button.textContent = 'Премахване…';
 
-            const result = await postAction(removeUrl, { friendId: suggestion.id }, {
+            const result = await postAction(removeUrl, { friendshipId: suggestion.friendshipId }, {
                 successMessage: 'Приятелят беше премахнат.',
                 errorMessage: 'Приятелят не може да бъде премахнат.'
             });

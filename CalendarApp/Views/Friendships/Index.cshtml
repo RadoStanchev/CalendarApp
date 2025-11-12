@@ -205,7 +205,7 @@
                                     </div>
                                     <form asp-action="Remove" method="post" class="ms-auto">
                                         @Html.AntiForgeryToken()
-                                        <input type="hidden" name="friendId" value="@friend.Id" />
+                                        <input type="hidden" name="friendshipId" value="@friend.FriendshipId" />
                                         <button type="submit" class="btn btn-outline-danger">Премахни</button>
                                     </form>
                                 </div>

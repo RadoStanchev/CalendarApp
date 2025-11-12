@@ -133,10 +133,10 @@ namespace CalendarApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Remove(Guid friendId)
+        public async Task<IActionResult> Remove(Guid friendshipId)
         {
             var userId = (await userManager.GetUserAsync(User)).Id;
-            var result = await friendshipService.RemoveFriendAsync(userId, friendId);
+            var result = await friendshipService.RemoveFriendAsync(friendshipId, userId);
             var message = result ? "Приятелят беше премахнат." : "Приятелят не може да бъде премахнат.";
 
             if (IsJsonRequest())

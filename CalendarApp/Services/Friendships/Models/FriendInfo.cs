@@ -2,6 +2,8 @@ namespace CalendarApp.Services.Friendships.Models
 {
     public class FriendInfo
     {
+        public Guid FriendshipId { get; init; }
+
         public Guid UserId { get; init; }
 
         public string FirstName { get; init; } = string.Empty;
