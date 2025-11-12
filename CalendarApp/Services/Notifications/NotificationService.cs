@@ -117,7 +117,7 @@ namespace CalendarApp.Services.Notifications
             return notifications.Count;
         }
 
-        public async Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds, CancellationToken cancellationToken = default)
+        public async Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds)
         {
             ArgumentNullException.ThrowIfNull(meeting);
 
@@ -146,8 +146,8 @@ namespace CalendarApp.Services.Notifications
 
             try
             {
-                await db.Notifications.AddRangeAsync(notifications, cancellationToken);
-                await db.SaveChangesAsync(cancellationToken);
+                await db.Notifications.AddRangeAsync(notifications);
+                await db.SaveChangesAsync();
 
                 foreach (var notification in notifications)
                 {
@@ -163,8 +163,7 @@ namespace CalendarApp.Services.Notifications
 
                     await hubContext.Clients.User(notification.UserId.ToString()).SendAsync(
                         "ReceiveMeetingReminder",
-                        payload,
-                        cancellationToken);
+                        payload);
                 }
             }
             catch (Exception ex)
@@ -183,18 +182,18 @@ namespace CalendarApp.Services.Notifications
             return $"Напомняне: {description} започва на {meeting.StartTime:dddd, MMM d yyyy h:mm tt}.";
         }
 
-        public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification, CancellationToken cancellationToken = default)
+        public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification)
         {
             if (notification == null)
             {
                 throw new ArgumentNullException(nameof(notification));
             }
 
-            var notifications = await CreateNotificationsAsync([notification], cancellationToken);
+            var notifications = await CreateNotificationsAsync([notification]);
             return notifications.First();
         }
 
-        public async Task<IReadOnlyCollection<NotificationDto>> CreateNotificationsAsync(IEnumerable<NotificationCreateDto> notifications, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<NotificationDto>> CreateNotificationsAsync(IEnumerable<NotificationCreateDto> notifications)
         {
             if (notifications == null)
             {
@@ -217,8 +216,8 @@ namespace CalendarApp.Services.Notifications
                 notification.IsRead = false;
             }
 
-            await db.Notifications.AddRangeAsync(materialized, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
+            await db.Notifications.AddRangeAsync(materialized);
+            await db.SaveChangesAsync();
 
             var results = materialized
                 .Select(mapper.Map<NotificationDto>)
@@ -227,7 +226,7 @@ namespace CalendarApp.Services.Notifications
             var broadcastTasks = results
                 .Select(result => hubContext.Clients
                     .User(result.UserId.ToString())
-                    .SendAsync("ReceiveNotification", result, cancellationToken))
+                    .SendAsync("ReceiveNotification", result))
                 .ToList();
 
             if (broadcastTasks.Count > 0)

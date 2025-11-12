@@ -47,7 +47,7 @@ namespace CalendarApp.Controllers
 
             var userId = currentUser.Id;
 
-            var friendshipThreadDtos = await friendshipService.GetChatThreadsAsync(userId, HttpContext.RequestAborted);
+            var friendshipThreadDtos = await friendshipService.GetChatThreadsAsync(userId);
 
             var onlineUsers = await presenceTracker.GetOnlineUsersAsync();
             var onlineUserSet = new HashSet<Guid>(onlineUsers);
@@ -67,7 +67,7 @@ namespace CalendarApp.Controllers
                 .ThenByDescending(t => t.LastMessageAt ?? t.CreatedAt)
                 .ToList();
 
-            var meetingThreadDtos = await meetingService.GetChatThreadsAsync(userId, HttpContext.RequestAborted);
+            var meetingThreadDtos = await meetingService.GetChatThreadsAsync(userId);
 
             var meetingThreads = mapper.Map<List<ChatThreadViewModel>>(meetingThreadDtos, opts =>
                 opts.Items["CurrentUserId"] = userId)
@@ -119,13 +119,13 @@ namespace CalendarApp.Controllers
 
             if (activeThreadType == ThreadType.Friendship && activeThreadId.HasValue)
             {
-                var messageItems = await messageService.GetRecentFriendshipMessagesAsync(userId, activeThreadId.Value, MessagesPageSize, HttpContext.RequestAborted);
+                var messageItems = await messageService.GetRecentFriendshipMessagesAsync(userId, activeThreadId.Value, MessagesPageSize);
 
                 messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
             }
             else if (activeThreadType == ThreadType.Meeting && activeThreadId.HasValue)
             {
-                var messageItems = await messageService.GetRecentMeetingMessagesAsync(userId, activeThreadId.Value, MessagesPageSize, HttpContext.RequestAborted);
+                var messageItems = await messageService.GetRecentMeetingMessagesAsync(userId, activeThreadId.Value, MessagesPageSize);
 
                 messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
             }
@@ -182,11 +182,11 @@ namespace CalendarApp.Controllers
             {
                 if (threadType == ThreadType.Meeting)
                 {
-                    await messageSeenService.MarkMeetingMessagesAsSeenAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
+                    await messageSeenService.MarkMeetingMessagesAsSeenAsync(currentUser.Id, threadId);
                 }
                 else
                 {
-                    await messageSeenService.MarkFriendshipMessagesAsSeenAsync(currentUser.Id, threadId, HttpContext.RequestAborted);
+                    await messageSeenService.MarkFriendshipMessagesAsSeenAsync(currentUser.Id, threadId);
                 }
             }
             catch (InvalidOperationException)
@@ -199,14 +199,14 @@ namespace CalendarApp.Controllers
 
         private async Task<IActionResult> BuildFriendshipThreadResponse(Guid friendshipId, Guid userId)
         {
-            var friendship = await friendshipService.GetChatThreadAsync(friendshipId, userId, HttpContext.RequestAborted);
+            var friendship = await friendshipService.GetChatThreadAsync(friendshipId, userId);
 
             if (friendship == null)
             {
                 return NotFound();
             }
 
-            var messageItems = await messageService.GetRecentFriendshipMessagesAsync(userId, friendshipId, MessagesPageSize, HttpContext.RequestAborted);
+            var messageItems = await messageService.GetRecentFriendshipMessagesAsync(userId, friendshipId, MessagesPageSize);
 
             var messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
 
@@ -241,14 +241,14 @@ namespace CalendarApp.Controllers
 
         private async Task<IActionResult> BuildMeetingThreadResponse(Guid meetingId, Guid userId)
         {
-            var meeting = await meetingService.GetChatThreadAsync(meetingId, userId, HttpContext.RequestAborted);
+            var meeting = await meetingService.GetChatThreadAsync(meetingId, userId);
 
             if (meeting == null)
             {
                 return NotFound();
             }
 
-            var messageItems = await messageService.GetRecentMeetingMessagesAsync(userId, meetingId, MessagesPageSize, HttpContext.RequestAborted);
+            var messageItems = await messageService.GetRecentMeetingMessagesAsync(userId, meetingId, MessagesPageSize);
 
             var messages = mapper.Map<List<ChatMessageViewModel>>(messageItems);
 

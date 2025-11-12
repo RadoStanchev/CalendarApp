@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Meetings
@@ -23,7 +22,7 @@ namespace CalendarApp.Services.Meetings
             this.notificationService = notificationService;
         }
 
-        public async Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId)
         {
             var meetings = await db.Meetings
                 .AsNoTracking()
@@ -40,7 +39,7 @@ namespace CalendarApp.Services.Meetings
                     CreatorLastName = m.CreatedBy.LastName,
                     ParticipantCount = m.Participants.Count(p => p.Status == ParticipantStatus.Accepted)
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             if (meetings.Count == 0)
             {
@@ -59,7 +58,7 @@ namespace CalendarApp.Services.Meetings
                     m.Content,
                     m.SentAt
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync();
 
             var latestMessageLookup = latestMessages
                 .GroupBy(m => m.MeetingId)
@@ -87,7 +86,7 @@ namespace CalendarApp.Services.Meetings
                 .ToList();
         }
 
-        public async Task<MeetingThreadDto?> GetChatThreadAsync(Guid meetingId, Guid userId, CancellationToken cancellationToken = default)
+        public async Task<MeetingThreadDto?> GetChatThreadAsync(Guid meetingId, Guid userId)
         {
             return await db.Meetings
                 .AsNoTracking()
@@ -105,7 +104,7 @@ namespace CalendarApp.Services.Meetings
                     CreatorLastName = m.CreatedBy.LastName,
                     ParticipantCount = m.Participants.Count(p => p.Status == ParticipantStatus.Accepted)
                 })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Guid> CreateMeetingAsync(MeetingCreateDto dto)
