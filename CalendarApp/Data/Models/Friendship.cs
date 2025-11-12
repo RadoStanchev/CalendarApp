@@ -24,9 +24,6 @@ namespace CalendarApp.Data.Models
         [Required]
         public FriendshipStatus Status { get; set; } = FriendshipStatus.Pending;
 
-        [Required, MaxLength(100)]
-        public string PairKey { get; set; } = string.Empty;
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

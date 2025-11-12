@@ -22,7 +22,7 @@ namespace CalendarApp.Services.Friendships
 
         Task<bool> CancelFriendRequestAsync(Guid friendshipId, Guid requesterId);
 
-        Task<bool> RemoveFriendAsync(Guid userId, Guid friendId);
+        Task<bool> RemoveFriendAsync(Guid friendshipId, Guid cancelerId);
 
         Task<IReadOnlyCollection<FriendshipThreadDto>> GetChatThreadsAsync(Guid userId);
 
