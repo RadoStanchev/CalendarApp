@@ -82,7 +82,7 @@ namespace CalendarApp.Infrastructure.Background
                     continue;
                 }
 
-                await notificationService.SendMeetingReminderAsync(meeting, recipientIds, cancellationToken);
+                await notificationService.SendMeetingReminderAsync(meeting, recipientIds);
                 meeting.ReminderSent = true;
             }
 

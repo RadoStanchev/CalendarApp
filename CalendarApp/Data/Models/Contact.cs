@@ -22,6 +22,7 @@ namespace CalendarApp.Data.Models
         public string? Note { get; set; }
 
         public ICollection<MeetingParticipant> MeetingParticipants { get; set; } = [];
+        public ICollection<Meeting> OwnedMeetings { get; set; } = [];
         public ICollection<Message> SentMessages { get; set; } = [];
         public ICollection<MessageSeen> MessageSeens { get; set; } = [];
         public ICollection<Friendship> SentFriendRequests { get; set; } = [];

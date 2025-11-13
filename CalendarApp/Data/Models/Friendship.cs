@@ -15,11 +15,11 @@ namespace CalendarApp.Data.Models
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        public Guid RequesterId { get; set; }
-        public Contact Requester { get; set; }
+        public Guid? RequesterId { get; set; }
+        public Contact? Requester { get; set; }
 
-        public Guid ReceiverId { get; set; }
-        public Contact Receiver { get; set; }
+        public Guid? ReceiverId { get; set; }
+        public Contact? Receiver { get; set; }
 
         [Required]
         public FriendshipStatus Status { get; set; } = FriendshipStatus.Pending;
