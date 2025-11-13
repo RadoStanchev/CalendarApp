@@ -138,10 +138,10 @@ namespace CalendarApp.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("ReceiverId")
+                    b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("RequesterId")
+                    b.Property<Guid>("RequesterId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
@@ -437,12 +437,14 @@ namespace CalendarApp.Data.Migrations
                     b.HasOne("CalendarApp.Data.Models.Contact", "Receiver")
                         .WithMany("ReceivedFriendRequests")
                         .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("CalendarApp.Data.Models.Contact", "Requester")
                         .WithMany("SentFriendRequests")
                         .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Receiver");
 

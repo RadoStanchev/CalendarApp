@@ -26,18 +26,15 @@ namespace CalendarApp.Services.Friendships
         {
             var friendships = await db.Friendships
                 .AsNoTracking()
-                .Where(f => f.Status == FriendshipStatus.Accepted
-                            && ((f.RequesterId.HasValue && f.RequesterId.Value == userId)
-                                || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId)))
-                .Where(f => f.RequesterId.HasValue && f.ReceiverId.HasValue)
+                .Where(f => f.Status == FriendshipStatus.Accepted && (f.RequesterId == userId || f.ReceiverId == userId))
                 .Select(f => new
                 {
                     f.Id,
                     f.CreatedAt,
-                    FriendId = f.RequesterId == userId ? f.ReceiverId.Value : f.RequesterId.Value,
-                    FriendFirstName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.FirstName : null) : (f.Requester != null ? f.Requester.FirstName : null),
-                    FriendLastName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.LastName : null) : (f.Requester != null ? f.Requester.LastName : null),
-                    FriendEmail = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.Email : null) : (f.Requester != null ? f.Requester.Email : null)
+                    FriendId = f.RequesterId == userId ? f.ReceiverId : f.RequesterId,
+                    FriendFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
+                    FriendLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
+                    FriendEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email
                 })
                 .ToListAsync();
 
@@ -54,7 +51,7 @@ namespace CalendarApp.Services.Friendships
                 .OrderByDescending(m => m.SentAt)
                 .Select(m => new
                 {
-                    FriendshipId = m.FriendshipId.Value,
+                    FriendshipId = m.FriendshipId!.Value,
                     m.Content,
                     m.SentAt
                 })
@@ -90,16 +87,14 @@ namespace CalendarApp.Services.Friendships
                 .AsNoTracking()
                 .Where(f => f.Id == friendshipId
                             && f.Status == FriendshipStatus.Accepted
-                            && ((f.RequesterId.HasValue && f.RequesterId.Value == userId)
-                                || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId)))
-                .Where(f => f.RequesterId.HasValue && f.ReceiverId.HasValue)
+                            && (f.RequesterId == userId || f.ReceiverId == userId))
                 .Select(f => new FriendshipThreadDto
                 {
                     FriendshipId = f.Id,
-                    FriendId = f.RequesterId == userId ? f.ReceiverId.Value : f.RequesterId.Value,
-                    FriendFirstName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.FirstName : null) : (f.Requester != null ? f.Requester.FirstName : null),
-                    FriendLastName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.LastName : null) : (f.Requester != null ? f.Requester.LastName : null),
-                    FriendEmail = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.Email : null) : (f.Requester != null ? f.Requester.Email : null),
+                    FriendId = f.RequesterId == userId ? f.ReceiverId : f.RequesterId,
+                    FriendFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
+                    FriendLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
+                    FriendEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email,
                     CreatedAt = f.CreatedAt
                 })
                 .FirstOrDefaultAsync();
@@ -109,17 +104,14 @@ namespace CalendarApp.Services.Friendships
         {
             return await db.Friendships
                 .AsNoTracking()
-                .Where(f => f.Status == FriendshipStatus.Accepted
-                            && ((f.RequesterId.HasValue && f.RequesterId.Value == userId)
-                                || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId)))
-                .Where(f => f.RequesterId.HasValue && f.ReceiverId.HasValue)
+                .Where(f => f.Status == FriendshipStatus.Accepted && (f.RequesterId == userId || f.ReceiverId == userId))
                 .Select(f => new FriendInfo
                 {
                     FriendshipId = f.Id,
-                    UserId = f.RequesterId == userId ? f.ReceiverId.Value : f.RequesterId.Value,
-                    FirstName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.FirstName : string.Empty) : (f.Requester != null ? f.Requester.FirstName : string.Empty),
-                    LastName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.LastName : string.Empty) : (f.Requester != null ? f.Requester.LastName : string.Empty),
-                    Email = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.Email : string.Empty) : (f.Requester != null ? f.Requester.Email : string.Empty)
+                    UserId = f.RequesterId == userId ? f.Receiver.Id : f.Requester.Id,
+                    FirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
+                    LastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
+                    Email = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email
                 })
                 .OrderBy(f => f.FirstName)
                 .ThenBy(f => f.LastName)
@@ -130,19 +122,16 @@ namespace CalendarApp.Services.Friendships
         {
             return await db.Friendships
                 .AsNoTracking()
-                .Where(f => f.Status == FriendshipStatus.Pending
-                            && ((f.RequesterId.HasValue && f.RequesterId.Value == userId)
-                                || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId)))
-                .Where(f => f.RequesterId.HasValue && f.ReceiverId.HasValue)
+                .Where(f => f.Status == FriendshipStatus.Pending && (f.RequesterId == userId || f.ReceiverId == userId))
                 .Select(f => new FriendRequestInfo
                 {
                     FriendshipId = f.Id,
-                    RequesterId = f.RequesterId.Value,
-                    ReceiverId = f.ReceiverId.Value,
-                    TargetUserId = f.RequesterId == userId ? f.ReceiverId.Value : f.RequesterId.Value,
-                    TargetFirstName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.FirstName : string.Empty) : (f.Requester != null ? f.Requester.FirstName : string.Empty),
-                    TargetLastName = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.LastName : string.Empty) : (f.Requester != null ? f.Requester.LastName : string.Empty),
-                    TargetEmail = f.RequesterId == userId ? (f.Receiver != null ? f.Receiver.Email : string.Empty) : (f.Requester != null ? f.Requester.Email : string.Empty),
+                    RequesterId = f.RequesterId,
+                    ReceiverId = f.ReceiverId,
+                    TargetUserId = f.RequesterId == userId ? f.Receiver.Id : f.Requester.Id,
+                    TargetFirstName = f.RequesterId == userId ? f.Receiver.FirstName : f.Requester.FirstName,
+                    TargetLastName = f.RequesterId == userId ? f.Receiver.LastName : f.Requester.LastName,
+                    TargetEmail = f.RequesterId == userId ? f.Receiver.Email : f.Requester.Email,
                     CreatedAt = f.CreatedAt,
                     IsIncoming = f.ReceiverId == userId
                 })
@@ -154,8 +143,7 @@ namespace CalendarApp.Services.Friendships
         {
             var userFriendships = await db.Friendships
                 .AsNoTracking()
-                .Where(f => (f.RequesterId.HasValue && f.RequesterId.Value == userId)
-                            || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId))
+                .Where(f => f.RequesterId == userId || f.ReceiverId == userId)
                 .Select(f => new
                 {
                     f.RequesterId,
@@ -166,18 +154,12 @@ namespace CalendarApp.Services.Friendships
 
             var acceptedFriends = new HashSet<Guid>(userFriendships
                 .Where(f => f.Status == FriendshipStatus.Accepted)
-                .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId)
-                .Where(id => id.HasValue)
-                .Select(id => id.Value));
+                .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId));
 
             var excluded = new HashSet<Guid> { userId };
             foreach (var friendship in userFriendships)
             {
-                var otherId = friendship.RequesterId == userId ? friendship.ReceiverId : friendship.RequesterId;
-                if (otherId.HasValue)
-                {
-                    excluded.Add(otherId.Value);
-                }
+                excluded.Add(friendship.RequesterId == userId ? friendship.ReceiverId : friendship.RequesterId);
             }
 
             var mutualCounts = new Dictionary<Guid, int>();
@@ -186,27 +168,24 @@ namespace CalendarApp.Services.Friendships
             {
                 var friendNetworks = await db.Friendships
                     .AsNoTracking()
-                    .Where(f => f.Status == FriendshipStatus.Accepted
-                                && f.RequesterId.HasValue
-                                && f.ReceiverId.HasValue
-                                && (acceptedFriends.Contains(f.RequesterId.Value) || acceptedFriends.Contains(f.ReceiverId.Value)))
+                    .Where(f => f.Status == FriendshipStatus.Accepted && (acceptedFriends.Contains(f.RequesterId) || acceptedFriends.Contains(f.ReceiverId)))
                     .Select(f => new { f.RequesterId, f.ReceiverId })
                     .ToListAsync();
 
                 foreach (var friendship in friendNetworks)
                 {
-                    if (friendship.RequesterId.HasValue && acceptedFriends.Contains(friendship.RequesterId.Value))
+                    if (acceptedFriends.Contains(friendship.RequesterId))
                     {
-                        var candidateId = friendship.ReceiverId.Value;
+                        var candidateId = friendship.ReceiverId;
                         if (!excluded.Contains(candidateId))
                         {
                             mutualCounts[candidateId] = mutualCounts.TryGetValue(candidateId, out var count) ? count + 1 : 1;
                         }
                     }
 
-                    if (friendship.ReceiverId.HasValue && acceptedFriends.Contains(friendship.ReceiverId.Value))
+                    if (acceptedFriends.Contains(friendship.ReceiverId))
                     {
-                        var candidateId = friendship.RequesterId.Value;
+                        var candidateId = friendship.RequesterId;
                         if (!excluded.Contains(candidateId))
                         {
                             mutualCounts[candidateId] = mutualCounts.TryGetValue(candidateId, out var count) ? count + 1 : 1;
@@ -298,8 +277,7 @@ namespace CalendarApp.Services.Friendships
 
             var relationshipStatuses = await db.Friendships
                 .AsNoTracking()
-                .Where(f => (f.RequesterId.HasValue && f.RequesterId.Value == userId)
-                            || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId))
+                .Where(f => f.RequesterId == userId || f.ReceiverId == userId)
                 .Select(f => new
                 {
                     f.Id,
@@ -313,11 +291,6 @@ namespace CalendarApp.Services.Friendships
             foreach (var relationship in relationshipStatuses)
             {
                 var otherUserId = relationship.RequesterId == userId ? relationship.ReceiverId : relationship.RequesterId;
-                if (!otherUserId.HasValue)
-                {
-                    continue;
-                }
-
                 var status = relationship.Status switch
                 {
                     FriendshipStatus.Accepted => FriendRelationshipStatus.Friend,
@@ -327,7 +300,7 @@ namespace CalendarApp.Services.Friendships
                     _ => FriendRelationshipStatus.None
                 };
 
-                statusLookup[otherUserId.Value] = (status, relationship.Id, relationship.ReceiverId == userId);
+                statusLookup[otherUserId] = (status, relationship.Id, relationship.ReceiverId == userId);
             }
 
             var query = db.Users.AsNoTracking();
@@ -443,13 +416,6 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            if (!friendship.RequesterId.HasValue)
-            {
-                db.Friendships.Remove(friendship);
-                await db.SaveChangesAsync();
-                return true;
-            }
-
             friendship.Status = FriendshipStatus.Accepted;
             friendship.CreatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
@@ -457,7 +423,7 @@ namespace CalendarApp.Services.Friendships
             var receiverName = await GetUserDisplayNameAsync(receiverId);
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
-                UserId = friendship.RequesterId.Value,
+                UserId = friendship.RequesterId,
                 Message = $"{receiverName} прие вашата покана за приятелство.",
                 Type = NotificationType.Info
             });
@@ -477,16 +443,13 @@ namespace CalendarApp.Services.Friendships
             friendship.CreatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
-            if (friendship.RequesterId.HasValue)
+            var receiverName = await GetUserDisplayNameAsync(receiverId);
+            await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
-                var receiverName = await GetUserDisplayNameAsync(receiverId);
-                await notificationService.CreateNotificationAsync(new NotificationCreateDto
-                {
-                    UserId = friendship.RequesterId.Value,
-                    Message = $"{receiverName} отказа вашата покана за приятелство.",
-                    Type = NotificationType.Warning
-                });
-            }
+                UserId = friendship.RequesterId,
+                Message = $"{receiverName} отказа вашата покана за приятелство.",
+                Type = NotificationType.Warning
+            });
 
             return true;
         }
@@ -504,15 +467,12 @@ namespace CalendarApp.Services.Friendships
             await db.SaveChangesAsync();
 
             var requesterName = await GetUserDisplayNameAsync(requesterId);
-            if (receiverId.HasValue)
+            await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
-                await notificationService.CreateNotificationAsync(new NotificationCreateDto
-                {
-                    UserId = receiverId.Value,
-                    Message = $"{requesterName} отмени поканата за приятелство.",
-                    Type = NotificationType.Info
-                });
-            }
+                UserId = receiverId,
+                Message = $"{requesterName} отмени поканата за приятелство.",
+                Type = NotificationType.Info
+            });
 
             return true;
         }
@@ -527,14 +487,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var requesterId = friendship.RequesterId;
-            var receiverId = friendship.ReceiverId;
-
-            var isCancelerParticipant =
-                (requesterId.HasValue && requesterId.Value == cancelerId) ||
-                (receiverId.HasValue && receiverId.Value == cancelerId);
-
-            if (!isCancelerParticipant && (requesterId.HasValue || receiverId.HasValue))
+            if (friendship.RequesterId != cancelerId && friendship.ReceiverId != cancelerId)
             {
                 return false;
             }

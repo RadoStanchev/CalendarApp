@@ -59,13 +59,13 @@ namespace CalendarApp.Data
                 .HasOne(f => f.Requester)
                 .WithMany(c => c.SentFriendRequests)
                 .HasForeignKey(f => f.RequesterId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Friendship>()
                 .HasOne(f => f.Receiver)
                 .WithMany(c => c.ReceivedFriendRequests)
                 .HasForeignKey(f => f.ReceiverId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }
