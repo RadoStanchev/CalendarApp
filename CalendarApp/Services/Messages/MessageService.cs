@@ -31,7 +31,8 @@ namespace CalendarApp.Services.Messages
                 .AsNoTracking()
                 .Where(f => f.Id == friendshipId
                             && f.Status == FriendshipStatus.Accepted
-                            && (f.RequesterId == userId || f.ReceiverId == userId))
+                            && ((f.RequesterId.HasValue && f.RequesterId.Value == userId)
+                                || (f.ReceiverId.HasValue && f.ReceiverId.Value == userId)))
                 .AnyAsync();
 
             if (!hasAccess)
