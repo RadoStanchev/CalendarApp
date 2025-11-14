@@ -356,6 +356,7 @@ namespace CalendarApp.Services.Friendships
             }
 
             var friendship = await db.Friendships
+                .Include(x => x.Requester)
                 .FirstOrDefaultAsync(f =>
                     (f.RequesterId == requesterId && f.ReceiverId == receiverId) ||
                     (f.RequesterId == receiverId && f.ReceiverId == requesterId));
@@ -397,11 +398,10 @@ namespace CalendarApp.Services.Friendships
 
             await db.SaveChangesAsync();
 
-            var requesterName = await GetUserDisplayNameAsync(requesterId);
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = receiverId,
-                Message = $"{requesterName} ви изпрати покана за приятелство.",
+                Message = $"{friendship.Requester.FirstName + " " + friendship.Requester.LastName} ви изпрати покана за приятелство.",
                 Type = NotificationType.Invitation
             });
 
@@ -410,7 +410,9 @@ namespace CalendarApp.Services.Friendships
 
         public async Task<bool> AcceptFriendRequestAsync(Guid friendshipId, Guid receiverId)
         {
-            var friendship = await db.Friendships.FirstOrDefaultAsync(f => f.Id == friendshipId);
+            var friendship = await db.Friendships
+                .Include(x => x.Receiver)
+                .FirstOrDefaultAsync(f => f.Id == friendshipId);
             if (friendship == null || friendship.Status != FriendshipStatus.Pending || friendship.ReceiverId != receiverId)
             {
                 return false;
@@ -420,11 +422,10 @@ namespace CalendarApp.Services.Friendships
             friendship.CreatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
-            var receiverName = await GetUserDisplayNameAsync(receiverId);
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = friendship.RequesterId,
-                Message = $"{receiverName} прие вашата покана за приятелство.",
+                Message = $"{friendship.Receiver.FirstName + " " + friendship.Receiver.LastName} прие вашата покана за приятелство.",
                 Type = NotificationType.Info
             });
 
@@ -433,7 +434,9 @@ namespace CalendarApp.Services.Friendships
 
         public async Task<bool> DeclineFriendRequestAsync(Guid friendshipId, Guid receiverId)
         {
-            var friendship = await db.Friendships.FirstOrDefaultAsync(f => f.Id == friendshipId);
+            var friendship = await db.Friendships
+                .Include(x => x.Receiver)
+                .FirstOrDefaultAsync(f => f.Id == friendshipId);
             if (friendship == null || friendship.Status != FriendshipStatus.Pending || friendship.ReceiverId != receiverId)
             {
                 return false;
@@ -443,11 +446,10 @@ namespace CalendarApp.Services.Friendships
             friendship.CreatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
 
-            var receiverName = await GetUserDisplayNameAsync(receiverId);
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = friendship.RequesterId,
-                Message = $"{receiverName} отказа вашата покана за приятелство.",
+                Message = $"{friendship.Receiver.FirstName + " " + friendship.Receiver.LastName} отказа вашата покана за приятелство.",
                 Type = NotificationType.Warning
             });
 
@@ -456,7 +458,9 @@ namespace CalendarApp.Services.Friendships
 
         public async Task<bool> CancelFriendRequestAsync(Guid friendshipId, Guid requesterId)
         {
-            var friendship = await db.Friendships.FirstOrDefaultAsync(f => f.Id == friendshipId);
+            var friendship = await db.Friendships
+                .Include(x => x.Requester)
+                .FirstOrDefaultAsync(f => f.Id == friendshipId);
             if (friendship == null || friendship.Status != FriendshipStatus.Pending || friendship.RequesterId != requesterId)
             {
                 return false;
@@ -466,11 +470,10 @@ namespace CalendarApp.Services.Friendships
             db.Friendships.Remove(friendship);
             await db.SaveChangesAsync();
 
-            var requesterName = await GetUserDisplayNameAsync(requesterId);
             await notificationService.CreateNotificationAsync(new NotificationCreateDto
             {
                 UserId = receiverId,
-                Message = $"{requesterName} отмени поканата за приятелство.",
+                Message = $"{friendship.Requester.FirstName + " " + friendship.Requester.LastName} отмени поканата за приятелство.",
                 Type = NotificationType.Info
             });
 
@@ -496,26 +499,5 @@ namespace CalendarApp.Services.Friendships
             await db.SaveChangesAsync();
             return true;
         }
-
-        private async Task<string> GetUserDisplayNameAsync(Guid userId)
-        {
-            var user = await db.Users
-                .AsNoTracking()
-                .Where(u => u.Id == userId)
-                .Select(u => new { u.FirstName, u.LastName })
-                .FirstOrDefaultAsync();
-
-            return FormatName(user?.FirstName, user?.LastName);
-        }
-
-        private static string FormatName(string? firstName, string? lastName)
-        {
-            var parts = new[] { firstName, lastName }
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .ToArray();
-
-            return parts.Length > 0 ? string.Join(" ", parts) : "Неизвестен";
-        }
-
     }
 }

@@ -492,8 +492,9 @@ namespace CalendarApp.Data.Migrations
             modelBuilder.Entity("CalendarApp.Data.Models.Message", b =>
                 {
                     b.HasOne("CalendarApp.Data.Models.Friendship", "Friendship")
-                        .WithMany()
-                        .HasForeignKey("FriendshipId");
+                        .WithMany("Messages")
+                        .HasForeignKey("FriendshipId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("CalendarApp.Data.Models.Meeting", "Meeting")
                         .WithMany()
@@ -613,6 +614,11 @@ namespace CalendarApp.Data.Migrations
                     b.Navigation("SentFriendRequests");
 
                     b.Navigation("SentMessages");
+                });
+
+            modelBuilder.Entity("CalendarApp.Data.Models.Friendship", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("CalendarApp.Data.Models.Meeting", b =>

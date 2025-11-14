@@ -16,7 +16,7 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<MeetingParticipantDto, MeetingParticipantDisplayViewModel>();
 
             CreateMap<Meeting, MeetingSummaryDto>()
-                .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => FormatName(src.CreatedBy)))
+                .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => $"{src.CreatedBy.FirstName} {src.CreatedBy.LastName}"))
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
                 .ForMember(dest => dest.CategoryColor, opt => opt.MapFrom(src => src.Category != null ? src.Category.Color : null))
                 .ForMember(dest => dest.ParticipantCount, opt => opt.MapFrom(src => src.Participants.Count))
@@ -52,16 +52,6 @@ namespace CalendarApp.Infrastructure.Mapping
             CreateMap<ContactSuggestionDto, ContactSuggestionViewModel>();
 
             CreateMap<CategoryDetailsDto, CategoryOptionViewModel>();
-        }
-
-        private static string FormatName(Contact? user)
-        {
-            var parts = new[] { user?.FirstName, user?.LastName }
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .Select(p => p!.Trim())
-                .ToArray();
-
-            return parts.Length > 0 ? string.Join(" ", parts) : "Неизвестен";
         }
     }
 }

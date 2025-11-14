@@ -5,10 +5,6 @@ using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CalendarApp.Services.Meetings
 {
@@ -155,14 +151,13 @@ namespace CalendarApp.Services.Meetings
 
             var creatorName = await GetUserDisplayNameAsync(dto.CreatedById);
             var startTime = meeting.StartTime.ToLocalTime().ToString("g");
-            var locationSuffix = BuildLocationSuffix(meeting.Location);
 
             var notifications = meeting.Participants
                 .Where(p => p.ContactId != dto.CreatedById)
                 .Select(p => new NotificationCreateDto
                 {
                     UserId = p.ContactId,
-                    Message = $"{creatorName} ви покани на среща на {startTime}{locationSuffix}.",
+                    Message = $"{creatorName} ви покани на среща на {startTime}{LocationSuffix(meeting.Location)}.",
                     Type = NotificationType.Invitation
                 })
                 .ToList();
@@ -451,14 +446,13 @@ namespace CalendarApp.Services.Meetings
             await db.SaveChangesAsync();
             var updaterName = await GetUserDisplayNameAsync(dto.UpdatedById);
             var startTime = meeting.StartTime.ToLocalTime().ToString("g");
-            var locationSuffix = BuildLocationSuffix(meeting.Location);
 
             var invitationNotifications = newlyAddedParticipantIds
                 .Where(id => id != dto.UpdatedById)
                 .Select(id => new NotificationCreateDto
                 {
                     UserId = id,
-                    Message = $"{updaterName} ви добави към среща на {startTime}{locationSuffix}.",
+                    Message = $"{updaterName} ви добави към среща на {startTime}{LocationSuffix(meeting.Location)}.",
                     Type = NotificationType.Invitation
                 })
                 .ToList();
@@ -475,7 +469,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(id => new NotificationCreateDto
                 {
                     UserId = id,
-                    Message = $"{updaterName} актуализира срещата на {startTime}{locationSuffix}.",
+                    Message = $"{updaterName} актуализира срещата на {startTime}{LocationSuffix(meeting.Location)}.",
                     Type = NotificationType.Info
                 })
                 .ToList();
@@ -547,14 +541,7 @@ namespace CalendarApp.Services.Meetings
             return FormatName(user?.FirstName, user?.LastName);
         }
 
-        private static string BuildLocationSuffix(string? location)
-        {
-            if (string.IsNullOrWhiteSpace(location))
-            {
-                return string.Empty;
-            }
-
-            return $" на {location.Trim()}";
-        }
+        private static string LocationSuffix(string? location)
+            => string.IsNullOrWhiteSpace(location)? "" : $" на {location.Trim()}";
     }
 }

@@ -36,6 +36,12 @@ namespace CalendarApp.Data
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Message>()
+                .HasOne(m => m.Friendship)
+                .WithMany(f => f.Messages)
+                .HasForeignKey(m => m.FriendshipId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.Entity<MessageSeen>()
                 .HasKey(r => new { r.MessageId, r.ContactId });
 

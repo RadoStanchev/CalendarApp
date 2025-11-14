@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CalendarApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251113170415_ChangeDeleteBehavior")]
-    partial class ChangeDeleteBehavior
+    [Migration("20251113173153_DeleteOnMessageFriendship")]
+    partial class DeleteOnMessageFriendship
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -141,10 +141,10 @@ namespace CalendarApp.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("ReceiverId")
+                    b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("RequesterId")
+                    b.Property<Guid>("RequesterId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
@@ -440,12 +440,14 @@ namespace CalendarApp.Data.Migrations
                     b.HasOne("CalendarApp.Data.Models.Contact", "Receiver")
                         .WithMany("ReceivedFriendRequests")
                         .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("CalendarApp.Data.Models.Contact", "Requester")
                         .WithMany("SentFriendRequests")
                         .HasForeignKey("RequesterId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Receiver");
 
@@ -493,8 +495,9 @@ namespace CalendarApp.Data.Migrations
             modelBuilder.Entity("CalendarApp.Data.Models.Message", b =>
                 {
                     b.HasOne("CalendarApp.Data.Models.Friendship", "Friendship")
-                        .WithMany()
-                        .HasForeignKey("FriendshipId");
+                        .WithMany("Messages")
+                        .HasForeignKey("FriendshipId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("CalendarApp.Data.Models.Meeting", "Meeting")
                         .WithMany()
@@ -614,6 +617,11 @@ namespace CalendarApp.Data.Migrations
                     b.Navigation("SentFriendRequests");
 
                     b.Navigation("SentMessages");
+                });
+
+            modelBuilder.Entity("CalendarApp.Data.Models.Friendship", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("CalendarApp.Data.Models.Meeting", b =>
