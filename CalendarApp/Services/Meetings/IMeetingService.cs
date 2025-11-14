@@ -20,7 +20,7 @@ namespace CalendarApp.Services.Meetings
 
         Task<IReadOnlyCollection<ContactSummaryDto>> GetContactsAsync(IEnumerable<Guid> ids);
 
-        Task<IReadOnlyCollection<MeetingSummaryDto>> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null);
+        Task<UserMeetingsDto> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null);
 
         Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status);
 

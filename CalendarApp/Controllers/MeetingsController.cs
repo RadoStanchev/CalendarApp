@@ -35,21 +35,12 @@ namespace CalendarApp.Controllers
             var userId = await userManager.GetUserIdGuidAsync(User);
             var trimmedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
             var meetings = await meetingService.GetMeetingsForUserAsync(userId, trimmedSearch);
-            var meetingViewModels = mapper.Map<List<MeetingListItemViewModel>>(meetings);
-
-            var now = DateTime.UtcNow;
 
             var model = new MeetingListViewModel
             {
                 SearchTerm = trimmedSearch,
-                UpcomingMeetings = meetingViewModels
-                    .Where(m => m.StartTime >= now)
-                    .OrderBy(m => m.StartTime)
-                    .ToList(),
-                PastMeetings = meetingViewModels
-                    .Where(m => m.StartTime < now)
-                    .OrderByDescending(m => m.StartTime)
-                    .ToList()
+                UpcomingMeetings = mapper.Map<List<MeetingListItemViewModel>>(meetings.UpcomingMeetings),
+                PastMeetings = mapper.Map<List<MeetingListItemViewModel>>(meetings.PastMeetings)
             };
 
             return View(model);

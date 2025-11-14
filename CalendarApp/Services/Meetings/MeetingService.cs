@@ -321,8 +321,10 @@ namespace CalendarApp.Services.Meetings
             return contacts;
         }
 
-        public async Task<IReadOnlyCollection<MeetingSummaryDto>> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null)
+        public async Task<UserMeetingsDto> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null)
         {
+            var utcNow = DateTime.UtcNow;
+
             var query = db.Meetings
                 .AsNoTracking()
                 .Where(m => m.CreatedById == userId || m.Participants.Any(p => p.ContactId == userId));
@@ -330,60 +332,110 @@ namespace CalendarApp.Services.Meetings
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var trimmed = searchTerm.Trim();
-                var pattern = $"%{trimmed}%";
-                query = query.Where(m =>
-                    EF.Functions.Like(m.Description ?? string.Empty, pattern) ||
-                    EF.Functions.Like(m.Location ?? string.Empty, pattern));
+                if (!string.IsNullOrEmpty(trimmed))
+                {
+                    var pattern = $"%{trimmed}%";
+                    query = query.Where(m =>
+                        EF.Functions.Like(m.Description ?? string.Empty, pattern) ||
+                        EF.Functions.Like(m.Location ?? string.Empty, pattern));
+                }
             }
 
-            var meetings = await query
-                .Select(m => new
-                {
-                    m.Id,
-                    m.StartTime,
-                    m.Location,
-                    m.Description,
-                    m.CreatedById,
-                    m.CategoryId,
-                    CreatorFirstName = m.CreatedBy.FirstName,
-                    CreatorLastName = m.CreatedBy.LastName,
-                    CategoryName = m.Category != null ? m.Category.Name : null,
-                    CategoryColor = m.Category != null ? m.Category.Color : null,
-                    ParticipantCount = m.Participants.Count,
-                    ViewerStatus = m.Participants
-                        .Where(p => p.ContactId == userId)
-                        .Select(p => (ParticipantStatus?)p.Status)
-                        .FirstOrDefault()
-                })
+            var upcomingResults = await ProjectToMeetingSummary(query.Where(m => m.StartTime >= utcNow), userId)
                 .OrderBy(m => m.StartTime)
                 .ToListAsync();
 
-            return meetings
-                .Select(m =>
-                {
-                    var viewerStatus = m.ViewerStatus;
-                    if (viewerStatus == null && m.CreatedById == userId)
-                    {
-                        viewerStatus = ParticipantStatus.Accepted;
-                    }
+            var pastResults = await ProjectToMeetingSummary(query.Where(m => m.StartTime < utcNow), userId)
+                .OrderByDescending(m => m.StartTime)
+                .ToListAsync();
 
-                    return new MeetingSummaryDto
-                    {
-                        Id = m.Id,
-                        StartTime = m.StartTime,
-                        Location = m.Location,
-                        Description = m.Description,
-                        CreatedById = m.CreatedById,
-                        CreatedByName = FormatName(m.CreatorFirstName, m.CreatorLastName),
-                        CategoryId = m.CategoryId,
-                        CategoryName = m.CategoryName,
-                        CategoryColor = m.CategoryColor,
-                        ViewerIsCreator = m.CreatedById == userId,
-                        ViewerStatus = viewerStatus,
-                        ParticipantCount = m.ParticipantCount
-                    };
-                })
+            var upcoming = upcomingResults
+                .Select(result => MapToMeetingSummaryDto(result, userId))
                 .ToList();
+
+            var past = pastResults
+                .Select(result => MapToMeetingSummaryDto(result, userId))
+                .ToList();
+
+            return new UserMeetingsDto
+            {
+                UpcomingMeetings = upcoming,
+                PastMeetings = past
+            };
+        }
+
+        private static IQueryable<MeetingSummaryQueryResult> ProjectToMeetingSummary(IQueryable<Meeting> source, Guid userId)
+        {
+            return source.Select(m => new MeetingSummaryQueryResult
+            {
+                Id = m.Id,
+                StartTime = m.StartTime,
+                Location = m.Location,
+                Description = m.Description,
+                CreatedById = m.CreatedById,
+                CreatorFirstName = m.CreatedBy.FirstName,
+                CreatorLastName = m.CreatedBy.LastName,
+                CategoryId = m.CategoryId,
+                CategoryName = m.Category != null ? m.Category.Name : null,
+                CategoryColor = m.Category != null ? m.Category.Color : null,
+                ParticipantCount = m.Participants.Count,
+                ViewerStatus = m.Participants
+                    .Where(p => p.ContactId == userId)
+                    .Select(p => (ParticipantStatus?)p.Status)
+                    .FirstOrDefault()
+            });
+        }
+
+        private static MeetingSummaryDto MapToMeetingSummaryDto(MeetingSummaryQueryResult result, Guid userId)
+        {
+            var viewerStatus = result.ViewerStatus;
+            if (viewerStatus == null && result.CreatedById == userId)
+            {
+                viewerStatus = ParticipantStatus.Accepted;
+            }
+
+            return new MeetingSummaryDto
+            {
+                Id = result.Id,
+                StartTime = result.StartTime,
+                Location = result.Location,
+                Description = result.Description,
+                CreatedById = result.CreatedById,
+                CreatedByName = FormatName(result.CreatorFirstName, result.CreatorLastName),
+                CategoryId = result.CategoryId,
+                CategoryName = result.CategoryName,
+                CategoryColor = result.CategoryColor,
+                ViewerIsCreator = result.CreatedById == userId,
+                ViewerStatus = viewerStatus,
+                ParticipantCount = result.ParticipantCount
+            };
+        }
+
+        private sealed class MeetingSummaryQueryResult
+        {
+            public Guid Id { get; set; }
+
+            public DateTime StartTime { get; set; }
+
+            public string? Location { get; set; }
+
+            public string? Description { get; set; }
+
+            public Guid CreatedById { get; set; }
+
+            public string? CreatorFirstName { get; set; }
+
+            public string? CreatorLastName { get; set; }
+
+            public Guid? CategoryId { get; set; }
+
+            public string? CategoryName { get; set; }
+
+            public string? CategoryColor { get; set; }
+
+            public int ParticipantCount { get; set; }
+
+            public ParticipantStatus? ViewerStatus { get; set; }
         }
 
         public async Task<bool> UpdateMeetingAsync(MeetingUpdateDto dto)
