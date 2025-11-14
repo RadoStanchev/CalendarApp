@@ -149,10 +149,6 @@ namespace CalendarApp.Services.Meetings
             db.Meetings.Add(meeting);
             await db.SaveChangesAsync();
 
-            await db.Entry(meeting)
-                .Reference(m => m.CreatedBy)
-                .LoadAsync();
-
             var creatorName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}";
             var startTime = meeting.StartTime.ToLocalTime().ToString("g");
 
