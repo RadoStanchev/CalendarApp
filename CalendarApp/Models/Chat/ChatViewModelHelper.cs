@@ -65,15 +65,17 @@ namespace CalendarApp.Models.Chat
             return $"Последно съобщение: {localTime.ToString("g", BulgarianCulture)}";
         }
 
-        public static string BuildMeetingTitle(string? description, DateTime startTimeUtc)
+        public static string BuildMeetingTitle(DateTime startTimeUtc, string? location)
         {
-            if (!string.IsNullOrWhiteSpace(description))
+            var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
+            var dateLabel = local.ToString("dd MMM yyyy", BulgarianCulture);
+
+            if (string.IsNullOrWhiteSpace(location))
             {
-                return description.Trim();
+                return dateLabel;
             }
 
-            var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-            return $"Събитие на {local:dd MMM yyyy}";
+            return $"{dateLabel} • {location.Trim()}";
         }
 
         public static string BuildMeetingSubtitle(DateTime startTimeUtc, string? location)

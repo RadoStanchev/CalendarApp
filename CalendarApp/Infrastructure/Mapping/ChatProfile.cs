@@ -36,9 +36,9 @@ namespace CalendarApp.Infrastructure.Mapping
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(_ => ThreadType.Meeting))
                 .ForMember(dest => dest.FriendshipId, opt => opt.Ignore())
                 .ForMember(dest => dest.FriendId, opt => opt.Ignore())
-                .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => ChatViewModelHelper.BuildMeetingTitle(src.Description, src.StartTime)))
+                .ForMember(dest => dest.DisplayName, opt => opt.MapFrom(src => ChatViewModelHelper.BuildMeetingTitle(src.StartTime, src.Location)))
                 .ForMember(dest => dest.SecondaryLabel, opt => opt.MapFrom(src => ChatViewModelHelper.BuildMeetingSubtitle(src.StartTime, src.Location)))
-                .ForMember(dest => dest.AvatarInitials, opt => opt.MapFrom(src => ChatViewModelHelper.BuildInitials(ChatViewModelHelper.BuildMeetingTitle(src.Description, src.StartTime), null)))
+                .ForMember(dest => dest.AvatarInitials, opt => opt.MapFrom(src => ChatViewModelHelper.BuildInitials(ChatViewModelHelper.BuildMeetingTitle(src.StartTime, src.Location), null)))
                 .ForMember(dest => dest.AccentClass, opt => opt.MapFrom(src => ChatViewModelHelper.GetAccentClass(src.MeetingId)))
                 .ForMember(dest => dest.LastMessagePreview, opt => opt.MapFrom(src => src.LastMessageContent ?? string.Empty))
                 .ForMember(dest => dest.LastMessageAt, opt => opt.MapFrom(src => src.LastMessageSentAt))
@@ -47,7 +47,7 @@ namespace CalendarApp.Infrastructure.Mapping
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.StartTime))
                 .ForMember(dest => dest.Meeting, opt => opt.MapFrom((src, _, __, context) =>
                 {
-                    var title = ChatViewModelHelper.BuildMeetingTitle(src.Description, src.StartTime);
+                    var title = ChatViewModelHelper.BuildMeetingTitle(src.StartTime, src.Location);
                     var userId = context.Items.TryGetValue("CurrentUserId", out var value) && value is Guid id ? id : Guid.Empty;
 
                     return new MeetingThreadMetadata
