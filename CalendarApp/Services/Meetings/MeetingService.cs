@@ -321,7 +321,7 @@ namespace CalendarApp.Services.Meetings
             return contacts;
         }
 
-        public async Task<UserMeetingsDto> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null)
+        public async Task<(IReadOnlyCollection<MeetingSummaryDto> UpcomingMeetings, IReadOnlyCollection<MeetingSummaryDto> PastMeetings)> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null)
         {
             var utcNow = DateTime.UtcNow;
 
@@ -357,11 +357,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(result => MapToMeetingSummaryDto(result, userId))
                 .ToList();
 
-            return new UserMeetingsDto
-            {
-                UpcomingMeetings = upcoming,
-                PastMeetings = past
-            };
+            return (upcoming, past);
         }
 
         private static IQueryable<MeetingSummaryQueryResult> ProjectToMeetingSummary(IQueryable<Meeting> source, Guid userId)
