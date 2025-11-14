@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Hubs;
+using CalendarApp.Infrastructure.Mapping;
 using CalendarApp.Services.Notifications.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -131,18 +132,17 @@ namespace CalendarApp.Services.Notifications
                 return;
             }
 
-            var notifications = new List<Notification>();
-            foreach (var userId in recipients)
-            {
-                var message = BuildReminderMessage(meeting);
-                notifications.Add(new Notification
+            var message = BuildReminderMessage(meeting);
+
+            var notifications = recipients
+                .Select(userId => new Notification
                 {
                     UserId = userId,
                     Message = message,
                     Type = NotificationType.Reminder,
                     CreatedAt = DateTime.Now
-                });
-            }
+                })
+                .ToList();
 
             try
             {
@@ -151,15 +151,9 @@ namespace CalendarApp.Services.Notifications
 
                 foreach (var notification in notifications)
                 {
-                    var payload = new
-                    {
-                        notificationId = notification.Id,
-                        message = notification.Message,
-                        meetingId = meeting.Id,
-                        meetingStartTime = meeting.StartTime,
-                        meetingLocation = meeting.Location,
-                        meetingDescription = meeting.Description
-                    };
+                    var payload = mapper.Map<MeetingReminderPayload>(
+                        notification,
+                        opt => opt.Items[NotificationProfile.MeetingContextKey] = meeting);
 
                     await hubContext.Clients.User(notification.UserId.ToString()).SendAsync(
                         "ReceiveMeetingReminder",
