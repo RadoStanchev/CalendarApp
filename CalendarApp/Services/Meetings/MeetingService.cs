@@ -149,7 +149,11 @@ namespace CalendarApp.Services.Meetings
             db.Meetings.Add(meeting);
             await db.SaveChangesAsync();
 
-            var creatorName = await GetUserDisplayNameAsync(dto.CreatedById);
+            await db.Entry(meeting)
+                .Reference(m => m.CreatedBy)
+                .LoadAsync();
+
+            var creatorName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}";
             var startTime = meeting.StartTime.ToLocalTime().ToString("g");
 
             var notifications = meeting.Participants
@@ -199,8 +203,8 @@ namespace CalendarApp.Services.Meetings
                 .Select(p => new MeetingParticipantDto
                 {
                     ContactId = p.ContactId,
-                    DisplayName = FormatName(p.Contact?.FirstName, p.Contact?.LastName),
-                    Email = p.Contact?.Email ?? string.Empty,
+                    DisplayName = $"{p.Contact.FirstName} {p.Contact.LastName}",
+                    Email = p.Contact.Email ?? string.Empty,
                     Status = p.Status,
                     IsCreator = p.ContactId == meeting.CreatedById
                 })
@@ -215,7 +219,7 @@ namespace CalendarApp.Services.Meetings
                 Location = meeting.Location,
                 Description = meeting.Description,
                 CreatedById = meeting.CreatedById,
-                CreatedByName = FormatName(meeting.CreatedBy?.FirstName, meeting.CreatedBy?.LastName),
+                CreatedByName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}",
                 CategoryId = meeting.CategoryId,
                 CategoryName = meeting.Category?.Name,
                 CategoryColor = meeting.Category?.Color,
@@ -244,8 +248,8 @@ namespace CalendarApp.Services.Meetings
                 .Select(p => new MeetingParticipantDto
                 {
                     ContactId = p.ContactId,
-                    DisplayName = FormatName(p.Contact?.FirstName, p.Contact?.LastName),
-                    Email = p.Contact?.Email ?? string.Empty,
+                    DisplayName = $"{p.Contact.FirstName} {p.Contact.LastName}",
+                    Email = p.Contact.Email ?? string.Empty,
                     Status = p.Status,
                     IsCreator = p.ContactId == meeting.CreatedById
                 })
@@ -288,7 +292,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(u => new ContactSuggestionDto
                 {
                     Id = u.Id,
-                    DisplayName = FormatName(u.FirstName, u.LastName),
+                    DisplayName = $"{u.FirstName} {u.LastName}",
                     Email = u.Email ?? string.Empty
                 })
                 .ToListAsync();
@@ -310,7 +314,7 @@ namespace CalendarApp.Services.Meetings
                 .Select(u => new ContactSummaryDto
                 {
                     Id = u.Id,
-                    DisplayName = FormatName(u.FirstName, u.LastName),
+                    DisplayName = $"{u.FirstName} {u.LastName}",
                     Email = u.Email ?? string.Empty
                 })
                 .ToListAsync();
@@ -370,7 +374,9 @@ namespace CalendarApp.Services.Meetings
         public async Task<bool> UpdateMeetingAsync(MeetingUpdateDto dto)
         {
             var meeting = await db.Meetings
+                .Include(m => m.CreatedBy)
                 .Include(m => m.Participants)
+                    .ThenInclude(p => p.Contact)
                 .FirstOrDefaultAsync(m => m.Id == dto.Id);
 
             if (meeting == null || meeting.CreatedById != dto.UpdatedById)
@@ -444,7 +450,8 @@ namespace CalendarApp.Services.Meetings
             }
 
             await db.SaveChangesAsync();
-            var updaterName = await GetUserDisplayNameAsync(dto.UpdatedById);
+
+            var updaterName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}";
             var startTime = meeting.StartTime.ToLocalTime().ToString("g");
 
             var invitationNotifications = newlyAddedParticipantIds
@@ -520,25 +527,6 @@ namespace CalendarApp.Services.Meetings
             }
 
             return categoryId;
-        }
-
-        private static string FormatName(string? firstName, string? lastName)
-        {
-            var parts = new[] { firstName, lastName }
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .ToArray();
-            return parts.Length > 0 ? string.Join(" ", parts) : "Неизвестен";
-        }
-
-        private async Task<string> GetUserDisplayNameAsync(Guid userId)
-        {
-            var user = await db.Users
-                .AsNoTracking()
-                .Where(u => u.Id == userId)
-                .Select(u => new { u.FirstName, u.LastName })
-                .FirstOrDefaultAsync();
-
-            return FormatName(user?.FirstName, user?.LastName);
         }
 
         private static string LocationSuffix(string? location)
