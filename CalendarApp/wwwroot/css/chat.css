@@ -95,14 +95,22 @@
     display: none;
 }
 
+.notification-toggle,
 .messenger-toggle {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
     padding: 0.25rem;
     margin-bottom: 1.25rem;
     background: rgba(99, 102, 241, 0.08);
     border-radius: 999px;
+}
+
+.messenger-toggle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notification-toggle {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .messenger-toggle__button {
@@ -111,7 +119,6 @@
     border-radius: 999px;
     padding: 0.5rem 0.75rem;
     font-weight: 600;
-    font-size: 0.9rem;
     color: #4b5563;
     transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
