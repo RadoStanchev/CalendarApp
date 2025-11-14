@@ -485,27 +485,23 @@
 
         function activate(targetKey) {
             panels.forEach((panel, key) => {
-                if (key === targetKey) {
-                    panel.classList.remove('d-none');
-                } else {
-                    panel.classList.add('d-none');
-                }
+                const isTarget = key === targetKey;
+                panel.classList.toggle('d-none', !isTarget);
+                panel.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
             });
 
             buttons.forEach(button => {
-                if (button.dataset.friendPanelToggle === targetKey) {
-                    button.classList.add('active');
-                    button.setAttribute('aria-pressed', 'true');
-                } else {
-                    button.classList.remove('active');
-                    button.setAttribute('aria-pressed', 'false');
-                }
+                const isTarget = button.dataset.friendPanelToggle === targetKey;
+                button.classList.toggle('is-active', isTarget);
+                button.classList.remove('active');
+                button.setAttribute('aria-pressed', isTarget ? 'true' : 'false');
+                button.setAttribute('aria-selected', isTarget ? 'true' : 'false');
             });
         }
 
         buttons.forEach(button => {
             button.addEventListener('click', () => {
-                if (button.classList.contains('active')) {
+                if (button.classList.contains('is-active')) {
                     return;
                 }
 
@@ -516,7 +512,7 @@
             });
         });
 
-        const defaultButton = buttons.find(button => button.classList.contains('active')) ?? buttons[0];
+        const defaultButton = buttons.find(button => button.classList.contains('is-active')) ?? buttons[0];
         const defaultKey = defaultButton?.dataset.friendPanelToggle;
         if (defaultKey && panels.has(defaultKey)) {
             activate(defaultKey);

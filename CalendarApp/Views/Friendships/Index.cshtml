@@ -75,13 +75,36 @@
                         <h2 class="h5 fw-semibold mb-1">Разширете мрежата си</h2>
                         <p class="text-muted small mb-0">Откривайте нови контакти и следете поканите си.</p>
                     </div>
-                    <div class="btn-group btn-group-sm" role="group" aria-label="Филтри за приятели">
-                        <button type="button" class="btn btn-outline-primary active" data-friend-panel-toggle="suggestions">Предложения</button>
-                        <button type="button" class="btn btn-outline-primary" data-friend-panel-toggle="requests">Покани</button>
+                    <div class="messenger-toggle" role="tablist" aria-label="Превключване между предложения и покани">
+                        <button type="button"
+                                class="messenger-toggle__button is-active"
+                                id="friendToggleSuggestions"
+                                data-friend-panel-toggle="suggestions"
+                                aria-controls="friendSuggestionsPanel"
+                                aria-pressed="true"
+                                aria-selected="true"
+                                role="tab">
+                            Предложения
+                        </button>
+                        <button type="button"
+                                class="messenger-toggle__button"
+                                id="friendToggleRequests"
+                                data-friend-panel-toggle="requests"
+                                aria-controls="friendRequestsPanel"
+                                aria-pressed="false"
+                                aria-selected="false"
+                                role="tab">
+                            Покани
+                        </button>
                     </div>
                 </div>
 
-                <div class="friendship-panel" data-friend-panel="suggestions">
+                <div class="friendship-panel"
+                     data-friend-panel="suggestions"
+                     id="friendSuggestionsPanel"
+                     role="tabpanel"
+                     aria-labelledby="friendToggleSuggestions"
+                     aria-hidden="false">
                     @if (!Model.Suggestions.Any())
                     {
                         <div class="empty-state text-center py-5">
@@ -112,7 +135,12 @@
                     }
                 </div>
 
-                <div class="friendship-panel d-none" data-friend-panel="requests">
+                <div class="friendship-panel d-none"
+                     data-friend-panel="requests"
+                     id="friendRequestsPanel"
+                     role="tabpanel"
+                     aria-labelledby="friendToggleRequests"
+                     aria-hidden="true">
                     <div class="requests-section">
                         <h3 class="h6 text-uppercase text-muted mb-2">Входящи</h3>
                         @if (!Model.IncomingRequests.Any())
