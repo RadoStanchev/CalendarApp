@@ -21,10 +21,6 @@ namespace CalendarApp.Services.Messages
             this.userManager = userManager;
         }
 
-        public string BuildFriendshipGroupName(Guid friendshipId) => $"friendship:{friendshipId}";
-
-        public string BuildMeetingGroupName(Guid meetingId) => $"meeting:{meetingId}";
-
         public async Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId)
         {
             var hasAccess = await db.Friendships

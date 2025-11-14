@@ -88,12 +88,12 @@ namespace CalendarApp.Hubs
                 throw new HubException("Чатът не е намерен или достъпът е отказан.");
             }
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, messageService.BuildFriendshipGroupName(friendshipId));
+            await Groups.AddToGroupAsync(Context.ConnectionId, BuildFriendshipGroupName(friendshipId));
         }
 
         public async Task LeaveFriendship(Guid friendshipId)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, messageService.BuildFriendshipGroupName(friendshipId));
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, BuildFriendshipGroupName(friendshipId));
         }
 
         public async Task SendMessage(Guid friendshipId, string message)
@@ -109,7 +109,7 @@ namespace CalendarApp.Hubs
             {
                 var chatMessage = await messageService.SaveMessageAsync(userId, friendshipId, trimmedMessage);
 
-                await Clients.Group(messageService.BuildFriendshipGroupName(friendshipId))
+                await Clients.Group(BuildFriendshipGroupName(friendshipId))
                     .SendAsync("ReceiveMessage", chatMessage);
             }
             catch (InvalidOperationException)
@@ -135,12 +135,12 @@ namespace CalendarApp.Hubs
                 throw new HubException("Събитието не е намерено или достъпът е отказан.");
             }
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, messageService.BuildMeetingGroupName(meetingId));
+            await Groups.AddToGroupAsync(Context.ConnectionId, BuildMeetingGroupName(meetingId));
         }
 
         public Task LeaveMeeting(Guid meetingId)
         {
-            return Groups.RemoveFromGroupAsync(Context.ConnectionId, messageService.BuildMeetingGroupName(meetingId));
+            return Groups.RemoveFromGroupAsync(Context.ConnectionId, BuildMeetingGroupName(meetingId));
         }
 
         public async Task SendMeetingMessage(Guid meetingId, string message)
@@ -156,7 +156,7 @@ namespace CalendarApp.Hubs
             {
                 var chatMessage = await messageService.SaveMeetingMessageAsync(userId, meetingId, trimmedMessage);
 
-                await Clients.Group(messageService.BuildMeetingGroupName(meetingId))
+                await Clients.Group(BuildMeetingGroupName(meetingId))
                     .SendAsync("ReceiveMessage", chatMessage);
             }
             catch (InvalidOperationException)
@@ -169,5 +169,8 @@ namespace CalendarApp.Hubs
             }
         }
 
+        private static string BuildFriendshipGroupName(Guid friendshipId) => $"friendship:{friendshipId}";
+
+        private static string BuildMeetingGroupName(Guid meetingId) => $"meeting:{meetingId}";
     }
 }
