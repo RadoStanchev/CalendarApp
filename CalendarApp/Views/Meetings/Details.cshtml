@@ -43,15 +43,16 @@
         return new string(new[] { char.ToUpper(trimmed[0], CultureInfo.GetCultureInfo("bg-BG")) });
     }
 
-    string BuildMeetingTitle(string? description, DateTime startTimeUtc)
+    string BuildMeetingTitle(DateTime startTimeUtc, string? location)
     {
-        if (!string.IsNullOrWhiteSpace(description))
+        var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
+        var dateLabel = local.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("bg-BG"));
+        if (string.IsNullOrWhiteSpace(location))
         {
-            return description.Trim();
+            return dateLabel;
         }
 
-        var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-        return $"Събитие на {local:dd MMM yyyy}";
+        return $"{dateLabel} • {location.Trim()}";
     }
 
     string BuildMeetingSubtitle(DateTime startTimeUtc, string? location)
@@ -66,7 +67,7 @@
         return $"{formatted} • {location.Trim()}";
     }
 
-    var meetingTitle = BuildMeetingTitle(Model.Description, Model.StartTime);
+    var meetingTitle = BuildMeetingTitle(Model.StartTime, Model.Location);
     var meetingSubtitle = BuildMeetingSubtitle(Model.StartTime, Model.Location);
     var meetingAccent = BuildAccent(Model.Id);
     var meetingInitials = BuildInitials(meetingTitle);
