@@ -1,0 +1,85 @@
+@model MeetingListItemViewModel
+@using CalendarApp.Data.Models
+@{
+    string FormatStatusBadge(MeetingListItemViewModel meeting)
+    {
+        if (!meeting.ViewerStatus.HasValue)
+        {
+            return string.Empty;
+        }
+
+        return meeting.ViewerStatus.Value switch
+        {
+            ParticipantStatus.Accepted => "bg-success",
+            ParticipantStatus.Declined => "bg-danger",
+            _ => "bg-warning text-dark"
+        };
+    }
+
+    string FormatStatusLabel(ParticipantStatus status) => status switch
+    {
+        ParticipantStatus.Accepted => "Прието",
+        ParticipantStatus.Declined => "Отказано",
+        _ => "Чака отговор"
+    };
+
+    string BuildCategoryBadgeStyle(string? color)
+    {
+        if (string.IsNullOrWhiteSpace(color))
+        {
+            return string.Empty;
+        }
+
+        return $"background-color: {color}; border-color: {color}; color: #fff;";
+    }
+
+    var statusOptions = Enum.GetValues<ParticipantStatus>();
+}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    <h3 class="h5 fw-semibold mb-0">@Model.StartTime.ToLocalTime().ToString("f")</h3>
+                    @if (!string.IsNullOrWhiteSpace(Model.CategoryName))
+                    {
+                        <span class="badge rounded-pill" style="@BuildCategoryBadgeStyle(Model.CategoryColor)">@Model.CategoryName</span>
+                    }
+                    @if (Model.ViewerStatus.HasValue)
+                    {
+                        <span class="badge @FormatStatusBadge(Model)">@FormatStatusLabel(Model.ViewerStatus.Value)</span>
+                    }
+                </div>
+                <p class="text-muted mb-1">Организатор: @Model.CreatedByName</p>
+                <p class="mb-1"><strong>Място:</strong> @(string.IsNullOrWhiteSpace(Model.Location) ? "Няма посочено място" : Model.Location)</p>
+                <p class="mb-2"><strong>Описание:</strong> @(string.IsNullOrWhiteSpace(Model.Description) ? "Няма добавено описание" : Model.Description)</p>
+                <p class="text-muted small mb-0">@Model.ParticipantCount @(Model.ParticipantCount == 1 ? "участник" : "участници")</p>
+            </div>
+            <div class="d-flex flex-column align-items-stretch gap-2">
+                <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Виж детайлите</a>
+                @if (Model.ViewerIsCreator)
+                {
+                    <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Редактирай срещата</a>
+                }
+                else if (Model.ViewerStatus.HasValue)
+                {
+                    <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex flex-column gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@Url.Action("My", "Meetings")" />
+                        <label class="form-label small mb-0" for="status-@Model.Id">Обновете статуса си</label>
+                        <div class="d-flex gap-2 align-items-center">
+                            <select class="form-select form-select-sm" id="status-@Model.Id" name="status">
+                                @foreach (var status in statusOptions)
+                                {
+                                    <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? true : false)">@FormatStatusLabel(status)</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Запази</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
