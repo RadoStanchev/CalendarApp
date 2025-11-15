@@ -2,12 +2,27 @@ using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Services.Categories.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 
 namespace CalendarApp.Services.Categories
 {
     public class CategoryService : ICategoryService
     {
+        private static readonly string[] DefaultColors = new[]
+        {
+            "#0D6EFD", // primary
+            "#6610F2",
+            "#6F42C1",
+            "#D63384",
+            "#DC3545",
+            "#FD7E14",
+            "#FFC107",
+            "#198754",
+            "#20C997",
+            "#0DCAF0"
+        };
+
         private readonly ApplicationDbContext db;
 
         public CategoryService(ApplicationDbContext db)
@@ -53,7 +68,7 @@ namespace CalendarApp.Services.Categories
             var category = new Category
             {
                 Name = name,
-                Color = color
+                Color = color ?? await PickAutomaticColorAsync()
             };
 
             db.Categories.Add(category);
@@ -76,6 +91,26 @@ namespace CalendarApp.Services.Categories
 
             await db.SaveChangesAsync();
             return true;
+        }
+
+        private async Task<string> PickAutomaticColorAsync()
+        {
+            var usedColors = await db.Categories
+                .AsNoTracking()
+                .Where(c => c.Color != null)
+                .Select(c => c.Color!)
+                .ToListAsync();
+
+            var availableColor = DefaultColors
+                .FirstOrDefault(defaultColor => !usedColors
+                    .Any(used => string.Equals(used, defaultColor, StringComparison.OrdinalIgnoreCase)));
+
+            if (!string.IsNullOrWhiteSpace(availableColor))
+            {
+                return availableColor;
+            }
+
+            return DefaultColors[Random.Shared.Next(DefaultColors.Length)];
         }
 
         public async Task<bool> DeleteAsync(Guid categoryId)
