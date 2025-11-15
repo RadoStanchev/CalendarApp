@@ -174,12 +174,11 @@
             }
 
             const token = ++queryToken;
-            const exclude = Array.from(participants.keys());
+            const excludeIds = Array.from(participants.keys());
             const url = new URL(searchUrl, window.location.origin);
             url.searchParams.set('term', term);
-            if (exclude.length > 0) {
-                url.searchParams.set('exclude', exclude.join(','));
-            }
+            url.searchParams.delete('excludeIds');
+            excludeIds.forEach(id => url.searchParams.append('excludeIds', id));
 
             try {
                 const response = await fetch(url.toString(), {
