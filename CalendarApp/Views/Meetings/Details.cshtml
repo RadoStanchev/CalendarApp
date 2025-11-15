@@ -32,17 +32,6 @@
     var chatEnabled = Model.ViewerIsCreator || (Model.ViewerIsParticipant && Model.ViewerStatus == ParticipantStatus.Accepted);
     var accentPalette = new[] { "accent-blue", "accent-purple", "accent-green", "accent-orange", "accent-teal" };
     string BuildAccent(Guid id) => accentPalette[Math.Abs(id.GetHashCode()) % accentPalette.Length];
-    string BuildInitials(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return "М";
-        }
-
-        var trimmed = text.Trim();
-        return new string(new[] { char.ToUpper(trimmed[0], CultureInfo.GetCultureInfo("bg-BG")) });
-    }
-
     string BuildMeetingTitle(DateTime startTimeUtc, string? location)
     {
         var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
@@ -55,22 +44,10 @@
         return $"{dateLabel} • {location.Trim()}";
     }
 
-    string BuildMeetingSubtitle(DateTime startTimeUtc, string? location)
-    {
-        var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-        var formatted = local.ToString("g", CultureInfo.GetCultureInfo("bg-BG"));
-        if (string.IsNullOrWhiteSpace(location))
-        {
-            return formatted;
-        }
-
-        return $"{formatted} • {location.Trim()}";
-    }
-
     var meetingTitle = BuildMeetingTitle(Model.StartTime, Model.Location);
-    var meetingSubtitle = BuildMeetingSubtitle(Model.StartTime, Model.Location);
     var meetingAccent = BuildAccent(Model.Id);
-    var meetingInitials = BuildInitials(meetingTitle);
+    var meetingInitials = string.Empty;
+    var meetingStatus = ChatViewModelHelper.BuildActivityLabel(null);
     var viewerName = Model.Participants.FirstOrDefault(p => p.ContactId == Model.ViewerId)?.DisplayName
         ?? (User?.Identity?.Name ?? string.Empty);
 }
@@ -232,8 +209,7 @@
                                                 data-thread-type="meeting"
                                                 data-fetch-url="@Url.Action("Thread", "Chat", new { id = Model.Id, type = ThreadType.Meeting })"
                                                 data-display-name="@meetingTitle"
-                                                data-secondary="@meetingSubtitle"
-                                                data-status=""
+                                                data-status="@meetingStatus"
                                                 data-avatar="@meetingInitials"
                                                 data-accent="@meetingAccent"
                                                 data-last-message=""
@@ -254,7 +230,7 @@
                                         <span id="activeContactAvatar" class="messenger-avatar @meetingAccent">@meetingInitials</span>
                                         <span class="messenger-contact__meta">
                                             <span id="activeContactName" class="messenger-contact__name">@meetingTitle</span>
-                                            <span id="activeContactStatus" class="messenger-contact__status">@meetingSubtitle</span>
+                                        <span id="activeContactStatus" class="messenger-contact__status text-muted">@meetingStatus</span>
                                         </span>
                                     </div>
                                     <div class="messenger-self">

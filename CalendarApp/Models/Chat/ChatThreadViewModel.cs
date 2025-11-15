@@ -14,8 +14,6 @@ namespace CalendarApp.Models.Chat
 
         public string DisplayName { get; set; } = string.Empty;
 
-        public string SecondaryLabel { get; set; } = string.Empty;
-
         public string AvatarInitials { get; set; } = string.Empty;
 
         public string AccentClass { get; set; } = "accent-blue";

@@ -133,7 +133,7 @@ namespace CalendarApp.Controllers
             var model = new ChatViewModel
             {
                 CurrentUserId = userId,
-                CurrentUserName = ChatViewModelHelper.BuildFullName(currentUser.FirstName, currentUser.LastName),
+                CurrentUserName = $"{currentUser.FirstName} {currentUser.LastName}",
                 FriendshipThreads = friendshipThreads,
                 MeetingThreads = meetingThreads,
                 ActiveThreadType = activeThreadType,
@@ -219,7 +219,6 @@ namespace CalendarApp.Controllers
                 threadType = ThreadType.Friendship.ToString().ToLowerInvariant(),
                 friendshipId = thread.FriendshipId,
                 displayName = thread.DisplayName,
-                secondaryLabel = thread.SecondaryLabel,
                 avatar = thread.AvatarInitials,
                 accent = thread.AccentClass,
                 lastActivity = ChatViewModelHelper.BuildActivityLabel(messages.LastOrDefault()?.SentAt),
@@ -263,7 +262,6 @@ namespace CalendarApp.Controllers
                 isOnline = false,
                 metadata = thread.Meeting,
                 displayName = thread.DisplayName,
-                secondaryLabel = thread.SecondaryLabel,
                 avatar = thread.AvatarInitials,
                 accent = thread.AccentClass,
                 lastActivity = ChatViewModelHelper.BuildActivityLabel(messages.LastOrDefault()?.SentAt),
