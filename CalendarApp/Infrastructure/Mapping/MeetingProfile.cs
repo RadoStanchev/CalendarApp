@@ -49,8 +49,6 @@ namespace CalendarApp.Infrastructure.Mapping
 
             CreateMap<MeetingParticipantFormModel, MeetingParticipantUpdateDto>();
 
-            CreateMap<ContactSuggestionDto, ContactSuggestionViewModel>();
-
             CreateMap<CategoryDetailsDto, CategoryOptionViewModel>();
         }
     }
