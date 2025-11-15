@@ -103,9 +103,8 @@
         }
 
         if (button.classList.contains("active") && activeContactStatus) {
-            const secondary = button.dataset.secondary || "";
             const status = button.dataset.status || "";
-            const statusText = secondary || (isOnline ? "Онлайн" : status);
+            const statusText = isOnline ? "Онлайн" : status;
             activeContactStatus.textContent = statusText;
             activeContactStatus.classList.toggle("text-muted", !statusText);
         }
@@ -339,9 +338,12 @@
         button.classList.add("active");
 
         const name = button.dataset.displayName || "Разговор";
-        const secondary = button.dataset.secondary || "";
         const status = button.dataset.status || "";
-        const initials = button.dataset.avatar || name.substring(0, 2).toUpperCase();
+        const initials =
+            button.dataset.avatar ||
+            (threadType == THREAD_TYPES.FRIENDSHIP
+                ? name.substring(0, 2).toUpperCase()
+                : "");
         const accent = button.dataset.accent;
         const isOnline = button.dataset.isOnline === "true";
 
@@ -350,7 +352,7 @@
         }
 
         if (activeContactStatus) {
-            const statusText = secondary || (isOnline ? "Онлайн" : status);
+            const statusText = isOnline ? "Онлайн" : status;
             activeContactStatus.textContent = statusText;
             activeContactStatus.classList.toggle("text-muted", !statusText);
         }
@@ -489,10 +491,6 @@
 
             if (payload.displayName) {
                 button.dataset.displayName = payload.displayName;
-            }
-
-            if (payload.secondaryLabel) {
-                button.dataset.secondary = payload.secondaryLabel;
             }
 
             if (payload.lastActivity) {
@@ -734,7 +732,7 @@
                     return;
                 }
 
-                const haystack = `${button.dataset.displayName ?? ""} ${button.dataset.lastMessage ?? ""} ${button.dataset.secondary ?? ""}`
+                const haystack = `${button.dataset.displayName ?? ""} ${button.dataset.lastMessage ?? ""}`
                     .toLocaleLowerCase("bg-BG");
                 button.classList.toggle("is-hidden", !haystack.includes(term));
             });

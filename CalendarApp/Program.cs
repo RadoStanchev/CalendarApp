@@ -14,9 +14,16 @@ using CalendarApp.Services.User;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var bulgarianCulture = CultureInfo.GetCultureInfo("bg-BG");
+CultureInfo.DefaultThreadCurrentCulture = bulgarianCulture;
+CultureInfo.DefaultThreadCurrentUICulture = bulgarianCulture;
+CultureInfo.CurrentCulture = bulgarianCulture;
+CultureInfo.CurrentUICulture = bulgarianCulture;
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
