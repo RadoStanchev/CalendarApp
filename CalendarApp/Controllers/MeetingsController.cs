@@ -187,8 +187,7 @@ namespace CalendarApp.Controllers
             var userId = await userManager.GetUserIdGuidAsync(User);
             var idsToExclude = excludeIds ?? Enumerable.Empty<Guid>();
             var results = await meetingService.SearchContactsAsync(userId, term ?? string.Empty, idsToExclude);
-            var viewModels = mapper.Map<List<ContactSuggestionViewModel>>(results);
-            return Json(viewModels);
+            return Json(results);
         }
 
         [HttpPost]
