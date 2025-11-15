@@ -43,12 +43,7 @@ namespace CalendarApp.Controllers
             var categoryId = await categoryService.CreateAsync(dto);
             var createdCategory = await categoryService.GetByIdAsync(categoryId);
 
-            return Json(new
-            {
-                id = createdCategory?.Id ?? categoryId,
-                name = createdCategory?.Name ?? dto.Name,
-                color = createdCategory?.Color ?? dto.Color
-            });
+            return Json(createdCategory);
         }
     }
 }

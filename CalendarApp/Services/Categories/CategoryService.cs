@@ -11,7 +11,7 @@ namespace CalendarApp.Services.Categories
     {
         private static readonly string[] DefaultColors = new[]
         {
-            "#0D6EFD", // primary
+            "#0D6EFD",
             "#6610F2",
             "#6F42C1",
             "#D63384",
@@ -87,9 +87,7 @@ namespace CalendarApp.Services.Categories
             }
 
             category.Name = (dto.Name ?? string.Empty).Trim();
-
-            var color = string.IsNullOrWhiteSpace(dto.Color) ? null : dto.Color!.Trim();
-            category.Color = color ?? await PickAutomaticColorAsync();
+            category.Color = dto.Color ?? await PickAutomaticColorAsync();
 
             await db.SaveChangesAsync();
             return true;
