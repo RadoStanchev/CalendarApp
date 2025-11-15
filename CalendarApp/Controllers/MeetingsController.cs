@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CalendarApp.Controllers
@@ -181,11 +182,11 @@ namespace CalendarApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> SearchContacts(string term, string? exclude)
+        public async Task<IActionResult> SearchContacts(string term, IEnumerable<Guid>? excludeIds)
         {
             var userId = await userManager.GetUserIdGuidAsync(User);
-            var excludeIds = ParseExcludeIds(exclude);
-            var results = await meetingService.SearchContactsAsync(userId, term ?? string.Empty, excludeIds);
+            var idsToExclude = excludeIds ?? Enumerable.Empty<Guid>();
+            var results = await meetingService.SearchContactsAsync(userId, term ?? string.Empty, idsToExclude);
             var viewModels = mapper.Map<List<ContactSuggestionViewModel>>(results);
             return Json(viewModels);
         }
@@ -244,24 +245,5 @@ namespace CalendarApp.Controllers
             return mapper.Map<List<CategoryOptionViewModel>>(categories);
         }
 
-        private static IEnumerable<Guid> ParseExcludeIds(string? exclude)
-        {
-            if (string.IsNullOrWhiteSpace(exclude))
-            {
-                return Array.Empty<Guid>();
-            }
-
-            var ids = new List<Guid>();
-            var parts = exclude.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var part in parts)
-            {
-                if (Guid.TryParse(part, out var id))
-                {
-                    ids.Add(id);
-                }
-            }
-
-            return ids;
-        }
     }
 }
