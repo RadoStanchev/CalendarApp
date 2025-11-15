@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace CalendarApp.Services.Messages.Models
 {
     public class ChatMessageDto

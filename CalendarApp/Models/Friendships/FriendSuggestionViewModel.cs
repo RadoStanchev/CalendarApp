@@ -9,5 +9,7 @@ namespace CalendarApp.Models.Friendships
         public string Email { get; set; } = string.Empty;
 
         public int MutualFriendCount { get; set; }
+
+        public string AvatarInitials { get; set; } = string.Empty;
     }
 }

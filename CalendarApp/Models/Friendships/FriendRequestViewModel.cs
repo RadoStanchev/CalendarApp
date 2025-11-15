@@ -13,5 +13,7 @@ namespace CalendarApp.Models.Friendships
         public DateTime RequestedOn { get; set; }
 
         public bool IsIncoming { get; set; }
+
+        public string AvatarInitials { get; set; } = string.Empty;
     }
 }

@@ -201,29 +201,26 @@
                     </div>
                     <div class="modal-body">
                         <div class="messenger-layout messenger-layout--embedded">
-                            <aside class="messenger-sidebar">
-                                <div class="messenger-sidebar__section">
-                                    <div class="messenger-thread-list">
-                                        <button class="messenger-thread active" type="button"
-                                                data-thread-id="@Model.Id"
-                                                data-thread-type="meeting"
-                                                data-fetch-url="@Url.Action("Thread", "Chat", new { id = Model.Id, type = ThreadType.Meeting })"
-                                                data-display-name="@meetingTitle"
-                                                data-status="@meetingStatus"
-                                                data-avatar="@meetingInitials"
-                                                data-accent="@meetingAccent"
-                                                data-last-message=""
-                                                data-meeting-id="@Model.Id">
-                                            <span class="messenger-avatar @meetingAccent">@meetingInitials</span>
-                                            <span class="messenger-thread__content">
-                                                <span class="messenger-thread__name">@meetingTitle</span>
-                                                <span class="messenger-thread__preview">Няма съобщения</span>
-                                            </span>
-                                            <span class="messenger-thread__meta"></span>
-                                        </button>
-                                    </div>
-                                </div>
-                            </aside>
+                            <div class="visually-hidden">
+                                <button class="messenger-thread active" type="button"
+                                        data-thread-id="@Model.Id"
+                                        data-thread-type="meeting"
+                                        data-fetch-url="@Url.Action("Thread", "Chat", new { id = Model.Id, type = ThreadType.Meeting })"
+                                        data-display-name="@meetingTitle"
+                                        data-secondary="@meetingSubtitle"
+                                        data-status=""
+                                        data-avatar="@meetingInitials"
+                                        data-accent="@meetingAccent"
+                                        data-last-message=""
+                                        data-meeting-id="@Model.Id">
+                                    <span class="messenger-avatar @meetingAccent">@meetingInitials</span>
+                                    <span class="messenger-thread__content">
+                                        <span class="messenger-thread__name">@meetingTitle</span>
+                                        <span class="messenger-thread__preview">Няма съобщения</span>
+                                    </span>
+                                    <span class="messenger-thread__meta"></span>
+                                </button>
+                            </div>
                             <section class="messenger-content">
                                 <header class="messenger-header">
                                     <div class="messenger-contact" aria-live="polite">
@@ -246,8 +243,8 @@
                                      data-current-user-id="@Model.ViewerId"
                                      data-current-user-name="@viewerName">
                                     <div class="messenger-empty-state">
-                                        <h3 class="messenger-empty-state__title">Изберете приятел или започнете нов разговор</h3>
-                                        <p class="messenger-empty-state__text">Съобщенията се появяват тук веднага щом някой напише нещо.</p>
+                                        <h3 class="messenger-empty-state__title">Все още няма съобщения</h3>
+                                        <p class="messenger-empty-state__text">Започнете разговора в чата на срещата.</p>
                                     </div>
                                 </div>
                                 <form id="chatForm" class="messenger-form" autocomplete="off">
