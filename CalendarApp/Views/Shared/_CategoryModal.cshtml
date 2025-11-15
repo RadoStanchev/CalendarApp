@@ -1,0 +1,29 @@
+@model CategoryCreateInputModel
+
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-labelledby="categoryModalLabel" aria-hidden="true" data-category-modal>
+    <div class="modal-dialog">
+        <form asp-controller="Categories" asp-action="Create" method="post" class="modal-content" data-category-form>
+            @Html.AntiForgeryToken()
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="categoryModalLabel">Нова категория</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger d-none" role="alert" data-category-error></div>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" autocomplete="off" />
+                </div>
+                <div class="mb-0">
+                    <label asp-for="Color" class="form-label"></label>
+                    <input asp-for="Color" class="form-control" placeholder="#0D6EFD" autocomplete="off" />
+                    <div class="form-text">Оставете празно, за да се зададе автоматичен цвят.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Отказ</button>
+                <button type="submit" class="btn btn-primary" data-category-submit>Добави категория</button>
+            </div>
+        </form>
+    </div>
+</div>

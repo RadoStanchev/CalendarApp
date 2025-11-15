@@ -33,8 +33,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="CategoryId" class="form-label"></label>
-                            <select asp-for="CategoryId" class="form-select">
+                            <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                                <label asp-for="CategoryId" class="form-label mb-0"></label>
+                                <button type="button" class="btn btn-link btn-sm p-0" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                                    + Нова категория
+                                </button>
+                            </div>
+                            <select asp-for="CategoryId" class="form-select" data-category-select>
                                 @foreach (var category in Model.Categories)
                                 {
                                     <option value="@category.Id" selected="@(Model.CategoryId == category.Id ? true : false)" data-color="@category.Color">@category.Name</option>
@@ -104,6 +109,7 @@
             <button type="submit" class="btn btn-primary">Създай среща</button>
         </div>
     </form>
+    @await Html.PartialAsync("_CategoryModal", new CategoryCreateInputModel())
 </div>
 
 @section Scripts {
@@ -113,6 +119,11 @@
         window.initMeetingParticipants && window.initMeetingParticipants({
             rootSelector: '[data-meeting-search-root]',
             showStatus: false
+        });
+
+        window.initCategoryModal && window.initCategoryModal({
+            selectSelector: '[data-category-select]',
+            modalSelector: '#categoryModal'
         });
     </script>
 }
