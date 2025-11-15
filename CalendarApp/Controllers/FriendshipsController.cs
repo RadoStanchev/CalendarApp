@@ -120,7 +120,7 @@ namespace CalendarApp.Controllers
             var payload = results.Select(result => new
             {
                 id = result.UserId,
-                displayName = FormatName(result.FirstName, result.LastName),
+                displayName = $"{result.FirstName} {result.LastName}",
                 email = result.Email,
                 status = result.RelationshipStatus.ToString(),
                 friendshipId = result.FriendshipId,
@@ -160,14 +160,6 @@ namespace CalendarApp.Controllers
             }
 
             return false;
-        }
-
-        private static string FormatName(string? firstName, string? lastName)
-        {
-            var first = firstName?.Trim() ?? string.Empty;
-            var last = lastName?.Trim() ?? string.Empty;
-
-            return $"{first} {last}".Trim();
         }
 
         private static IEnumerable<Guid> ParseExcludeIds(string? exclude)
