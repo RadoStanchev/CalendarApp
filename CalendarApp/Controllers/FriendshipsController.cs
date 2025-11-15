@@ -111,11 +111,10 @@ namespace CalendarApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Search(string term, string? exclude)
+        public async Task<IActionResult> Search(string term, IEnumerable<Guid>? excludeIds)
         {
-            var userId = (await userManager.GetUserAsync(User)).Id;
-            var excludeIds = ParseExcludeIds(exclude);
-            var results = await friendshipService.SearchAsync(userId, term ?? string.Empty, excludeIds);
+            var userId = await userManager.GetUserIdGuidAsync(User);
+            var results = await friendshipService.SearchAsync(userId, term ?? string.Empty, excludeIds ?? Enumerable.Empty<Guid>());
 
             var payload = results.Select(result => new
             {
@@ -161,26 +160,5 @@ namespace CalendarApp.Controllers
 
             return false;
         }
-
-        private static IEnumerable<Guid> ParseExcludeIds(string? exclude)
-        {
-            if (string.IsNullOrWhiteSpace(exclude))
-            {
-                return Array.Empty<Guid>();
-            }
-
-            var ids = new List<Guid>();
-            var parts = exclude.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var part in parts)
-            {
-                if (Guid.TryParse(part, out var id))
-                {
-                    ids.Add(id);
-                }
-            }
-
-            return ids;
-        }
-
     }
 }
