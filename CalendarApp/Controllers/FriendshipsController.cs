@@ -1,7 +1,6 @@
 using AutoMapper;
 using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Extentions;
-using CalendarApp.Infrastructure.Formatting;
 using CalendarApp.Models.Friendships;
 using CalendarApp.Services.Friendships;
 using Microsoft.AspNetCore.Authorization;
@@ -121,7 +120,7 @@ namespace CalendarApp.Controllers
             var payload = results.Select(result => new
             {
                 id = result.UserId,
-                displayName = NameFormatter.Format(result.FirstName, result.LastName),
+                displayName = $"{result.FirstName} {result.LastName}",
                 email = result.Email,
                 status = result.RelationshipStatus.ToString(),
                 friendshipId = result.FriendshipId,

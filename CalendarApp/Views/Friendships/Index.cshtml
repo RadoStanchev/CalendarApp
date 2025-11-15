@@ -3,21 +3,6 @@
 @{
     ViewData["Title"] = "Общност";
     var antiForgeryTokens = Antiforgery.GetAndStoreTokens(Context);
-    string BuildInitials(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return "?";
-        }
-
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 1)
-        {
-            return parts[0][0].ToString().ToUpperInvariant();
-        }
-
-        return string.Concat(parts[0][0], parts[^1][0]).ToUpperInvariant();
-    }
 }
 
 <div class="friendship-page">
@@ -118,7 +103,7 @@
                         {
                             <div class="friend-item mb-3">
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar me-3">@BuildInitials(suggestion.DisplayName)</div>
+                                    <div class="avatar me-3">@suggestion.AvatarInitials</div>
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold">@suggestion.DisplayName</div>
                                         <div class="text-muted small">@suggestion.Email</div>
@@ -153,7 +138,7 @@
                             {
                                 <div class="friend-item mb-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar me-3">@BuildInitials(request.DisplayName)</div>
+                                        <div class="avatar me-3">@request.AvatarInitials</div>
                                         <div class="flex-grow-1">
                                             <div class="fw-semibold">@request.DisplayName</div>
                                             <div class="text-muted small">@request.Email</div>
@@ -189,7 +174,7 @@
                             {
                                 <div class="friend-item mb-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar me-3">@BuildInitials(request.DisplayName)</div>
+                                        <div class="avatar me-3">@request.AvatarInitials</div>
                                         <div class="flex-grow-1">
                                             <div class="fw-semibold">@request.DisplayName</div>
                                             <div class="text-muted small">@request.Email</div>
@@ -226,7 +211,7 @@
                         {
                             <div class="friend-item mb-3">
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar me-3">@BuildInitials(friend.DisplayName)</div>
+                                    <div class="avatar me-3">@friend.AvatarInitials</div>
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold">@friend.DisplayName</div>
                                         <div class="text-muted small">@friend.Email</div>
