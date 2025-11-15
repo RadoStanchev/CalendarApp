@@ -1,4 +1,5 @@
 using CalendarApp.Data.Models;
+using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,9 +16,9 @@ namespace CalendarApp.Services.Meetings
 
         Task<bool> UpdateMeetingAsync(MeetingUpdateDto dto);
 
-        Task<IReadOnlyCollection<ContactSuggestionDto>> SearchContactsAsync(Guid requesterId, string term, IEnumerable<Guid> excludeIds);
+        Task<IReadOnlyCollection<ContactSuggestionViewModel>> SearchContactsAsync(Guid requesterId, string term, IEnumerable<Guid> excludeIds);
 
-        Task<IReadOnlyCollection<ContactSummaryDto>> GetContactsAsync(IEnumerable<Guid> ids);
+        Task<IReadOnlyCollection<ContactSuggestionViewModel>> GetContactsAsync(IEnumerable<Guid> ids);
 
         Task<(IReadOnlyCollection<MeetingSummaryDto> UpcomingMeetings, IReadOnlyCollection<MeetingSummaryDto> PastMeetings)> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null);
 

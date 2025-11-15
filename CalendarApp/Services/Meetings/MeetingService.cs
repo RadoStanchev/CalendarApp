@@ -1,6 +1,7 @@
 using AutoMapper;
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
@@ -265,7 +266,7 @@ namespace CalendarApp.Services.Meetings
             };
         }
 
-        public async Task<IReadOnlyCollection<ContactSuggestionDto>> SearchContactsAsync(Guid requesterId, string term, IEnumerable<Guid> excludeIds)
+        public async Task<IReadOnlyCollection<ContactSuggestionViewModel>> SearchContactsAsync(Guid requesterId, string term, IEnumerable<Guid> excludeIds)
         {
             term = term?.Trim() ?? string.Empty;
             var exclude = new HashSet<Guid>(excludeIds ?? Enumerable.Empty<Guid>()) { requesterId };
@@ -285,7 +286,7 @@ namespace CalendarApp.Services.Meetings
                 .OrderBy(u => u.FirstName)
                 .ThenBy(u => u.LastName)
                 .Take(10)
-                .Select(u => new ContactSuggestionDto
+                .Select(u => new ContactSuggestionViewModel
                 {
                     Id = u.Id,
                     DisplayName = $"{u.FirstName} {u.LastName}",
@@ -296,18 +297,18 @@ namespace CalendarApp.Services.Meetings
             return suggestions;
         }
 
-        public async Task<IReadOnlyCollection<ContactSummaryDto>> GetContactsAsync(IEnumerable<Guid> ids)
+        public async Task<IReadOnlyCollection<ContactSuggestionViewModel>> GetContactsAsync(IEnumerable<Guid> ids)
         {
             var idList = ids?.Distinct().ToList() ?? [];
             if (idList.Count == 0)
             {
-                return Array.Empty<ContactSummaryDto>();
+                return Array.Empty<ContactSuggestionViewModel>();
             }
 
             var contacts = await db.Users
                 .AsNoTracking()
                 .Where(u => idList.Contains(u.Id))
-                .Select(u => new ContactSummaryDto
+                .Select(u => new ContactSuggestionViewModel
                 {
                     Id = u.Id,
                     DisplayName = $"{u.FirstName} {u.LastName}",
