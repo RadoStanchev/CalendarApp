@@ -45,7 +45,7 @@ namespace CalendarApp.Controllers
             {
                 Filter = filter,
                 UnreadCount = await notificationService.GetUnreadCountAsync(userId),
-                Notifications = mapper.Map<IReadOnlyList<NotificationListItemViewModel>>(notifications)
+                Notifications = mapper.Map<IReadOnlyList<NotificationViewModel>>(notifications)
             };
 
             return View(model);
@@ -56,13 +56,13 @@ namespace CalendarApp.Controllers
         {
             var userId = await GetCurrentUserIdAsync();
             var notifications = await notificationService.GetRecentAsync(userId, count, includeRead);
-            var previewModels = mapper.Map<IReadOnlyCollection<NotificationPreviewViewModel>>(notifications);
+            var notificationModels = mapper.Map<IReadOnlyCollection<NotificationViewModel>>(notifications);
             var unreadCount = await notificationService.GetUnreadCountAsync(userId);
 
             return Json(new
             {
                 unreadCount,
-                notifications = previewModels
+                notifications = notificationModels
             });
         }
 

@@ -10,6 +10,6 @@ namespace CalendarApp.Models.Notifications
 
         public int UnreadCount { get; set; }
 
-        public IReadOnlyList<NotificationListItemViewModel> Notifications { get; set; } = Array.Empty<NotificationListItemViewModel>();
+        public IReadOnlyList<NotificationViewModel> Notifications { get; set; } = Array.Empty<NotificationViewModel>();
     }
 }
