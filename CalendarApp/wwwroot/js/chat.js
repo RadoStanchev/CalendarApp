@@ -339,16 +339,11 @@
 
         const name = button.dataset.displayName || "Разговор";
         const status = button.dataset.status || "";
-        const datasetInitials = button.dataset.avatar || "";
-        const fallbackInitials = (() => {
-            if (threadType !== THREAD_TYPES.FRIENDSHIP) {
-                return "";
-            }
-
-            const basis = name.trim().slice(0, 2);
-            return basis ? basis.toLocaleUpperCase("bg-BG") : "";
-        })();
-        const initials = datasetInitials || fallbackInitials;
+        const initials =
+            button.dataset.avatar ||
+            (threadType == THREAD_TYPES.FRIENDSHIP
+                ? name.substring(0, 2).toUpperCase()
+                : "");
         const accent = button.dataset.accent;
         const isOnline = button.dataset.isOnline === "true";
 
