@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using AutoMapper;
 using CalendarApp.Models.Chat;
 using CalendarApp.Services.Friendships.Models;

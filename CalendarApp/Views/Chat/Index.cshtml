@@ -1,5 +1,4 @@
 @model CalendarApp.Models.Chat.ChatViewModel
-@using System.Globalization
 @using System.Linq
 @using CalendarApp.Models.Chat
 @{ 
@@ -71,7 +70,7 @@
             return $"{Math.Floor(diff.TotalDays)} дни";
         }
 
-        return local.ToString("d", CultureInfo.GetCultureInfo("bg-BG"));
+        return local.ToString("d");
     }
 }
 
@@ -217,7 +216,7 @@
                             <span class="message__author">@(isOwn ? "Вие" : message.SenderName)</span>
                             <p class="message__text">@message.Content</p>
                             <span class="message__meta">
-                                @DateTime.SpecifyKind(message.SentAt, DateTimeKind.Utc).ToLocalTime().ToString("t", CultureInfo.GetCultureInfo("bg-BG"))
+                                @DateTime.SpecifyKind(message.SentAt, DateTimeKind.Utc).ToLocalTime().ToString("t")
                             </span>
                         </div>
                     </div>

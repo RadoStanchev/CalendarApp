@@ -1,6 +1,5 @@
 @model MeetingDetailsViewModel
 @using CalendarApp.Models.Chat
-@using System.Globalization
 @{
     ViewData["Title"] = "Детайли за срещата";
     var message = TempData["MeetingMessage"] as string;
@@ -35,7 +34,7 @@
     string BuildMeetingTitle(DateTime startTimeUtc, string? location)
     {
         var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-        var dateLabel = local.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("bg-BG"));
+        var dateLabel = local.ToString("dd MMM yyyy");
         if (string.IsNullOrWhiteSpace(location))
         {
             return dateLabel;
