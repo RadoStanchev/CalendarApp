@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 
 namespace CalendarApp.Models.Chat
 {
@@ -13,8 +12,6 @@ namespace CalendarApp.Models.Chat
             "accent-orange",
             "accent-teal"
         };
-
-        private static readonly CultureInfo BulgarianCulture = CultureInfo.GetCultureInfo("bg-BG");
 
         public static string GetAccentClass(Guid key)
         {
@@ -30,13 +27,13 @@ namespace CalendarApp.Models.Chat
             }
 
             var localTime = DateTime.SpecifyKind(sentAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
-            return $"Последно съобщение: {localTime.ToString("g", BulgarianCulture)}";
+            return $"Последно съобщение: {localTime.ToString("g")}";
         }
 
         public static string BuildMeetingTitle(DateTime startTimeUtc, string? location)
         {
             var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
-            var dateLabel = local.ToString("dd MMM yyyy", BulgarianCulture);
+            var dateLabel = local.ToString("dd MMM yyyy");
 
             if (string.IsNullOrWhiteSpace(location))
             {
