@@ -2,12 +2,27 @@ using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Services.Categories.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 
 namespace CalendarApp.Services.Categories
 {
     public class CategoryService : ICategoryService
     {
+        private static readonly string[] DefaultColors = new[]
+        {
+            "#0D6EFD",
+            "#6610F2",
+            "#6F42C1",
+            "#D63384",
+            "#DC3545",
+            "#FD7E14",
+            "#FFC107",
+            "#198754",
+            "#20C997",
+            "#0DCAF0"
+        };
+
         private readonly ApplicationDbContext db;
 
         public CategoryService(ApplicationDbContext db)
@@ -53,7 +68,7 @@ namespace CalendarApp.Services.Categories
             var category = new Category
             {
                 Name = name,
-                Color = color
+                Color = color ?? await PickAutomaticColorAsync()
             };
 
             db.Categories.Add(category);
@@ -72,10 +87,17 @@ namespace CalendarApp.Services.Categories
             }
 
             category.Name = (dto.Name ?? string.Empty).Trim();
-            category.Color = string.IsNullOrWhiteSpace(dto.Color) ? null : dto.Color!.Trim();
+            category.Color = dto.Color ?? await PickAutomaticColorAsync();
 
             await db.SaveChangesAsync();
             return true;
+        }
+
+        private async Task<string> PickAutomaticColorAsync()
+        {
+            var totalCategories = await db.Categories.CountAsync();
+            var index = totalCategories % DefaultColors.Length;
+            return DefaultColors[index];
         }
 
         public async Task<bool> DeleteAsync(Guid categoryId)

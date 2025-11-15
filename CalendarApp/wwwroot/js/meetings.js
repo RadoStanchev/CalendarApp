@@ -239,5 +239,140 @@
         });
     }
 
+    function extractErrorMessage(payload) {
+        const defaultMessage = 'Неуспешно добавяне на категория.';
+        if (!payload || typeof payload !== 'object') {
+            return defaultMessage;
+        }
+
+        if (payload.errors && typeof payload.errors === 'object') {
+            const messages = Object.values(payload.errors)
+                .reduce((acc, current) => {
+                    if (Array.isArray(current)) {
+                        return acc.concat(current.filter(Boolean));
+                    }
+                    return acc;
+                }, [])
+                .filter(Boolean);
+
+            if (messages.length > 0) {
+                return messages.join(' ');
+            }
+        }
+
+        if (payload.message) {
+            return payload.message;
+        }
+
+        return defaultMessage;
+    }
+
+    function addOrUpdateCategoryOption(select, category) {
+        if (!select || !category || !category.id) {
+            return;
+        }
+
+        const options = Array.from(select.options);
+        let option = options.find(opt => opt.value === String(category.id));
+        if (!option) {
+            option = document.createElement('option');
+            option.value = category.id;
+            select.appendChild(option);
+        }
+
+        option.textContent = category.name || 'Нова категория';
+        if (category.color) {
+            option.dataset.color = category.color;
+        } else {
+            delete option.dataset.color;
+        }
+
+        option.selected = true;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function initCategoryModal(config) {
+        const modal = document.querySelector(config?.modalSelector ?? '#categoryModal');
+        const select = document.querySelector(config?.selectSelector ?? '[data-category-select]');
+        if (!modal || !select) {
+            return;
+        }
+
+        const form = modal.querySelector('[data-category-form]');
+        const errorAlert = modal.querySelector('[data-category-error]');
+        const submitButton = modal.querySelector('[data-category-submit]');
+        if (!form) {
+            return;
+        }
+
+        const hideError = () => {
+            if (!errorAlert) {
+                return;
+            }
+            errorAlert.classList.add('d-none');
+            errorAlert.textContent = '';
+        };
+
+        const showError = (message) => {
+            if (!errorAlert) {
+                return;
+            }
+            errorAlert.textContent = message;
+            errorAlert.classList.remove('d-none');
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('data-loading', 'true');
+            }
+
+            hideError();
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (parseError) {
+                    // Ignore parsing issues and show a generic error below.
+                }
+
+                if (!response.ok || !payload) {
+                    showError(extractErrorMessage(payload));
+                    return;
+                }
+
+                addOrUpdateCategoryOption(select, payload);
+                form.reset();
+
+                if (window.bootstrap && typeof window.bootstrap.Modal !== 'undefined') {
+                    const instance = window.bootstrap.Modal.getOrCreateInstance(modal);
+                    instance.hide();
+                }
+            } catch (error) {
+                console.error('Грешка при създаване на категория', error);
+                showError('Възникна неочаквана грешка. Опитайте отново.');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.removeAttribute('data-loading');
+                }
+            }
+        });
+    }
+
     window.initMeetingParticipants = init;
+    window.initCategoryModal = initCategoryModal;
 })();

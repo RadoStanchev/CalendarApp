@@ -193,6 +193,13 @@ body {
   font-size: 0.75rem;
 }
 
+.badge {
+  padding-inline: 0.85rem;
+  padding-block: 0.4rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 991.98px) {
   .friendship-page {
     padding: 1.25rem;
