@@ -87,7 +87,9 @@ namespace CalendarApp.Services.Categories
             }
 
             category.Name = (dto.Name ?? string.Empty).Trim();
-            category.Color = string.IsNullOrWhiteSpace(dto.Color) ? null : dto.Color!.Trim();
+
+            var color = string.IsNullOrWhiteSpace(dto.Color) ? null : dto.Color!.Trim();
+            category.Color = color ?? await PickAutomaticColorAsync();
 
             await db.SaveChangesAsync();
             return true;
@@ -95,22 +97,9 @@ namespace CalendarApp.Services.Categories
 
         private async Task<string> PickAutomaticColorAsync()
         {
-            var usedColors = await db.Categories
-                .AsNoTracking()
-                .Where(c => c.Color != null)
-                .Select(c => c.Color!)
-                .ToListAsync();
-
-            var availableColor = DefaultColors
-                .FirstOrDefault(defaultColor => !usedColors
-                    .Any(used => string.Equals(used, defaultColor, StringComparison.OrdinalIgnoreCase)));
-
-            if (!string.IsNullOrWhiteSpace(availableColor))
-            {
-                return availableColor;
-            }
-
-            return DefaultColors[Random.Shared.Next(DefaultColors.Length)];
+            var totalCategories = await db.Categories.CountAsync();
+            var index = totalCategories % DefaultColors.Length;
+            return DefaultColors[index];
         }
 
         public async Task<bool> DeleteAsync(Guid categoryId)
