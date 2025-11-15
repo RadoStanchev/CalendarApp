@@ -13,17 +13,27 @@ using CalendarApp.Services.Notifications;
 using CalendarApp.Services.User;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var bulgarianCulture = CultureInfo.GetCultureInfo("bg-BG");
-CultureInfo.DefaultThreadCurrentCulture = bulgarianCulture;
-CultureInfo.DefaultThreadCurrentUICulture = bulgarianCulture;
-CultureInfo.CurrentCulture = bulgarianCulture;
-CultureInfo.CurrentUICulture = bulgarianCulture;
+var supportedCultures = new[] { "bg-BG" };
+var bulgarianCulture = new CultureInfo("bg-BG");
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture("bg-BG");
+    options.SupportedCultures = new List<CultureInfo> { bulgarianCulture };
+    options.SupportedUICultures = new List<CultureInfo> { bulgarianCulture };
+
+    // Optional: allow switching culture from ?culture=bg-BG or cookie
+    options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider());
+    options.RequestCultureProviders.Insert(1, new CookieRequestCultureProvider());
+});
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -74,6 +84,7 @@ builder.Services.AddSignalR()
 
 var app = builder.Build();
 
+app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 app.PrepareDatabase();
 
 // Configure the HTTP request pipeline.

@@ -371,117 +371,102 @@ namespace CalendarApp.Services.Meetings
         public async Task<bool> UpdateMeetingAsync(MeetingUpdateDto dto)
         {
             var meeting = await db.Meetings
-                .Include(m => m.CreatedBy)
-                .Include(m => m.Participants)
-                    .ThenInclude(p => p.Contact)
-                .FirstOrDefaultAsync(m => m.Id == dto.Id);
+             .Include(m => m.CreatedBy)
+             .Include(m => m.Participants)
+             .FirstOrDefaultAsync(m => m.Id == dto.Id);
 
             if (meeting == null || meeting.CreatedById != dto.UpdatedById)
-            {
                 return false;
-            }
 
-            var originalStartTime = meeting.StartTime;
-            var existingParticipantIds = meeting.Participants
-                .Select(p => p.ContactId)
-                .ToHashSet();
+            // Update basic fields
+            if (meeting.StartTime != dto.StartTime && dto.StartTime > DateTime.Now)
+                meeting.ReminderSent = false;
 
             meeting.StartTime = dto.StartTime;
             meeting.Location = dto.Location;
             meeting.Description = dto.Description;
             meeting.CategoryId = await EnsureValidCategoryIdAsync(dto.CategoryId);
 
-            if (originalStartTime != dto.StartTime && dto.StartTime > DateTime.Now)
-            {
-                meeting.ReminderSent = false;
-            }
-
-            var incomingParticipants = (dto.Participants ?? Array.Empty<MeetingParticipantUpdateDto>())
+            // Build participants map (deduplicated)
+            var incoming = dto.Participants?
                 .GroupBy(p => p.ContactId)
-                .Select(g => new MeetingParticipantUpdateDto
-                {
-                    ContactId = g.Key,
-                    Status = g.Last().Status
-                })
-                .ToDictionary(p => p.ContactId, p => p.Status);
+                .ToDictionary(g => g.Key, g => g.Last().Status)
+                ?? new Dictionary<Guid, ParticipantStatus>();
 
-            incomingParticipants[dto.UpdatedById] = ParticipantStatus.Accepted;
+            // Creator must always be Accepted
+            incoming[dto.UpdatedById] = ParticipantStatus.Accepted;
 
-            var existingParticipants = meeting.Participants.ToList();
-            var newlyAddedParticipantIds = new List<Guid>();
-            foreach (var participant in existingParticipants)
+            var existing = meeting.Participants.ToDictionary(p => p.ContactId);
+            var newlyAdded = new List<Guid>();
+
+            // Update current participants
+            foreach (var (contactId, participant) in existing)
             {
-                if (participant.ContactId == meeting.CreatedById)
-                {
-                    participant.Status = ParticipantStatus.Accepted;
-                    continue;
-                }
-
-                if (!incomingParticipants.ContainsKey(participant.ContactId))
+                if (!incoming.TryGetValue(contactId, out var status))
                 {
                     meeting.Participants.Remove(participant);
                     continue;
                 }
 
-                participant.Status = incomingParticipants[participant.ContactId];
-                incomingParticipants.Remove(participant.ContactId);
+                participant.Status = status;
+                incoming.Remove(contactId);
             }
 
-            foreach (var (contactId, status) in incomingParticipants)
+            // Add new participants
+            foreach (var (contactId, status) in incoming)
             {
-                if (contactId == meeting.CreatedById)
-                {
-                    continue;
-                }
+                if (contactId == meeting.CreatedById) continue;
 
-                meeting.Participants.Add(new MeetingParticipant
+                db.MeetingParticipants.Add(new MeetingParticipant
                 {
+                    MeetingId = meeting.Id,
                     ContactId = contactId,
                     Status = status
                 });
 
-                if (!existingParticipantIds.Contains(contactId))
-                {
-                    newlyAddedParticipantIds.Add(contactId);
-                }
+                if (!existing.ContainsKey(contactId))
+                    newlyAdded.Add(contactId);
             }
 
             await db.SaveChangesAsync();
 
+            // --- Notifications ---
             var updaterName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}";
-            var startTime = meeting.StartTime.ToLocalTime().ToString("g");
+            var startStr = meeting.StartTime.ToLocalTime().ToString("g");
+            var location = string.IsNullOrWhiteSpace(meeting.Location)
+                ? ""
+                : $" на {meeting.Location.Trim()}";
 
-            var invitationNotifications = newlyAddedParticipantIds
-                .Where(id => id != dto.UpdatedById)
-                .Select(id => new NotificationCreateDto
-                {
-                    UserId = id,
-                    Message = $"{updaterName} ви добави към среща на {startTime}{LocationSuffix(meeting.Location)}.",
-                    Type = NotificationType.Invitation
-                })
-                .ToList();
-
-            if (invitationNotifications.Count > 0)
+            // Invitations (only new participants)
+            if (newlyAdded.Count > 0)
             {
-                await notificationService.CreateNotificationsAsync(invitationNotifications);
+                await notificationService.CreateNotificationsAsync(
+                    newlyAdded
+                        .Where(id => id != dto.UpdatedById)
+                        .Select(id => new NotificationCreateDto
+                        {
+                            UserId = id,
+                            Message = $"{updaterName} ви добави към среща на {startStr}{location}.",
+                            Type = NotificationType.Invitation
+                        })
+                );
             }
 
-            var participantsToNotify = meeting.Participants
-                .Select(p => p.ContactId)
-                .Where(id => id != dto.UpdatedById && id != meeting.CreatedById && !newlyAddedParticipantIds.Contains(id))
-                .Distinct()
-                .Select(id => new NotificationCreateDto
-                {
-                    UserId = id,
-                    Message = $"{updaterName} актуализира срещата на {startTime}{LocationSuffix(meeting.Location)}.",
-                    Type = NotificationType.Info
-                })
-                .ToList();
-
-            if (participantsToNotify.Count > 0)
-            {
-                await notificationService.CreateNotificationsAsync(participantsToNotify);
-            }
+            // Updates for existing participants (exclude creator, updater, newly added)
+            await notificationService.CreateNotificationsAsync(
+                meeting.Participants
+                    .Select(p => p.ContactId)
+                    .Where(id => id != dto.UpdatedById &&
+                                 id != meeting.CreatedById &&
+                                 !newlyAdded.Contains(id))
+                    .Distinct()
+                    .Select(id => new NotificationCreateDto
+                    {
+                        UserId = id,
+                        Message = $"{updaterName} актуализира срещата на {startStr}{location}.",
+                        Type = NotificationType.Info
+                    })
+            );
 
             return true;
         }
@@ -527,6 +512,6 @@ namespace CalendarApp.Services.Meetings
         }
 
         private static string LocationSuffix(string? location)
-            => string.IsNullOrWhiteSpace(location)? "" : $" на {location.Trim()}";
+            => string.IsNullOrWhiteSpace(location) ? "" : $" на {location.Trim()}";
     }
 }
