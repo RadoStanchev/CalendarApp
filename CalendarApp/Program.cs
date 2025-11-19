@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Text.Json.Serialization;
+using Microsoft.Azure.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,7 +81,13 @@ builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
     {
         options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    }); ;
+    });
+
+if (builder.Configuration.GetValue<bool>("Azure:SignalR:Enabled"))
+{
+    builder.Services.AddSignalR().AddAzureSignalR(
+        builder.Configuration["Azure:SignalR:ConnectionString"]);
+}
 
 var app = builder.Build();
 
