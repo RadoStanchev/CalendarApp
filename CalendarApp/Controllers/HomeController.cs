@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +16,14 @@ namespace CalendarApp.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+
+            if (!isAuthenticated)
+            {
+                return RedirectToAction(nameof(AccountController.Login), typeof(AccountController).GetControllerName());
+            }
+
+            return RedirectToAction(nameof(MeetingsController.My), typeof(MeetingsController).GetControllerName());
         }
 
         public IActionResult Privacy()
