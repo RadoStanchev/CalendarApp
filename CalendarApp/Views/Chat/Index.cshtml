@@ -187,18 +187,13 @@
                     <span id="activeContactStatus" class="messenger-contact__status@(string.IsNullOrEmpty(activeContactStatus) ? " text-muted" : string.Empty)">@activeContactStatus</span>
                 </span>
             </div>
-            <div class="messenger-self">
-                <label class="messenger-label" for="userInput">Вашето име</label>
-                <input id="userInput" class="messenger-input" value="@Model.CurrentUserName" readonly />
-            </div>
         </header>
         <div id="chatMessages"
              class="messenger-messages"
              data-empty="@(Model.Messages.Any() ? "false" : "true")"
              data-thread-id="@(Model.ActiveThreadId?.ToString() ?? string.Empty)"
              data-thread-type="@(Model.ActiveThreadType?.ToString().ToLowerInvariant() ?? string.Empty)"
-             data-current-user-id="@Model.CurrentUserId"
-             data-current-user-name="@Model.CurrentUserName">
+             data-current-user-id="@Model.CurrentUserId">
             @if (!Model.Messages.Any())
             {
                 <div class="messenger-empty-state">
