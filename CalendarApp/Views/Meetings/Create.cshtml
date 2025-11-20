@@ -1,7 +1,6 @@
 @model MeetingCreateViewModel
 @{
     ViewData["Title"] = "Планирай среща";
-    var startValue = Model.StartTime?.ToString("yyyy-MM-ddTHH:mm");
 }
 
 <div class="meeting-form-page">
@@ -22,7 +21,7 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="StartTime" class="form-label"></label>
-                            <input asp-for="StartTime" type="datetime-local" class="form-control" value="@startValue" />
+                            <input asp-for="StartTime" type="datetime-local" class="form-control" value="@BulgarianTime.LocalNow.ToString("yyyy-MM-ddTHH:mm")" />
                             <span asp-validation-for="StartTime" class="text-danger"></span>
                         </div>
 
