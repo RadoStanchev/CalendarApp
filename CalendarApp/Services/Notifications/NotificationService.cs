@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Hubs;
+using CalendarApp.Infrastructure.Time;
 using CalendarApp.Services.Notifications.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -166,11 +167,12 @@ namespace CalendarApp.Services.Notifications
 
         private static string BuildReminderMessage(Meeting meeting)
         {
+            var startTimeLocal = BulgarianTime.ConvertUtcToLocal(meeting.StartTime);
             var description = string.IsNullOrWhiteSpace(meeting.Description)
                 ? "Предстояща среща"
                 : meeting.Description;
 
-            return $"Напомняне: {description} започва на {meeting.StartTime:dddd, MMM d yyyy h:mm tt}.";
+            return $"Напомняне: {description} започва на {startTimeLocal:dddd, MMM d yyyy h:mm tt}.";
         }
 
         public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification)

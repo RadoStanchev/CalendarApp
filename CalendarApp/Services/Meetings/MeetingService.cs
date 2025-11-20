@@ -2,6 +2,7 @@ using AutoMapper;
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Models.Meetings;
+using CalendarApp.Infrastructure.Time;
 using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
@@ -111,7 +112,7 @@ namespace CalendarApp.Services.Meetings
         {
             var meeting = new Meeting
             {
-                StartTime = dto.StartTime,
+                StartTime = BulgarianTime.ConvertLocalToUtc(dto.StartTime),
                 Location = dto.Location,
                 Description = dto.Description,
                 CreatedById = dto.CreatedById,
@@ -151,7 +152,7 @@ namespace CalendarApp.Services.Meetings
             await db.SaveChangesAsync();
 
             var creatorName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}";
-            var startTime = meeting.StartTime.ToLocalTime().ToString("g");
+            var startTime = BulgarianTime.ConvertUtcToLocal(meeting.StartTime).ToString("g");
 
             var notifications = meeting.Participants
                 .Where(p => p.ContactId != dto.CreatedById)
@@ -241,6 +242,8 @@ namespace CalendarApp.Services.Meetings
                 return null;
             }
 
+            var startTimeLocal = BulgarianTime.ConvertUtcToLocal(meeting.StartTime);
+
             var participants = meeting.Participants
                 .Select(p => new MeetingParticipantDto
                 {
@@ -257,7 +260,7 @@ namespace CalendarApp.Services.Meetings
             return new MeetingEditDto
             {
                 Id = meeting.Id,
-                StartTime = meeting.StartTime,
+                StartTime = startTimeLocal,
                 Location = meeting.Location,
                 Description = meeting.Description,
                 CategoryId = meeting.CategoryId,
@@ -379,10 +382,12 @@ namespace CalendarApp.Services.Meetings
                 return false;
 
             // Update basic fields
-            if (meeting.StartTime != dto.StartTime && dto.StartTime > DateTime.Now)
+            var newStartUtc = BulgarianTime.ConvertLocalToUtc(dto.StartTime);
+
+            if (meeting.StartTime != newStartUtc && newStartUtc > DateTime.UtcNow)
                 meeting.ReminderSent = false;
 
-            meeting.StartTime = dto.StartTime;
+            meeting.StartTime = newStartUtc;
             meeting.Location = dto.Location;
             meeting.Description = dto.Description;
             meeting.CategoryId = await EnsureValidCategoryIdAsync(dto.CategoryId);
@@ -432,7 +437,7 @@ namespace CalendarApp.Services.Meetings
 
             // --- Notifications ---
             var updaterName = $"{meeting.CreatedBy.FirstName} {meeting.CreatedBy.LastName}";
-            var startStr = meeting.StartTime.ToLocalTime().ToString("g");
+            var startStr = BulgarianTime.ConvertUtcToLocal(meeting.StartTime).ToString("g");
             var location = string.IsNullOrWhiteSpace(meeting.Location)
                 ? ""
                 : $" на {meeting.Location.Trim()}";
