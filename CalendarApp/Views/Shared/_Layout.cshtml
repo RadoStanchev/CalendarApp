@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using CalendarApp.Infrastructure.Extentions
+<!DOCTYPE html>
 <html lang="bg">
 <head>
     <meta charset="utf-8" />
@@ -15,32 +16,26 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Календар</a>
+                <a class="navbar-brand" asp-area="" asp-controller="@typeof(HomeController).GetControllerName()" asp-action="@nameof(HomeController.Index)">CalendarApp</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Превключване на навигацията">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Начало</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Поверителност</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Chat" asp-action="Index">Чат на живо</a>
-                        </li>
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="My">Моите срещи</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(ChatController).GetControllerName()" asp-action="@nameof(ChatController.Index)">Чат на живо</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Meetings" asp-action="Create">Създай среща</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(MeetingsController).GetControllerName()" asp-action="@nameof(MeetingsController.My)">Моите срещи</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Friendships" asp-action="Index">Приятели</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(MeetingsController).GetControllerName()" asp-action="@nameof(MeetingsController.Create)">Създай среща</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(FriendshipsController).GetControllerName()" asp-action="@nameof(FriendshipsController.Index)">Приятели</a>
                             </li>
                         }
                     </ul>
@@ -62,7 +57,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - Календар - <a asp-area="" asp-controller="Home" asp-action="Privacy">Поверителност</a>
+            &copy; 2025 - Календар - <a asp-area="" asp-controller="@typeof(HomeController)" asp-action="@nameof(HomeController.Privacy)">Поверителност</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
