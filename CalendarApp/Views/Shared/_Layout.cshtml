@@ -57,7 +57,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - Календар - <a asp-area="" asp-controller="@typeof(HomeController)" asp-action="@nameof(HomeController.Privacy)">Поверителност</a>
+            &copy; 2025 - Календар - <a asp-area="" asp-controller="@typeof(HomeController).GetControllerName()" asp-action="@nameof(HomeController.Privacy)">Поверителност</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
