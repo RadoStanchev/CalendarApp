@@ -172,7 +172,7 @@ namespace CalendarApp.Services.Notifications
                 ? "Предстояща среща"
                 : meeting.Description;
 
-            return $"Напомняне: {description} започва на {startTimeLocal:dddd, MMM d yyyy h:mm tt}.";
+            return $"Напомняне: {description} започва на {startTimeLocal:dddd, MMM d yyyy HH:mm}.";
         }
 
         public async Task<NotificationDto> CreateNotificationAsync(NotificationCreateDto notification)
@@ -195,7 +195,7 @@ namespace CalendarApp.Services.Notifications
 
             var materialized = notifications
                 .Where(n => n != null)
-                .Select(n => mapper.Map<Notification>(n))
+                .Select(mapper.Map<Notification>)
                 .ToList();
 
             if (materialized.Count == 0)

@@ -116,7 +116,7 @@ namespace CalendarApp.Infrastructure.Extensions
                 {
                     Description = subjects[random.Next(subjects.Length)],
                     Location = $"Стая {random.Next(1, 5)}",
-                    StartTime = start,
+                    StartTime = startUtc,
                     CategoryId = category.Id,
                     CreatedById = creator.Id
                 };
