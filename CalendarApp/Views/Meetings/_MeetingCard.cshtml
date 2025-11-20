@@ -41,7 +41,7 @@
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
             <div class="flex-grow-1">
                 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                    <h3 class="h5 fw-semibold mb-0">@Model.StartTime.ToLocalTime().ToString("f")</h3>
+                    <h3 class="h5 fw-semibold mb-0">@BulgarianTime.ConvertUtcToLocal(Model.StartTime).ToString("f")</h3>
                     @if (!string.IsNullOrWhiteSpace(Model.CategoryName))
                     {
                         <span class="badge rounded-pill badge-category" style="@BuildCategoryBadgeStyle(Model.CategoryColor)">@Model.CategoryName</span>

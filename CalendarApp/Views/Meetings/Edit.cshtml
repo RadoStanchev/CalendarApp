@@ -1,7 +1,7 @@
 @model MeetingEditViewModel
 @{
     ViewData["Title"] = "Редакция на среща";
-    var startValue = Model.StartTime?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
+    var startValue = Model.StartTime?.ToString("yyyy-MM-ddTHH:mm");
     var statuses = Enum.GetValues(typeof(ParticipantStatus)).Cast<ParticipantStatus>().ToArray();
 }
 

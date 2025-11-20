@@ -1,7 +1,7 @@
 @model MeetingCreateViewModel
 @{
     ViewData["Title"] = "Планирай среща";
-    var startValue = Model.StartTime?.ToLocalTime().ToString("yyyy-MM-ddTHH:mm");
+    var startValue = Model.StartTime?.ToString("yyyy-MM-ddTHH:mm");
 }
 
 <div class="meeting-form-page">

@@ -1,4 +1,5 @@
 using System;
+using CalendarApp.Infrastructure.Time;
 
 namespace CalendarApp.Models.Chat
 {
@@ -26,13 +27,13 @@ namespace CalendarApp.Models.Chat
                 return "Няма изпратени съобщения";
             }
 
-            var localTime = DateTime.SpecifyKind(sentAtUtc.Value, DateTimeKind.Utc).ToLocalTime();
+            var localTime = BulgarianTime.ConvertUtcToLocal(DateTime.SpecifyKind(sentAtUtc.Value, DateTimeKind.Utc));
             return $"Последно съобщение: {localTime.ToString("g")}";
         }
 
         public static string BuildMeetingTitle(DateTime startTimeUtc, string? location)
         {
-            var local = DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc).ToLocalTime();
+            var local = BulgarianTime.ConvertUtcToLocal(DateTime.SpecifyKind(startTimeUtc, DateTimeKind.Utc));
             var dateLabel = local.ToString("dd MMM yyyy");
 
             if (string.IsNullOrWhiteSpace(location))
