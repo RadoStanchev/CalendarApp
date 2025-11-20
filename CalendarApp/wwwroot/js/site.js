@@ -59,10 +59,10 @@
         if (isNaN(date)) return '';
 
         const diff = (Date.now() - date) / 1000;
-        if (diff < 60) return 'Just now';
-        if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-        return `${Math.floor(diff / 86400)} days ago`;
+        if (diff < 60) return 'Току-що';
+        if (diff < 3600) return `преди ${Math.floor(diff / 60)} минути`;
+        if (diff < 86400) return `преди ${Math.floor(diff / 3600)} часа`;
+        return `преди ${Math.floor(diff / 86400)} дни`;
     }
 
     function createItem(n) {

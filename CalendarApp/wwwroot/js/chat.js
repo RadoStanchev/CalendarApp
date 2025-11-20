@@ -480,7 +480,7 @@
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(`HTTP грешка ${response.status}`);
             }
 
             const payload = await response.json();
@@ -690,7 +690,7 @@
         try {
             await connection.invoke(method, currentThreadId, message);
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Грешка при изпращане на съобщение:", error);
         } finally {
             sendButton.disabled = false;
             if (messageInput) {

@@ -7,27 +7,30 @@ namespace CalendarApp.Models.Account
     {
         public Guid Id { get; set; }
 
-        [EmailAddress]
+        [EmailAddress(ErrorMessage = "Невалиден имейл адрес.")]
+        [Display(Name = "Имейл")]
         public string Email { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        [Display(Name = "First name")]
+        [Required(ErrorMessage = "Моля, въведете име.")]
+        [StringLength(50, ErrorMessage = "Името трябва да е до 50 символа.")]
+        [Display(Name = "Име")]
         public string FirstName { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        [Display(Name = "Last name")]
+        [Required(ErrorMessage = "Моля, въведете фамилия.")]
+        [StringLength(50, ErrorMessage = "Фамилията трябва да е до 50 символа.")]
+        [Display(Name = "Фамилия")]
         public string LastName { get; set; }
 
         [DataType(DataType.Date)]
-        [Display(Name = "Birth date")]
+        [Display(Name = "Дата на раждане")]
         public DateTime? BirthDate { get; set; }
 
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "Адресът трябва да е до 100 символа.")]
+        [Display(Name = "Адрес")]
         public string? Address { get; set; }
 
-        [StringLength(250)]
+        [StringLength(250, ErrorMessage = "Бележката трябва да е до 250 символа.")]
+        [Display(Name = "Бележка")]
         public string? Note { get; set; }
     }
 }
