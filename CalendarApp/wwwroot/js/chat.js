@@ -523,10 +523,6 @@
             await leaveThread(previousThreadId, previousThreadType);
             await joinThread(threadId, threadType);
 
-            if (messageInput) {
-                messageInput.focus();
-            }
-
             await markThreadAsRead(threadId, threadType);
         } catch (error) {
             console.error("Неуспешно зареждане на разговора:", error);
@@ -644,9 +640,6 @@
 
             setComposerState(Boolean(currentThreadId));
 
-            if (messageInput && currentThreadId) {
-                messageInput.focus();
-            }
         })
         .catch(error => {
             console.error("Неуспешно свързване с чат хъба:", error);
@@ -703,7 +696,6 @@
             if (messageInput) {
                 messageInput.value = "";
                 resizeComposer();
-                messageInput.focus();
             }
         }
     });
