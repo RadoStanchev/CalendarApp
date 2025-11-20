@@ -1,6 +1,7 @@
 ﻿using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Models;
+using CalendarApp.Infrastructure.Time;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -108,14 +109,14 @@ namespace CalendarApp.Infrastructure.Extensions
                 var creator = users[random.Next(users.Count)];
                 var category = categories[random.Next(categories.Count)];
 
-                var start = DateTime.Now.AddDays(random.Next(-10, 10)).AddHours(random.Next(8, 18));
-                var end = start.AddHours(random.Next(1, 3));
+                var startLocal = BulgarianTime.LocalNow.AddDays(random.Next(-10, 10)).AddHours(random.Next(8, 18));
+                var startUtc = BulgarianTime.ConvertLocalToUtc(startLocal);
 
                 var meeting = new Meeting
                 {
                     Description = subjects[random.Next(subjects.Length)],
                     Location = $"Room {random.Next(1, 5)}",
-                    StartTime = start,
+                    StartTime = startUtc,
                     CategoryId = category.Id,
                     CreatedById = creator.Id
                 };

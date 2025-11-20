@@ -5,6 +5,7 @@ using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Categories;
 using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Meetings.Models;
+using CalendarApp.Infrastructure.Time;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -52,7 +53,7 @@ namespace CalendarApp.Controllers
         {
             var model = new MeetingCreateViewModel
             {
-                StartTime = DateTime.UtcNow.AddHours(1)
+                StartTime = BulgarianTime.LocalNow.AddHours(1)
             };
 
             model.Categories = await GetCategoryOptionsAsync();

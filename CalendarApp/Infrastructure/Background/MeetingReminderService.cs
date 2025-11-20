@@ -1,5 +1,6 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Time;
 using CalendarApp.Services.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,7 +53,7 @@ namespace CalendarApp.Infrastructure.Background
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-            var now = DateTime.Now;
+            var now = BulgarianTime.UtcNow;
             var windowEnd = now.Add(ReminderWindow);
 
             var meetings = await db.Meetings
