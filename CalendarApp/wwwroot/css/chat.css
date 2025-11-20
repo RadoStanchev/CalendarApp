@@ -29,6 +29,12 @@
     max-height: calc(100vh - 200px);
     min-height: 0;
     overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.messenger-sidebar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 .messenger-sidebar__header {
@@ -340,6 +346,15 @@
     flex-direction: column;
     gap: 0.65rem;
     position: relative;
+}
+
+.messenger-messages {
+    scrollbar-width: none;
+}
+
+.messenger-messages::-webkit-scrollbar {
+    width: 0;
+    height: 0;
 }
 
 .messenger-messages[data-empty="true"] {
