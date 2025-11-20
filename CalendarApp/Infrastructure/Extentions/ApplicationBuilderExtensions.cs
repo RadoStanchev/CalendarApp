@@ -41,7 +41,7 @@ namespace CalendarApp.Infrastructure.Extensions
                 ("Stefan", "Kolev", "stefan@calendar.com"),
                 ("Tanya", "Mihaylova", "tanya@calendar.com"),
                 ("Dimitar", "Krastev", "dimitar@calendar.com"),
-                ("Admin", "User", "admin@calendar.com")
+                ("Админ", "Потребител", "admin@calendar.com")
             };
 
             foreach (var (first, last, email) in users)
@@ -66,11 +66,11 @@ namespace CalendarApp.Infrastructure.Extensions
 
             var categories = new[]
             {
-                new Category { Name = "Work", Color = "#007BFF" },
-                new Category { Name = "Personal", Color = "#28A745" },
-                new Category { Name = "Birthday", Color = "#FFC107" },
-                new Category { Name = "Family", Color = "#DC3545" },
-                new Category { Name = "Education", Color = "#6610F2" }
+                new Category { Name = "Работа", Color = "#007BFF" },
+                new Category { Name = "Лично", Color = "#28A745" },
+                new Category { Name = "Рожден ден", Color = "#FFC107" },
+                new Category { Name = "Семейство", Color = "#DC3545" },
+                new Category { Name = "Образование", Color = "#6610F2" }
             };
 
             context.Categories.AddRange(categories);
@@ -88,16 +88,16 @@ namespace CalendarApp.Infrastructure.Extensions
 
             var subjects = new[]
             {
-                "Weekly Team Sync",
-                "Client Presentation",
-                "Project Planning",
-                "Code Review",
-                "Marketing Strategy",
-                "Product Demo",
-                "Budget Discussion",
-                "UI/UX Brainstorm",
-                "Performance Review",
-                "Team Building Event"
+                "Седмична синхронизация на екипа",
+                "Презентация пред клиент",
+                "Планиране на проект",
+                "Преглед на код",
+                "Маркетингова стратегия",
+                "Демо на продукта",
+                "Обсъждане на бюджет",
+                "Мозъчна атака за UI/UX",
+                "Преглед на представянето",
+                "Тиймбилдинг събитие"
             };
 
             var meetings = new List<Meeting>();
@@ -114,7 +114,7 @@ namespace CalendarApp.Infrastructure.Extensions
                 var meeting = new Meeting
                 {
                     Description = subjects[random.Next(subjects.Length)],
-                    Location = $"Room {random.Next(1, 5)}",
+                    Location = $"Стая {random.Next(1, 5)}",
                     StartTime = start,
                     CategoryId = category.Id,
                     CreatedById = creator.Id
