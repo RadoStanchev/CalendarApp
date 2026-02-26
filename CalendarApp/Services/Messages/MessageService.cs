@@ -1,7 +1,6 @@
 using CalendarApp.Data;
 using CalendarApp.Data.Models;
 using CalendarApp.Services.Messages.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +12,9 @@ namespace CalendarApp.Services.Messages
     public class MessageService : IMessageService
     {
         private readonly ApplicationDbContext db;
-        private readonly UserManager<Contact> userManager;
-
-        public MessageService(ApplicationDbContext db, UserManager<Contact> userManager)
+        public MessageService(ApplicationDbContext db)
         {
             this.db = db;
-            this.userManager = userManager;
         }
 
         public async Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId)
@@ -214,7 +210,7 @@ namespace CalendarApp.Services.Messages
 
         private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId)
         {
-            var sender = await userManager.Users
+            var sender = await db.Users
                 .Where(u => u.Id == userId)
                 .Select(u => new { u.Id, u.FirstName, u.LastName })
                 .AsNoTracking()

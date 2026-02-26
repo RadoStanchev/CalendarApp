@@ -3,12 +3,11 @@ namespace CalendarApp.Controllers
     using System;
     using System.Collections.Generic;
     using AutoMapper;
-    using CalendarApp.Data.Models;
     using CalendarApp.Models.Notifications;
+    using CalendarApp.Services.Auth;
     using CalendarApp.Services.Notifications;
     using CalendarApp.Services.Notifications.Models;
     using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
 
     [Authorize]
@@ -16,22 +15,22 @@ namespace CalendarApp.Controllers
     {
         private readonly INotificationService notificationService;
         private readonly IMapper mapper;
-        private readonly UserManager<Contact> userManager;
+        private readonly IAuthenticationService authenticationService;
 
         public NotificationsController(
             INotificationService notificationService,
             IMapper mapper,
-            UserManager<Contact> userManager)
+            IAuthenticationService authenticationService)
         {
             this.notificationService = notificationService;
             this.mapper = mapper;
-            this.userManager = userManager;
+            this.authenticationService = authenticationService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index(NotificationReadFilter filter = NotificationReadFilter.All)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = GetCurrentUserId();
 
             await notificationService.MarkAllAsReadAsync(userId);
 
@@ -54,7 +53,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Recent(int count = 3, bool includeRead = true)
         {
-            var userId = await GetCurrentUserIdAsync();
+            var userId = GetCurrentUserId();
             var notifications = await notificationService.GetRecentAsync(userId, count, includeRead);
             var notificationModels = mapper.Map<IReadOnlyCollection<NotificationViewModel>>(notifications);
             var unreadCount = await notificationService.GetUnreadCountAsync(userId);
@@ -75,7 +74,7 @@ namespace CalendarApp.Controllers
                 return BadRequest();
             }
 
-            var userId = await GetCurrentUserIdAsync();
+            var userId = GetCurrentUserId();
             var marked = await notificationService.MarkAsReadAsync(userId, Id.Value);
 
             if (!marked)
@@ -87,10 +86,6 @@ namespace CalendarApp.Controllers
             return Ok(new { success = true, unreadCount });
         }
 
-        private async Task<Guid> GetCurrentUserIdAsync()
-        {
-            var user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("Потребителят не е намерен.");
-            return user.Id;
-        }
+        private Guid GetCurrentUserId() => authenticationService.GetCurrentUserId(User);
     }
 }

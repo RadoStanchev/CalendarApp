@@ -1,13 +1,11 @@
 using AutoMapper;
-using CalendarApp.Data.Models;
-using CalendarApp.Infrastructure.Extentions;
+using CalendarApp.Services.Auth;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Categories;
 using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Infrastructure.Time;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -21,20 +19,20 @@ namespace CalendarApp.Controllers
         private readonly IMeetingService meetingService;
         private readonly ICategoryService categoryService;
         private readonly IMapper mapper;
-        private readonly UserManager<Contact> userManager;
+        private readonly IAuthenticationService authenticationService;
 
-        public MeetingsController(IMeetingService meetingService, ICategoryService categoryService, IMapper mapper, UserManager<Contact> userManager)
+        public MeetingsController(IMeetingService meetingService, ICategoryService categoryService, IMapper mapper, IAuthenticationService authenticationService)
         {
             this.meetingService = meetingService;
             this.categoryService = categoryService;
             this.mapper = mapper;
-            this.userManager = userManager;
+            this.authenticationService = authenticationService;
         }
 
         [HttpGet]
         public async Task<IActionResult> My(string? search)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var trimmedSearch = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
             var meetings = await meetingService.GetMeetingsForUserAsync(userId, trimmedSearch);
 
@@ -65,7 +63,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MeetingCreateViewModel model)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
 
             if (!ModelState.IsValid)
             {
@@ -104,7 +102,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var dto = await meetingService.GetMeetingForEditAsync(id, userId);
             if (dto == null)
             {
@@ -125,7 +123,7 @@ namespace CalendarApp.Controllers
                 return BadRequest();
             }
 
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
 
             if (!ModelState.IsValid)
             {
@@ -171,7 +169,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var dto = await meetingService.GetMeetingDetailsAsync(id, userId);
             if (dto == null)
             {
@@ -185,7 +183,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> SearchContacts(string term, IEnumerable<Guid>? excludeIds)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var idsToExclude = excludeIds ?? Enumerable.Empty<Guid>();
             var results = await meetingService.SearchContactsAsync(userId, term ?? string.Empty, idsToExclude);
             return Json(results);
@@ -195,7 +193,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(Guid id, ParticipantStatus status, string? returnUrl)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var updated = await meetingService.UpdateParticipantStatusAsync(id, userId, status);
 
             if (!updated)

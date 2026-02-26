@@ -1,28 +1,38 @@
 using CalendarApp.Data;
-using CalendarApp.Data.Models;
 using CalendarApp.Hubs;
 using CalendarApp.Infrastructure.Background;
+using CalendarApp.Infrastructure.Data;
 using CalendarApp.Infrastructure.Extensions;
 using CalendarApp.Infrastructure.Mapping;
+using CalendarApp.Services.Auth;
 using CalendarApp.Services.Categories;
+using CalendarApp.Services.Categories.Repositories;
+using CalendarApp.Services.Friendships.Repositories;
+using CalendarApp.Services.Meetings.Repositories;
+using CalendarApp.Services.Messages.Repositories;
+using CalendarApp.Services.MessageSeens.Repositories;
+using CalendarApp.Services.Notifications.Repositories;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.MessageSeens;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.User;
+using CalendarApp.Services.User.Repositories;
 using CalendarApp.Services.UserPresence;
+using Dapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Text.Json.Serialization;
-using Microsoft.Azure.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var supportedCultures = new[] { "bg-BG" };
+DefaultTypeMap.MatchNamesWithUnderscores = true;
+
 var bulgarianCulture = new CultureInfo("bg-BG");
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -30,29 +40,42 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.DefaultRequestCulture = new RequestCulture("bg-BG");
     options.SupportedCultures = new List<CultureInfo> { bulgarianCulture };
     options.SupportedUICultures = new List<CultureInfo> { bulgarianCulture };
-
-    // Optional: allow switching culture from ?culture=bg-BG or cookie
     options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider());
     options.RequestCultureProviders.Insert(1, new CookieRequestCultureProvider());
 });
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-builder.Services.AddIdentity<Contact, IdentityRole<Guid>>(options =>
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ApplicationDbContext>(sp =>
 {
-    options.SignIn.RequireConfirmedAccount = true;
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = false;
-})
-.AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders();
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+    optionsBuilder.UseSqlServer(connectionString);
+    return new ApplicationDbContext(optionsBuilder.Options);
+});
 
+builder.Services.AddScoped<IDbConnectionFactory, SqlConnectionFactory>();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/Login";
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+builder.Services.AddScoped<IPasswordHasher<CalendarApp.Data.Models.Contact>, PasswordHasher<CalendarApp.Data.Models.Contact>>();
+builder.Services.AddScoped<IAuthenticationService, CookieAuthenticationService>();
+
+builder.Services.AddScoped<IUserRepository, DapperUserRepository>();
+builder.Services.AddScoped<IFriendshipRepository, DapperFriendshipRepository>();
+builder.Services.AddScoped<IMeetingRepository, DapperMeetingRepository>();
+builder.Services.AddScoped<IMessageRepository, DapperMessageRepository>();
+builder.Services.AddScoped<INotificationRepository, DapperNotificationRepository>();
+builder.Services.AddScoped<ICategoryRepository, DapperCategoryRepository>();
+builder.Services.AddScoped<IMessageSeenRepository, DapperMessageSeenRepository>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMeetingService, MeetingService>();
@@ -92,23 +115,16 @@ if (builder.Configuration.GetValue<bool>("Azure:SignalR:Enabled"))
 var app = builder.Build();
 
 app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
-app.PrepareDatabase();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseMigrationsEndPoint();
-}
-else
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -120,6 +136,5 @@ app.MapControllerRoute(
 
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<NotificationHub>("/hubs/notifications");
-
 
 app.Run();
