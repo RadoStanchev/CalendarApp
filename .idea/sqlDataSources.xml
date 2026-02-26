@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DdlMappings">
+    <mapping uuid="7d71c0c8-fb23-4693-8ef2-a77d015d9359" name="Local Sql Mac Mapping">
+      <data-sources db="518e8f79-2e20-4907-bedb-aa953eb7cefb" />
+      <scope>
+        <node kind="database" negative="1" />
+      </scope>
+    </mapping>
+  </component>
+</project>
