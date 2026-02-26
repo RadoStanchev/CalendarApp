@@ -1,13 +1,13 @@
 using AutoMapper;
-using CalendarApp.Data.Models;
+using CalendarApp.Services.Auth;
 using CalendarApp.Models.Chat;
 using CalendarApp.Services.Friendships;
 using CalendarApp.Services.Meetings;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.MessageSeens;
+using CalendarApp.Services.User;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CalendarApp.Controllers
@@ -17,35 +17,36 @@ namespace CalendarApp.Controllers
     {
         private const int MessagesPageSize = 100;
 
-        private readonly UserManager<Contact> userManager;
+        private readonly IAuthenticationService authenticationService;
         private readonly IFriendshipService friendshipService;
         private readonly IMeetingService meetingService;
         private readonly IMessageService messageService;
         private readonly IMessageSeenService messageSeenService;
         private readonly IUserPresenceTracker presenceTracker;
+        private readonly IUserService userService;
         private readonly IMapper mapper;
 
-        public ChatController(UserManager<Contact> userManager, IFriendshipService friendshipService, IMeetingService meetingService, IMessageService messageService, IMessageSeenService messageSeenService, IUserPresenceTracker presenceTracker, IMapper mapper)
+        public ChatController(IAuthenticationService authenticationService, IFriendshipService friendshipService, IMeetingService meetingService, IMessageService messageService, IMessageSeenService messageSeenService, IUserPresenceTracker presenceTracker, IUserService userService, IMapper mapper)
         {
-            this.userManager = userManager;
+            this.authenticationService = authenticationService;
             this.friendshipService = friendshipService;
             this.meetingService = meetingService;
             this.messageService = messageService;
             this.messageSeenService = messageSeenService;
             this.presenceTracker = presenceTracker;
+            this.userService = userService;
             this.mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index(Guid? friendshipId, Guid? meetingId, ThreadType? type)
         {
-            var currentUser = await userManager.GetUserAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
+            var currentUser = await userService.GetByIdAsync(userId);
             if (currentUser == null)
             {
                 return Challenge();
             }
-
-            var userId = currentUser.Id;
 
             var friendshipThreadDtos = await friendshipService.GetChatThreadsAsync(userId);
 
@@ -147,13 +148,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Thread(Guid id, ThreadType type)
         {
-            var currentUser = await userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return Unauthorized();
-            }
-
-            var userId = currentUser.Id;
+            var userId = authenticationService.GetCurrentUserId(User);
 
             if (type == ThreadType.Meeting)
             {
@@ -172,21 +167,17 @@ namespace CalendarApp.Controllers
                 return BadRequest();
             }
 
-            var currentUser = await userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return Unauthorized();
-            }
+            var userId = authenticationService.GetCurrentUserId(User);
 
             try
             {
                 if (threadType == ThreadType.Meeting)
                 {
-                    await messageSeenService.MarkMeetingMessagesAsSeenAsync(currentUser.Id, threadId);
+                    await messageSeenService.MarkMeetingMessagesAsSeenAsync(userId, threadId);
                 }
                 else
                 {
-                    await messageSeenService.MarkFriendshipMessagesAsSeenAsync(currentUser.Id, threadId);
+                    await messageSeenService.MarkFriendshipMessagesAsSeenAsync(userId, threadId);
                 }
             }
             catch (InvalidOperationException)

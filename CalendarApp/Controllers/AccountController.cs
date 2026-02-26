@@ -1,30 +1,26 @@
 ﻿using AutoMapper;
 using CalendarApp.Data.Models;
-using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Models.Account;
+using CalendarApp.Services.Auth;
 using CalendarApp.Services.User;
 using CalendarApp.Services.User.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CalendarApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<Contact> userManager;
-        private readonly SignInManager<Contact> signInManager;
+        private readonly IAuthenticationService authenticationService;
         private readonly IUserService userService;
         private readonly IMapper mapper;
 
         public AccountController(
-            UserManager<Contact> userManager,
-            SignInManager<Contact> signInManager,
+            IAuthenticationService authenticationService,
             IUserService userService,
             IMapper mapper)
         {
-            this.userManager = userManager;
-            this.signInManager = signInManager;
+            this.authenticationService = authenticationService;
             this.userService = userService;
             this.mapper = mapper;
         }
@@ -42,16 +38,15 @@ namespace CalendarApp.Controllers
             user.UserName = model.Email;
             user.EmailConfirmed = true;
 
-            var result = await userManager.CreateAsync(user, model.Password);
+            var result = await authenticationService.RegisterAsync(user, model.Password, false);
 
             if (result.Succeeded)
             {
-                await signInManager.SignInAsync(user, false);
                 return RedirectToAction(nameof(Profile));
             }
 
             foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError("", error);
 
             return View(model);
         }
@@ -65,10 +60,10 @@ namespace CalendarApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var result = await signInManager.PasswordSignInAsync(
-                model.Email, model.Password, model.RememberMe, false);
+            var result = await authenticationService.LoginAsync(
+                model.Email, model.Password, model.RememberMe);
 
-            if (result.Succeeded)
+            if (result)
                 return RedirectToAction(nameof(Profile));
 
             ModelState.AddModelError("", "Невалиден опит за вход.");
@@ -79,14 +74,14 @@ namespace CalendarApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await signInManager.SignOutAsync();
+            await authenticationService.LogoutAsync();
             return RedirectToAction(nameof(Login));
         }
 
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var user = await userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -99,7 +94,7 @@ namespace CalendarApp.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
             var user = await userService.GetByIdAsync(userId);
             if (user == null)
                 return NotFound();
@@ -113,7 +108,7 @@ namespace CalendarApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(EditProfileViewModel model)
         {
-            var userId = await userManager.GetUserIdGuidAsync(User);
+            var userId = authenticationService.GetCurrentUserId(User);
 
             if (!ModelState.IsValid)
             {
