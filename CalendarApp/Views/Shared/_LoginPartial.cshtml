@@ -1,11 +1,13 @@
 @using CalendarApp.Controllers
 @using CalendarApp.Infrastructure.Extentions
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<Contact> SignInManager
-@inject UserManager<Contact> UserManager
+
+@{
+    var currentUser = HttpContext.User;
+    var isAuthenticated = currentUser?.Identity?.IsAuthenticated ?? false;
+}
 
 <ul class="navbar-nav">
-@if (SignInManager.IsSignedIn(User))
+@if (isAuthenticated)
 {
     <li class="nav-item">
         <a class="nav-link text-dark d-inline-flex align-items-center" asp-area="" asp-controller="@typeof(NotificationsController).GetControllerName()" asp-action="@nameof(NotificationsController.Index)" data-notification-link title="Преглед на известията">
@@ -15,7 +17,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Profile)">Здравей, @User.Identity?.Name!</a>
+        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Profile)">Здравей, @currentUser?.Identity?.Name!</a>
     </li>
     <li class="nav-item">
         <form  class="form-inline" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Logout)">
