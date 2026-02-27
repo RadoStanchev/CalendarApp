@@ -1,4 +1,3 @@
-using CalendarApp.Data;
 using CalendarApp.Hubs;
 using CalendarApp.Infrastructure.Background;
 using CalendarApp.Infrastructure.Data;
@@ -24,7 +23,6 @@ using Dapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Text.Json.Serialization;
@@ -45,16 +43,6 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ApplicationDbContext>(sp =>
-{
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var connectionString = configuration.GetConnectionString("DefaultConnection")
-        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-    var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-    optionsBuilder.UseSqlServer(connectionString);
-    return new ApplicationDbContext(optionsBuilder.Options);
-});
-
 builder.Services.AddScoped<IDbConnectionFactory, SqlConnectionFactory>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

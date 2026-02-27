@@ -1,8 +1,8 @@
-using CalendarApp.Data;
 using CalendarApp.Data.Models;
+using CalendarApp.Infrastructure.Data;
 using CalendarApp.Infrastructure.Time;
 using CalendarApp.Services.Notifications;
-using Microsoft.EntityFrameworkCore;
+using Dapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -50,44 +50,47 @@ namespace CalendarApp.Infrastructure.Background
         private async Task CheckForUpcomingMeetingsAsync(CancellationToken cancellationToken)
         {
             using var scope = serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var connectionFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
             var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
             var now = BulgarianTime.UtcNow;
             var windowEnd = now.Add(ReminderWindow);
 
-            var meetings = await db.Meetings
-                .Include(m => m.Participants)
-                .Where(m => !m.ReminderSent && m.StartTime >= now && m.StartTime <= windowEnd)
-                .ToListAsync(cancellationToken);
+            using var connection = connectionFactory.CreateConnection();
+            var meetings = (await connection.QueryAsync<Meeting>(new CommandDefinition(@"
+SELECT Id, StartTime, [Location], [Description], CategoryId, CreatedById, ReminderSent
+FROM dbo.Meetings
+WHERE ReminderSent = 0 AND StartTime >= @Now AND StartTime <= @WindowEnd",
+                new { Now = now, WindowEnd = windowEnd }, cancellationToken: cancellationToken))).ToList();
 
             if (meetings.Count == 0)
+            {
                 return;
+            }
 
             foreach (var meeting in meetings)
             {
-                var recipientIds = meeting.Participants
-                    .Where(p => p.Status != ParticipantStatus.Declined)
-                    .Select(p => p.ContactId)
-                    .Distinct()
-                    .ToList();
+                var recipientIds = (await connection.QueryAsync<Guid>(new CommandDefinition(@"
+SELECT DISTINCT ContactId
+FROM dbo.MeetingParticipants
+WHERE MeetingId = @MeetingId AND Status <> @DeclinedStatus",
+                    new { MeetingId = meeting.Id, DeclinedStatus = (int)ParticipantStatus.Declined }, cancellationToken: cancellationToken))).ToList();
 
                 if (meeting.CreatedById != Guid.Empty && !recipientIds.Contains(meeting.CreatedById))
                 {
                     recipientIds.Add(meeting.CreatedById);
                 }
 
-                if (recipientIds.Count == 0)
+                if (recipientIds.Count > 0)
                 {
-                    meeting.ReminderSent = true;
-                    continue;
+                    await notificationService.SendMeetingReminderAsync(meeting, recipientIds);
                 }
 
-                await notificationService.SendMeetingReminderAsync(meeting, recipientIds);
-                meeting.ReminderSent = true;
+                await connection.ExecuteAsync(new CommandDefinition(@"
+UPDATE dbo.Meetings
+SET ReminderSent = 1
+WHERE Id = @MeetingId", new { MeetingId = meeting.Id }, cancellationToken: cancellationToken));
             }
-
-            await db.SaveChangesAsync(cancellationToken);
         }
     }
 }
