@@ -1,82 +1,33 @@
-using CalendarApp.Data;
-using CalendarApp.Data.Models;
 using CalendarApp.Services.Messages;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using CalendarApp.Services.MessageSeens.Repositories;
 
 namespace CalendarApp.Services.MessageSeens
 {
     public class MessageSeenService : IMessageSeenService
     {
-        private readonly ApplicationDbContext db;
+        private readonly IMessageSeenRepository messageSeenRepository;
         private readonly IMessageService messageService;
 
-        public MessageSeenService(ApplicationDbContext db, IMessageService messageService)
+        public MessageSeenService(IMessageSeenRepository messageSeenRepository, IMessageService messageService)
         {
-            this.db = db;
+            this.messageSeenRepository = messageSeenRepository;
             this.messageService = messageService;
         }
 
         public async Task MarkFriendshipMessagesAsSeenAsync(Guid userId, Guid friendshipId)
         {
             await messageService.EnsureFriendshipAccessAsync(userId, friendshipId);
-
-            var now = DateTime.UtcNow;
-
-            var unseenMessageIds = await db.Messages
-                .Where(m => m.FriendshipId == friendshipId && m.SenderId != userId)
-                .Where(m => !db.MessageSeens.Any(r => r.MessageId == m.Id && r.ContactId == userId))
-                .Select(m => m.Id)
-                .ToListAsync();
-
-            if (unseenMessageIds.Count == 0)
-            {
-                return;
-            }
-
-            var receipts = unseenMessageIds
-                .Select(messageId => new MessageSeen
-                {
-                    MessageId = messageId,
-                    ContactId = userId,
-                    SeenAt = now
-                })
-                .ToList();
-
-            db.MessageSeens.AddRange(receipts);
-            await db.SaveChangesAsync();
+            var unseenMessageIds = await messageSeenRepository.GetUnseenFriendshipMessageIdsAsync(userId, friendshipId);
+            if (unseenMessageIds.Count == 0) return;
+            await messageSeenRepository.InsertManyAsync(userId, unseenMessageIds, DateTime.UtcNow);
         }
 
         public async Task MarkMeetingMessagesAsSeenAsync(Guid userId, Guid meetingId)
         {
             await messageService.EnsureMeetingAccessAsync(userId, meetingId);
-
-            var now = DateTime.UtcNow;
-
-            var unseenMessageIds = await db.Messages
-                .Where(m => m.MeetingId == meetingId && m.SenderId != userId)
-                .Where(m => !db.MessageSeens.Any(r => r.MessageId == m.Id && r.ContactId == userId))
-                .Select(m => m.Id)
-                .ToListAsync();
-
-            if (unseenMessageIds.Count == 0)
-            {
-                return;
-            }
-
-            var receipts = unseenMessageIds
-                .Select(messageId => new MessageSeen
-                {
-                    MessageId = messageId,
-                    ContactId = userId,
-                    SeenAt = now
-                })
-                .ToList();
-
-            db.MessageSeens.AddRange(receipts);
-            await db.SaveChangesAsync();
+            var unseenMessageIds = await messageSeenRepository.GetUnseenMeetingMessageIdsAsync(userId, meetingId);
+            if (unseenMessageIds.Count == 0) return;
+            await messageSeenRepository.InsertManyAsync(userId, unseenMessageIds, DateTime.UtcNow);
         }
     }
 }

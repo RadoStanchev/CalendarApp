@@ -1,32 +1,20 @@
-using CalendarApp.Data;
-using CalendarApp.Data.Models;
 using CalendarApp.Services.Messages.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-using System.Threading.Tasks;
+using CalendarApp.Services.Messages.Repositories;
 
 namespace CalendarApp.Services.Messages
 {
     public class MessageService : IMessageService
     {
-        private readonly ApplicationDbContext db;
-        public MessageService(ApplicationDbContext db)
+        private readonly IMessageRepository messageRepository;
+
+        public MessageService(IMessageRepository messageRepository)
         {
-            this.db = db;
+            this.messageRepository = messageRepository;
         }
 
         public async Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId)
         {
-            var hasAccess = await db.Friendships
-                .AsNoTracking()
-                .Where(f => f.Id == friendshipId
-                            && f.Status == FriendshipStatus.Accepted
-                            && (f.RequesterId == userId || f.ReceiverId == userId))
-                .AnyAsync();
-
-            if (!hasAccess)
+            if (!await messageRepository.HasFriendshipAccessAsync(userId, friendshipId))
             {
                 throw new InvalidOperationException("Приятелството не е намерено или достъпът е отказан.");
             }
@@ -34,14 +22,7 @@ namespace CalendarApp.Services.Messages
 
         public async Task EnsureMeetingAccessAsync(Guid userId, Guid meetingId)
         {
-            var hasAccess = await db.Meetings
-                .AsNoTracking()
-                .Where(m => m.Id == meetingId
-                            && (m.CreatedById == userId
-                                || m.Participants.Any(p => p.ContactId == userId && p.Status == ParticipantStatus.Accepted)))
-                .AnyAsync();
-
-            if (!hasAccess)
+            if (!await messageRepository.HasMeetingAccessAsync(userId, meetingId))
             {
                 throw new InvalidOperationException("Срещата не е намерена или достъпът е отказан.");
             }
@@ -55,28 +36,17 @@ namespace CalendarApp.Services.Messages
             }
 
             await EnsureFriendshipAccessAsync(userId, friendshipId);
-
             var sender = await GetSenderAsync(userId);
-
-            var entity = new Message
-            {
-                FriendshipId = friendshipId,
-                SenderId = userId,
-                Content = content,
-                SentAt = DateTime.UtcNow
-            };
-
-            db.Messages.Add(entity);
-            await db.SaveChangesAsync();
+            var messageId = await messageRepository.InsertAsync(userId, content, friendshipId: friendshipId);
 
             return new ChatMessageDto
             {
                 FriendshipId = friendshipId,
-                MessageId = entity.Id,
+                MessageId = messageId,
                 SenderId = sender.Id,
                 SenderName = sender.Name,
-                Content = entity.Content,
-                SentAt = entity.SentAt,
+                Content = content,
+                SentAt = DateTime.UtcNow,
                 Metadata = new Dictionary<string, string?>()
             };
         }
@@ -89,148 +59,46 @@ namespace CalendarApp.Services.Messages
             }
 
             await EnsureMeetingAccessAsync(userId, meetingId);
-
             var sender = await GetSenderAsync(userId);
+            var meeting = await messageRepository.GetMeetingInfoAsync(meetingId)
+                ?? throw new InvalidOperationException("Срещата не беше намерена.");
 
-            var meeting = await db.Meetings
-                .AsNoTracking()
-                .Where(m => m.Id == meetingId)
-                .Select(m => new { m.Id, m.StartTime, m.Location })
-                .FirstOrDefaultAsync();
-
-            if (meeting == null)
-            {
-                throw new InvalidOperationException("Срещата не беше намерена.");
-            }
-
-            var entity = new Message
-            {
-                MeetingId = meetingId,
-                SenderId = userId,
-                Content = content,
-                SentAt = DateTime.UtcNow
-            };
-
-            db.Messages.Add(entity);
-            await db.SaveChangesAsync();
-
-            var metadata = new Dictionary<string, string?>
-            {
-                ["meetingStartUtc"] = meeting.StartTime.ToUniversalTime().ToString("O"),
-                ["meetingLocation"] = meeting.Location
-            };
+            var messageId = await messageRepository.InsertAsync(userId, content, meetingId: meetingId);
 
             return new ChatMessageDto
             {
                 MeetingId = meetingId,
-                MessageId = entity.Id,
+                MessageId = messageId,
                 SenderId = sender.Id,
                 SenderName = sender.Name,
-                Content = entity.Content,
-                SentAt = entity.SentAt,
-                Metadata = metadata
+                Content = content,
+                SentAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, string?>
+                {
+                    ["meetingStartUtc"] = meeting.StartTime.ToUniversalTime().ToString("O"),
+                    ["meetingLocation"] = meeting.Location
+                }
             };
         }
 
         public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentFriendshipMessagesAsync(Guid userId, Guid friendshipId, int take)
         {
             await EnsureFriendshipAccessAsync(userId, friendshipId);
-
-            var messages = await db.Messages
-                .AsNoTracking()
-                .Where(m => m.FriendshipId == friendshipId)
-                .OrderByDescending(m => m.SentAt)
-                .Take(take)
-                .Select(m => new
-                {
-                    m.Id,
-                    m.SenderId,
-                    m.Content,
-                    m.SentAt,
-                    m.FriendshipId,
-                    m.MeetingId,
-                    SenderFirstName = m.Sender.FirstName,
-                    SenderLastName = m.Sender.LastName
-                })
-                .ToListAsync();
-
-            return messages
-                .Select(m => new ChatMessageDto
-                {
-                    FriendshipId = m.FriendshipId,
-                    MeetingId = m.MeetingId,
-                    MessageId = m.Id,
-                    SenderId = m.SenderId,
-                    SenderName = BuildDisplayName(m.SenderFirstName, m.SenderLastName),
-                    Content = m.Content,
-                    SentAt = m.SentAt,
-                    Metadata = new Dictionary<string, string?>()
-                })
-                .OrderBy(m => m.SentAt)
-                .ToList();
+            return await messageRepository.GetRecentFriendshipMessagesAsync(friendshipId, take);
         }
 
         public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentMeetingMessagesAsync(Guid userId, Guid meetingId, int take)
         {
             await EnsureMeetingAccessAsync(userId, meetingId);
-
-            var messages = await db.Messages
-                .AsNoTracking()
-                .Where(m => m.MeetingId == meetingId)
-                .OrderByDescending(m => m.SentAt)
-                .Take(take)
-                .Select(m => new
-                {
-                    m.Id,
-                    m.SenderId,
-                    m.Content,
-                    m.SentAt,
-                    m.FriendshipId,
-                    m.MeetingId,
-                    SenderFirstName = m.Sender.FirstName,
-                    SenderLastName = m.Sender.LastName
-                })
-                .ToListAsync();
-
-            return messages
-                .Select(m => new ChatMessageDto
-                {
-                    FriendshipId = m.FriendshipId,
-                    MeetingId = m.MeetingId,
-                    MessageId = m.Id,
-                    SenderId = m.SenderId,
-                    SenderName = BuildDisplayName(m.SenderFirstName, m.SenderLastName),
-                    Content = m.Content,
-                    SentAt = m.SentAt,
-                    Metadata = new Dictionary<string, string?>()
-                })
-                .OrderBy(m => m.SentAt)
-                .ToList();
+            return await messageRepository.GetRecentMeetingMessagesAsync(meetingId, take);
         }
 
         private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId)
         {
-            var sender = await db.Contacts
-                .Where(u => u.Id == userId)
-                .Select(u => new { u.Id, u.FirstName, u.LastName })
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            var sender = await messageRepository.GetSenderAsync(userId)
+                ?? throw new InvalidOperationException("Подателят не е намерен.");
 
-            if (sender == null)
-            {
-                throw new InvalidOperationException("Подателят не е намерен.");
-            }
-
-            var senderName = BuildDisplayName(sender.FirstName, sender.LastName);
-
-            return (sender.Id, senderName);
-        }
-
-        private static string BuildDisplayName(string? firstName, string? lastName)
-        {
-            return string.Join(" ", new[] { firstName, lastName }
-                .Select(part => part?.Trim())
-                .Where(part => !string.IsNullOrEmpty(part)));
+            return (sender.Value.Id, string.Join(" ", new[] { sender.Value.FirstName, sender.Value.LastName }.Where(x => !string.IsNullOrWhiteSpace(x))));
         }
     }
 }
