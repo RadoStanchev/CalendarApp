@@ -15,9 +15,9 @@ public class DapperUserRepository : IUserRepository
 
     public async Task<bool> CreateAsync(Contact user)
     {
-        const string sql = @"INSERT INTO AspNetUsers
-(Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnabled, AccessFailedCount, FirstName, LastName, BirthDate, Address, Note)
-VALUES (@Id, @UserName, @NormalizedUserName, @Email, @NormalizedEmail, @EmailConfirmed, @PasswordHash, @SecurityStamp, @ConcurrencyStamp, @PhoneNumberConfirmed, @TwoFactorEnabled, @LockoutEnabled, @AccessFailedCount, @FirstName, @LastName, @BirthDate, @Address, @Note)";
+        const string sql = @"INSERT INTO dbo.Contacts
+(Id, UserName, Email, EmailConfirmed, PasswordHash, SecurityStamp, FirstName, LastName, BirthDate, Address, Note)
+VALUES (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @SecurityStamp, @FirstName, @LastName, @BirthDate, @Address, @Note)";
 
         using var connection = connectionFactory.CreateConnection();
         var affected = await connection.ExecuteAsync(sql, user);
@@ -27,32 +27,32 @@ VALUES (@Id, @UserName, @NormalizedUserName, @Email, @NormalizedEmail, @EmailCon
     public async Task<bool> DeleteAsync(Guid id)
     {
         using var connection = connectionFactory.CreateConnection();
-        var affected = await connection.ExecuteAsync("DELETE FROM AspNetUsers WHERE Id = @id", new { id });
+        var affected = await connection.ExecuteAsync("DELETE FROM dbo.Contacts WHERE Id = @id", new { id });
         return affected > 0;
     }
 
     public async Task<IEnumerable<Contact>> GetAllAsync()
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QueryAsync<Contact>("SELECT * FROM AspNetUsers ORDER BY FirstName");
+        return await connection.QueryAsync<Contact>("SELECT * FROM dbo.Contacts ORDER BY FirstName");
     }
 
     public async Task<Contact?> GetByEmailAsync(string email)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<Contact>("SELECT TOP 1 * FROM AspNetUsers WHERE Email = @email", new { email });
+        return await connection.QueryFirstOrDefaultAsync<Contact>("SELECT TOP 1 * FROM dbo.Contacts WHERE Email = @email", new { email });
     }
 
     public async Task<Contact?> GetByIdAsync(Guid id)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<Contact>("SELECT TOP 1 * FROM AspNetUsers WHERE Id = @id", new { id });
+        return await connection.QueryFirstOrDefaultAsync<Contact>("SELECT TOP 1 * FROM dbo.Contacts WHERE Id = @id", new { id });
     }
 
     public async Task<IEnumerable<Contact>> SearchAsync(string term)
     {
         using var connection = connectionFactory.CreateConnection();
-        const string sql = @"SELECT * FROM AspNetUsers
+        const string sql = @"SELECT * FROM dbo.Contacts
 WHERE LOWER(FirstName) LIKE @term OR LOWER(LastName) LIKE @term OR LOWER(Email) LIKE @term
 ORDER BY FirstName";
 
@@ -61,7 +61,7 @@ ORDER BY FirstName";
 
     public async Task<bool> UpdateProfileAsync(Contact user)
     {
-        const string sql = @"UPDATE AspNetUsers
+        const string sql = @"UPDATE dbo.Contacts
 SET FirstName = @FirstName,
     LastName = @LastName,
     BirthDate = @BirthDate,

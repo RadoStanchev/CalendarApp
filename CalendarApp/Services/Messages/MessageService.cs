@@ -210,7 +210,7 @@ namespace CalendarApp.Services.Messages
 
         private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId)
         {
-            var sender = await db.Users
+            var sender = await db.Contacts
                 .Where(u => u.Id == userId)
                 .Select(u => new { u.Id, u.FirstName, u.LastName })
                 .AsNoTracking()

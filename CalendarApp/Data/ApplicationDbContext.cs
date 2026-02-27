@@ -1,17 +1,16 @@
 using CalendarApp.Data.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CalendarApp.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<Contact, IdentityRole<Guid>, Guid>
+    public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
+        public DbSet<Contact> Contacts { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Meeting> Meetings { get; set; }
         public DbSet<MeetingParticipant> MeetingParticipants { get; set; }
@@ -24,15 +23,17 @@ namespace CalendarApp.Data
         {
             base.OnModelCreating(builder);
 
+            builder.Entity<Contact>().ToTable("Contacts", "dbo");
+
             builder.Entity<Meeting>()
                 .HasOne(m => m.CreatedBy)
-                .WithMany(c => c.OwnedMeetings)
+                .WithMany(c => c.MeetingsCreated)
                 .HasForeignKey(m => m.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Message>()
                 .HasOne(m => m.Sender)
-                .WithMany(c => c.SentMessages)
+                .WithMany(c => c.MessagesSent)
                 .HasForeignKey(m => m.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -63,16 +64,27 @@ namespace CalendarApp.Data
 
             builder.Entity<Friendship>()
                 .HasOne(f => f.Requester)
-                .WithMany(c => c.SentFriendRequests)
+                .WithMany(c => c.FriendshipsRequested)
                 .HasForeignKey(f => f.RequesterId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Friendship>()
                 .HasOne(f => f.Receiver)
-                .WithMany(c => c.ReceivedFriendRequests)
+                .WithMany(c => c.FriendshipsReceived)
                 .HasForeignKey(f => f.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<MeetingParticipant>()
+                .HasOne(mp => mp.Contact)
+                .WithMany(c => c.Meetings)
+                .HasForeignKey(mp => mp.ContactId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany(c => c.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
