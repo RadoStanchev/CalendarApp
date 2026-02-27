@@ -1,7 +1,8 @@
 ﻿using CalendarApp.Data;
 using CalendarApp.Data.Models;
-using CalendarApp.Models;
 using CalendarApp.Infrastructure.Time;
+using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace CalendarApp.Infrastructure.Extensions
@@ -11,25 +12,66 @@ namespace CalendarApp.Infrastructure.Extensions
         public static IApplicationBuilder PrepareDatabase(this IApplicationBuilder app)
         {
             using var scope = app.ApplicationServices.CreateScope();
-            var services = scope.ServiceProvider;
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var connectionString = context.Database.GetConnectionString();
 
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            context.Database.Migrate();
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Database connection string is not configured.");
+            }
 
-            SeedUsers(services);
-            SeedCategories(services);
-            SeedMeetingsWithParticipants(services);
+            SeedDefaults(connectionString);
 
             return app;
         }
 
-        private static void SeedUsers(IServiceProvider services)
+        private static void SeedDefaults(string connectionString)
         {
-            var context = services.GetRequiredService<ApplicationDbContext>();
+            using var connection = new SqlConnection(connectionString);
+            connection.Open();
 
-            if (context.Contacts.Any()) return;
+            using var transaction = connection.BeginTransaction();
 
-            var users = new (string First, string Last, string Email)[]
+            EnsureCategories(connection, transaction);
+            var contacts = EnsureDemoContacts(connection, transaction);
+            var meetings = EnsureDemoMeetings(connection, transaction, contacts);
+            EnsureMeetingParticipants(connection, transaction, contacts, meetings);
+
+            transaction.Commit();
+        }
+
+        private static void EnsureCategories(SqlConnection connection, SqlTransaction transaction)
+        {
+            const string categoriesExistSql = "SELECT COUNT(*) FROM [dbo].[Categories]";
+            var categoriesCount = connection.ExecuteScalar<int>(categoriesExistSql, transaction: transaction);
+
+            if (categoriesCount > 0)
+            {
+                return;
+            }
+
+            var categories = new[]
+            {
+                new { Id = Guid.NewGuid(), Name = "Работа", Color = "#007BFF" },
+                new { Id = Guid.NewGuid(), Name = "Лично", Color = "#28A745" },
+                new { Id = Guid.NewGuid(), Name = "Рожден ден", Color = "#FFC107" },
+                new { Id = Guid.NewGuid(), Name = "Семейство", Color = "#DC3545" },
+                new { Id = Guid.NewGuid(), Name = "Образование", Color = "#6610F2" }
+            };
+
+            const string insertCategorySql = @"
+                INSERT INTO [dbo].[Categories] ([Id], [Name], [Color])
+                VALUES (@Id, @Name, @Color);";
+
+            connection.Execute(insertCategorySql, categories, transaction);
+        }
+
+        private static Dictionary<string, Guid> EnsureDemoContacts(SqlConnection connection, SqlTransaction transaction)
+        {
+            const string contactsExistSql = "SELECT COUNT(*) FROM [dbo].[Contacts]";
+            var contactsCount = connection.ExecuteScalar<int>(contactsExistSql, transaction: transaction);
+
+            var contacts = new (string First, string Last, string Email)[]
             {
                 ("Maria", "Ivanova", "maria@calendar.com"),
                 ("Georgi", "Petrov", "georgi@calendar.com"),
@@ -43,53 +85,70 @@ namespace CalendarApp.Infrastructure.Extensions
                 ("Админ", "Потребител", "admin@calendar.com")
             };
 
-            foreach (var (first, last, email) in users)
+            if (contactsCount == 0)
             {
-                var user = new Contact
+                const string insertContactSql = @"
+                    INSERT INTO [dbo].[Contacts]
+                        ([Id], [UserName], [Email], [EmailConfirmed], [PasswordHash], [SecurityStamp], [FirstName], [LastName], [BirthDate], [Address], [Note])
+                    VALUES
+                        (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @SecurityStamp, @FirstName, @LastName, @BirthDate, @Address, @Note);";
+
+                var contactsToInsert = contacts.Select(contact => new
                 {
                     Id = Guid.NewGuid(),
-                    UserName = email,
-                    Email = email,
-                    FirstName = first,
-                    LastName = last,
+                    UserName = contact.Email,
+                    Email = contact.Email,
                     EmailConfirmed = true,
                     PasswordHash = string.Empty,
-                    SecurityStamp = Guid.NewGuid().ToString()
-                };
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    FirstName = contact.First,
+                    LastName = contact.Last,
+                    BirthDate = (DateTime?)null,
+                    Address = (string?)null,
+                    Note = (string?)null
+                });
 
-                context.Contacts.Add(user);
+                connection.Execute(insertContactSql, contactsToInsert, transaction);
             }
 
-            context.SaveChanges();
+            const string selectContactsSql = @"
+                SELECT [Id], [Email]
+                FROM [dbo].[Contacts]
+                WHERE [Email] IN @Emails;";
+
+            var selectedContacts = connection.Query<(Guid Id, string Email)>(
+                selectContactsSql,
+                new { Emails = contacts.Select(c => c.Email).ToArray() },
+                transaction);
+
+            return selectedContacts.ToDictionary(contact => contact.Email, contact => contact.Id, StringComparer.OrdinalIgnoreCase);
         }
 
-        private static void SeedCategories(IServiceProvider services)
+        private static List<Guid> EnsureDemoMeetings(SqlConnection connection, SqlTransaction transaction, IReadOnlyDictionary<string, Guid> contacts)
         {
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            if (context.Categories.Any()) return;
+            const string meetingsExistSql = "SELECT COUNT(*) FROM [dbo].[Meetings]";
+            var meetingsCount = connection.ExecuteScalar<int>(meetingsExistSql, transaction: transaction);
 
-            var categories = new[]
+            if (meetingsCount > 0)
             {
-                new Category { Name = "Работа", Color = "#007BFF" },
-                new Category { Name = "Лично", Color = "#28A745" },
-                new Category { Name = "Рожден ден", Color = "#FFC107" },
-                new Category { Name = "Семейство", Color = "#DC3545" },
-                new Category { Name = "Образование", Color = "#6610F2" }
-            };
+                return connection.Query<Guid>(
+                        "SELECT TOP (20) [Id] FROM [dbo].[Meetings] ORDER BY [StartTime] ASC;",
+                        transaction: transaction)
+                    .ToList();
+            }
 
-            context.Categories.AddRange(categories);
-            context.SaveChanges();
-        }
+            var categories = connection.Query<(Guid Id, string Name)>(
+                    "SELECT [Id], [Name] FROM [dbo].[Categories];",
+                    transaction: transaction)
+                .ToList();
 
-        private static void SeedMeetingsWithParticipants(IServiceProvider services)
-        {
-            var context = services.GetRequiredService<ApplicationDbContext>();
-            if (context.Meetings.Any()) return;
+            if (categories.Count == 0 || contacts.Count == 0)
+            {
+                return [];
+            }
 
-            var users = context.Contacts.ToList();
-            var categories = context.Categories.ToList();
-            var random = new Random();
-
+            var creatorIds = contacts.Values.ToArray();
+            var random = new Random(42);
             var subjects = new[]
             {
                 "Седмична синхронизация на екипа",
@@ -104,57 +163,103 @@ namespace CalendarApp.Infrastructure.Extensions
                 "Тиймбилдинг събитие"
             };
 
-            var meetings = new List<Meeting>();
-
-            // Create 20 meetings
+            var meetings = new List<MeetingSeed>();
             for (int i = 0; i < 20; i++)
             {
-                var creator = users[random.Next(users.Count)];
                 var category = categories[random.Next(categories.Count)];
-
+                var creatorId = creatorIds[random.Next(creatorIds.Length)];
                 var startLocal = BulgarianTime.LocalNow.AddDays(random.Next(-10, 10)).AddHours(random.Next(8, 18));
-                var startUtc = BulgarianTime.ConvertLocalToUtc(startLocal);
 
-                var meeting = new Meeting
+                meetings.Add(new MeetingSeed
                 {
-                    Description = subjects[random.Next(subjects.Length)],
+                    Id = Guid.NewGuid(),
+                    StartTime = BulgarianTime.ConvertLocalToUtc(startLocal),
                     Location = $"Стая {random.Next(1, 5)}",
-                    StartTime = startUtc,
+                    Description = subjects[random.Next(subjects.Length)],
                     CategoryId = category.Id,
-                    CreatedById = creator.Id
-                };
-
-                meetings.Add(meeting);
+                    CreatedById = creatorId,
+                    ReminderSent = false
+                });
             }
 
-            context.Meetings.AddRange(meetings);
-            context.SaveChanges();
+            const string insertMeetingsSql = @"
+                INSERT INTO [dbo].[Meetings]
+                    ([Id], [StartTime], [Location], [Description], [CategoryId], [CreatedById], [ReminderSent])
+                VALUES
+                    (@Id, @StartTime, @Location, @Description, @CategoryId, @CreatedById, @ReminderSent);";
 
-            // Now seed meeting participants
-            var allMeetings = context.Meetings.ToList();
-            var participantStatuses = Enum.GetValues<ParticipantStatus>();
+            connection.Execute(insertMeetingsSql, meetings, transaction);
 
-            foreach (var meeting in allMeetings)
+            return meetings.Select(m => m.Id).ToList();
+        }
+
+        private static void EnsureMeetingParticipants(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            IReadOnlyDictionary<string, Guid> contacts,
+            IReadOnlyCollection<Guid> seededMeetingIds)
+        {
+            const string participantsExistSql = "SELECT COUNT(*) FROM [dbo].[MeetingParticipants]";
+            var participantsCount = connection.ExecuteScalar<int>(participantsExistSql, transaction: transaction);
+
+            if (participantsCount > 0)
             {
-                var selectedUsers = users
+                return;
+            }
+
+            var meetings = seededMeetingIds.Count > 0
+                ? seededMeetingIds.ToList()
+                : connection.Query<Guid>("SELECT [Id] FROM [dbo].[Meetings];", transaction: transaction).ToList();
+
+            if (meetings.Count == 0 || contacts.Count == 0)
+            {
+                return;
+            }
+
+            var contactIds = contacts.Values.ToList();
+            var statuses = Enum.GetValues<ParticipantStatus>().Cast<int>().ToArray();
+            var random = new Random(84);
+
+            var participants = new List<object>();
+
+            foreach (var meetingId in meetings)
+            {
+                var selectedContacts = contactIds
                     .OrderBy(_ => random.Next())
-                    .Take(random.Next(5, 9)) // 5 to 8 participants per meeting
+                    .Take(random.Next(5, Math.Min(9, contactIds.Count + 1)))
                     .ToList();
 
-                foreach (var user in selectedUsers)
+                foreach (var contactId in selectedContacts)
                 {
-                    var participant = new MeetingParticipant
+                    participants.Add(new
                     {
-                        MeetingId = meeting.Id,
-                        ContactId = user.Id,
-                        Status = participantStatuses[random.Next(participantStatuses.Length)]
-                    };
-
-                    context.MeetingParticipants.Add(participant);
+                        Id = Guid.NewGuid(),
+                        MeetingId = meetingId,
+                        ContactId = contactId,
+                        Status = statuses[random.Next(statuses.Length)]
+                    });
                 }
             }
 
-            context.SaveChanges();
+            const string insertParticipantsSql = @"
+                INSERT INTO [dbo].[MeetingParticipants]
+                    ([Id], [MeetingId], [ContactId], [Status])
+                VALUES
+                    (@Id, @MeetingId, @ContactId, @Status);";
+
+            connection.Execute(insertParticipantsSql, participants, transaction);
+        }
+
+
+        private sealed class MeetingSeed
+        {
+            public Guid Id { get; init; }
+            public DateTime StartTime { get; init; }
+            public string Location { get; init; } = string.Empty;
+            public string Description { get; init; } = string.Empty;
+            public Guid CategoryId { get; init; }
+            public Guid CreatedById { get; init; }
+            public bool ReminderSent { get; init; }
         }
     }
 }
