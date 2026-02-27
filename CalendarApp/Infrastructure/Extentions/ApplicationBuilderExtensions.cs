@@ -2,7 +2,6 @@
 using CalendarApp.Data.Models;
 using CalendarApp.Models;
 using CalendarApp.Infrastructure.Time;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace CalendarApp.Infrastructure.Extensions
@@ -26,10 +25,9 @@ namespace CalendarApp.Infrastructure.Extensions
 
         private static void SeedUsers(IServiceProvider services)
         {
-            var userManager = services.GetRequiredService<UserManager<Contact>>();
             var context = services.GetRequiredService<ApplicationDbContext>();
 
-            if (context.Users.Any()) return;
+            if (context.Contacts.Any()) return;
 
             var users = new (string First, string Last, string Email)[]
             {
@@ -49,15 +47,20 @@ namespace CalendarApp.Infrastructure.Extensions
             {
                 var user = new Contact
                 {
+                    Id = Guid.NewGuid(),
                     UserName = email,
                     Email = email,
                     FirstName = first,
                     LastName = last,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    PasswordHash = string.Empty,
+                    SecurityStamp = Guid.NewGuid().ToString()
                 };
 
-                userManager.CreateAsync(user, "Test123!").Wait();
+                context.Contacts.Add(user);
             }
+
+            context.SaveChanges();
         }
 
         private static void SeedCategories(IServiceProvider services)
@@ -83,7 +86,7 @@ namespace CalendarApp.Infrastructure.Extensions
             var context = services.GetRequiredService<ApplicationDbContext>();
             if (context.Meetings.Any()) return;
 
-            var users = context.Users.ToList();
+            var users = context.Contacts.ToList();
             var categories = context.Categories.ToList();
             var random = new Random();
 

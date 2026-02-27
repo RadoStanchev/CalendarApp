@@ -274,7 +274,7 @@ namespace CalendarApp.Services.Meetings
             term = term?.Trim() ?? string.Empty;
             var exclude = new HashSet<Guid>(excludeIds ?? Enumerable.Empty<Guid>()) { requesterId };
 
-            var query = db.Users.AsNoTracking();
+            var query = db.Contacts.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(term))
             {
@@ -308,7 +308,7 @@ namespace CalendarApp.Services.Meetings
                 return Array.Empty<ContactSuggestionViewModel>();
             }
 
-            var contacts = await db.Users
+            var contacts = await db.Contacts
                 .AsNoTracking()
                 .Where(u => idList.Contains(u.Id))
                 .Select(u => new ContactSuggestionViewModel

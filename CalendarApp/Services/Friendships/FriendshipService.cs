@@ -205,7 +205,7 @@ namespace CalendarApp.Services.Friendships
 
             if (candidateIds.Count > 0)
             {
-                var candidates = await db.Users
+                var candidates = await db.Contacts
                     .AsNoTracking()
                     .Where(u => candidateIds.Contains(u.Id))
                     .Select(u => new
@@ -233,7 +233,7 @@ namespace CalendarApp.Services.Friendships
 
             if (suggestions.Count < maxSuggestions)
             {
-                var fallback = await db.Users
+                var fallback = await db.Contacts
                     .AsNoTracking()
                     .Where(u => !excluded.Contains(u.Id))
                     .OrderBy(u => u.FirstName)
@@ -303,7 +303,7 @@ namespace CalendarApp.Services.Friendships
                 statusLookup[otherUserId] = (status, relationship.Id, relationship.ReceiverId == userId);
             }
 
-            var query = db.Users.AsNoTracking();
+            var query = db.Contacts.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(term))
             {

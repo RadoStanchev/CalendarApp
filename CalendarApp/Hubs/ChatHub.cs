@@ -1,10 +1,7 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Extensions;
-using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
@@ -16,8 +13,6 @@ namespace CalendarApp.Hubs
     {
         private readonly IMessageService messageService;
         private readonly IUserPresenceTracker presenceTracker;
-        private readonly UserManager<Contact> userManager;
-
         public ChatHub(IMessageService messageService, IUserPresenceTracker presenceTracker)
         {
             this.messageService = messageService;

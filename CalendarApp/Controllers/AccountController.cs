@@ -36,7 +36,6 @@ namespace CalendarApp.Controllers
 
             var user = mapper.Map<Contact>(model);
             user.UserName = model.Email;
-            user.EmailConfirmed = true;
 
             var result = await authenticationService.RegisterAsync(user, model.Password, false);
 

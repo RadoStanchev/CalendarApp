@@ -64,15 +64,9 @@ public class CookieAuthenticationService : IAuthenticationService
         }
 
         user.Id = Guid.NewGuid();
-        user.NormalizedEmail = user.Email?.ToUpperInvariant();
-        user.NormalizedUserName = user.UserName?.ToUpperInvariant();
         user.SecurityStamp = Guid.NewGuid().ToString();
-        user.ConcurrencyStamp = Guid.NewGuid().ToString();
         user.PasswordHash = passwordHasher.HashPassword(user, password);
-        user.PhoneNumberConfirmed = false;
-        user.TwoFactorEnabled = false;
-        user.LockoutEnabled = false;
-        user.AccessFailedCount = 0;
+        user.EmailConfirmed = true;
 
         var created = await userRepository.CreateAsync(user);
         if (!created)
