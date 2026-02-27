@@ -95,10 +95,10 @@ namespace CalendarApp.Services.Messages
 
         private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId)
         {
-            var sender = await messageRepository.GetSenderAsync(userId)
+            var (Id, FirstName, LastName) = await messageRepository.GetSenderAsync(userId)
                 ?? throw new InvalidOperationException("Подателят не е намерен.");
 
-            return (sender.Value.Id, string.Join(" ", new[] { sender.Value.FirstName, sender.Value.LastName }.Where(x => !string.IsNullOrWhiteSpace(x))));
+            return (Id, string.Join(" ", new[] { FirstName, LastName }.Where(x => !string.IsNullOrWhiteSpace(x))));
         }
     }
 }
