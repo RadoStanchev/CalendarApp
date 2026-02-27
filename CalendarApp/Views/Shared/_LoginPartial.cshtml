@@ -2,8 +2,7 @@
 @using CalendarApp.Infrastructure.Extentions
 
 @{
-    var currentUser = HttpContext.User;
-    var isAuthenticated = currentUser?.Identity?.IsAuthenticated ?? false;
+    var isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
 }
 
 <ul class="navbar-nav">
@@ -17,7 +16,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Profile)">Здравей, @currentUser?.Identity?.Name!</a>
+        <a class="nav-link text-dark" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Profile)">Здравей, @User?.Identity?.Name!</a>
     </li>
     <li class="nav-item">
         <form  class="form-inline" asp-area="" asp-controller="@typeof(AccountController).GetControllerName()" asp-action="@nameof(AccountController.Logout)">
