@@ -1,4 +1,4 @@
-using CalendarApp.Infrastructure.Extensions;
+using CalendarApp.Services.Auth;
 using CalendarApp.Services.Messages;
 using CalendarApp.Services.UserPresence;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +13,16 @@ namespace CalendarApp.Hubs
     {
         private readonly IMessageService messageService;
         private readonly IUserPresenceTracker presenceTracker;
-        public ChatHub(IMessageService messageService, IUserPresenceTracker presenceTracker)
+        private readonly IAuthenticationService authenticationService;
+
+        public ChatHub(
+            IMessageService messageService,
+            IUserPresenceTracker presenceTracker,
+            IAuthenticationService authenticationService)
         {
             this.messageService = messageService;
             this.presenceTracker = presenceTracker;
+            this.authenticationService = authenticationService;
         }
 
         public override async Task OnConnectedAsync()
@@ -25,7 +31,7 @@ namespace CalendarApp.Hubs
 
             try
             {
-                var userId = Context.User.GetUserIdGuid();
+                var userId = authenticationService.GetCurrentUserId(Context.User ?? throw new InvalidOperationException("Потребителят не е намерен."));
                 var becameOnline = await presenceTracker.UserConnectedAsync(userId, Context.ConnectionId);
 
                 if (becameOnline)
@@ -37,18 +43,19 @@ namespace CalendarApp.Hubs
                     });
                 }
             }
-            catch (HubException)
+            catch (InvalidOperationException)
             {
-                
+            }
+            catch (FormatException)
+            {
             }
         }
-
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             try
             {
-                var userId = Context.User.GetUserIdGuid();
+                var userId = authenticationService.GetCurrentUserId(Context.User ?? throw new InvalidOperationException("Потребителят не е намерен."));
                 var becameOffline = await presenceTracker.UserDisconnectedAsync(userId, Context.ConnectionId);
 
                 if (becameOffline)
@@ -60,7 +67,11 @@ namespace CalendarApp.Hubs
                     });
                 }
             }
-            catch (HubException)
+            catch (InvalidOperationException)
+            {
+                // Ignore presence updates if the user identifier is not available.
+            }
+            catch (FormatException)
             {
                 // Ignore presence updates if the user identifier is not available.
             }
@@ -72,7 +83,7 @@ namespace CalendarApp.Hubs
 
         public async Task JoinFriendship(Guid friendshipId)
         {
-            var userId = Context.User.GetUserIdGuid();
+            var userId = authenticationService.GetCurrentUserId(Context.User ?? throw new InvalidOperationException("Потребителят не е намерен."));
 
             try
             {
@@ -99,7 +110,7 @@ namespace CalendarApp.Hubs
                 return;
             }
 
-            var userId = Context.User.GetUserIdGuid();
+            var userId = authenticationService.GetCurrentUserId(Context.User ?? throw new InvalidOperationException("Потребителят не е намерен."));
             try
             {
                 var chatMessage = await messageService.SaveMessageAsync(userId, friendshipId, trimmedMessage);
@@ -119,7 +130,7 @@ namespace CalendarApp.Hubs
 
         public async Task JoinMeeting(Guid meetingId)
         {
-            var userId = Context.User.GetUserIdGuid();
+            var userId = authenticationService.GetCurrentUserId(Context.User ?? throw new InvalidOperationException("Потребителят не е намерен."));
 
             try
             {
@@ -146,7 +157,7 @@ namespace CalendarApp.Hubs
                 return;
             }
 
-            var userId = Context.User.GetUserIdGuid();
+            var userId = authenticationService.GetCurrentUserId(Context.User ?? throw new InvalidOperationException("Потребителят не е намерен."));
             try
             {
                 var chatMessage = await messageService.SaveMeetingMessageAsync(userId, meetingId, trimmedMessage);
