@@ -1,5 +1,4 @@
 using CalendarApp.Infrastructure.Data;
-using CalendarApp.Infrastructure.Data.Sql;
 using Dapper;
 
 namespace CalendarApp.Services.MessageSeens.Repositories;
@@ -16,14 +15,28 @@ public class DapperMessageSeenRepository : IMessageSeenRepository
     public async Task<IReadOnlyCollection<Guid>> GetUnseenFriendshipMessageIdsAsync(Guid userId, Guid friendshipId)
     {
         using var connection = connectionFactory.CreateConnection();
-        var ids = await connection.QueryAsync<Guid>(MessageSeensSql.UnseenByFriendship, new { userId, friendshipId });
+        var ids = await connection.QueryAsync<Guid>(@"SELECT m.Id
+FROM dbo.Messages m
+WHERE m.FriendshipId = @friendshipId
+  AND m.SenderId <> @userId
+  AND NOT EXISTS (
+      SELECT 1 FROM dbo.MessageSeens ms
+      WHERE ms.MessageId = m.Id AND ms.ContactId = @userId
+  )", new { userId, friendshipId });
         return ids.ToList();
     }
 
     public async Task<IReadOnlyCollection<Guid>> GetUnseenMeetingMessageIdsAsync(Guid userId, Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();
-        var ids = await connection.QueryAsync<Guid>(MessageSeensSql.UnseenByMeeting, new { userId, meetingId });
+        var ids = await connection.QueryAsync<Guid>(@"SELECT m.Id
+FROM dbo.Messages m
+WHERE m.MeetingId = @meetingId
+  AND m.SenderId <> @userId
+  AND NOT EXISTS (
+      SELECT 1 FROM dbo.MessageSeens ms
+      WHERE ms.MessageId = m.Id AND ms.ContactId = @userId
+  )", new { userId, meetingId });
         return ids.ToList();
     }
 
@@ -33,9 +46,11 @@ public class DapperMessageSeenRepository : IMessageSeenRepository
         using var tx = connection.BeginTransaction();
         foreach (var messageId in messageIds)
         {
-            await connection.ExecuteAsync(MessageSeensSql.Insert, new { MessageId = messageId, ContactId = userId, SeenAt = seenAtUtc }, tx);
+            await connection.ExecuteAsync(@"INSERT INTO dbo.MessageSeens (MessageId, ContactId, SeenAt)
+VALUES (@MessageId, @ContactId, @SeenAt)", new { MessageId = messageId, ContactId = userId, SeenAt = seenAtUtc }, tx);
         }
 
         tx.Commit();
     }
+
 }

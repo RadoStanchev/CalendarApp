@@ -1,6 +1,5 @@
 using System.Data;
 using CalendarApp.Infrastructure.Data;
-using CalendarApp.Infrastructure.Data.Sql;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using Dapper;
@@ -19,7 +18,9 @@ public class DapperMeetingRepository : IMeetingRepository
     public async Task<MeetingRecord?> GetByIdAsync(Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QuerySingleOrDefaultAsync<MeetingRecord>(MeetingsSql.SelectRecordById, new { meetingId });
+        return await connection.QuerySingleOrDefaultAsync<MeetingRecord>(@"SELECT TOP (1) Id, StartTime, Location, Description, CategoryId, CreatedById, ReminderSent
+FROM dbo.Meetings
+WHERE Id = @meetingId", new { meetingId });
     }
 
     public async Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId)
@@ -89,7 +90,7 @@ WHERE m.Id = @meetingId
         createParams.Add("@CreatedById", dto.CreatedById);
 
         await connection.ExecuteAsync(
-            MeetingsSql.CreateProcedure,
+            "dbo.usp_Meeting_Create",
             createParams,
             tx,
             commandType: CommandType.StoredProcedure);
@@ -112,7 +113,7 @@ WHERE m.Id = @meetingId
         foreach (var (contactId, status) in participants)
         {
             await connection.ExecuteAsync(
-                MeetingsSql.ParticipantUpsertProcedure,
+                "dbo.usp_MeetingParticipant_Upsert",
                 new
                 {
                     MeetingId = meetingId,
@@ -229,7 +230,7 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
         }
 
         await connection.ExecuteAsync(
-            MeetingsSql.UpdateProcedure,
+            "dbo.usp_Meeting_Update",
             new
             {
                 MeetingId = dto.Id,
@@ -257,7 +258,7 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
             if (!incoming.TryGetValue(existingParticipant.Key, out var incomingStatus))
             {
                 await connection.ExecuteAsync(
-                    MeetingsSql.ParticipantDeleteProcedure,
+                    "dbo.usp_MeetingParticipant_Delete",
                     new { MeetingId = dto.Id, ContactId = existingParticipant.Key },
                     tx,
                     commandType: CommandType.StoredProcedure);
@@ -266,7 +267,7 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
             }
 
             await connection.ExecuteAsync(
-                MeetingsSql.ParticipantUpsertProcedure,
+                "dbo.usp_MeetingParticipant_Upsert",
                 new { MeetingId = dto.Id, ContactId = existingParticipant.Key, Status = (int)incomingStatus },
                 tx,
                 commandType: CommandType.StoredProcedure);
@@ -277,7 +278,7 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
         foreach (var added in incoming)
         {
             await connection.ExecuteAsync(
-                MeetingsSql.ParticipantUpsertProcedure,
+                "dbo.usp_MeetingParticipant_Upsert",
                 new { MeetingId = dto.Id, ContactId = added.Key, Status = (int)added.Value },
                 tx,
                 commandType: CommandType.StoredProcedure);
@@ -382,7 +383,7 @@ SELECT CASE WHEN EXISTS(
         }
 
         var affected = await connection.ExecuteAsync(
-            MeetingsSql.UpdateParticipantStatusProcedure,
+            "dbo.usp_MeetingParticipant_UpdateStatus",
             new
             {
                 MeetingId = meetingId,
@@ -447,4 +448,5 @@ WHERE MeetingId = @meetingId
         using var connection = connectionFactory.CreateConnection();
         return await connection.ExecuteScalarAsync<string?>("SELECT Location FROM dbo.Meetings WHERE Id = @meetingId", new { meetingId });
     }
+
 }

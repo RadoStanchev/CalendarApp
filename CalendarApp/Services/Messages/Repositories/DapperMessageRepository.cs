@@ -1,5 +1,4 @@
 using CalendarApp.Infrastructure.Data;
-using CalendarApp.Infrastructure.Data.Sql;
 using CalendarApp.Services.Messages.Models;
 using Dapper;
 using CalendarApp.Services.Friendships.Models;
@@ -19,26 +18,38 @@ public class DapperMessageRepository : IMessageRepository
     public async Task<bool> HasFriendshipAccessAsync(Guid userId, Guid friendshipId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>(MessagesSql.HasFriendshipAccess, new { userId, friendshipId, acceptedStatus = (int)FriendshipStatus.Accepted });
+        return await connection.ExecuteScalarAsync<bool>(@"SELECT CAST(CASE WHEN EXISTS (
+SELECT 1 FROM dbo.Friendships
+WHERE Id = @friendshipId
+  AND Status = @acceptedStatus
+  AND (RequesterId = @userId OR ReceiverId = @userId)) THEN 1 ELSE 0 END AS bit)", new { userId, friendshipId, acceptedStatus = (int)FriendshipStatus.Accepted });
     }
 
     public async Task<bool> HasMeetingAccessAsync(Guid userId, Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>(MessagesSql.HasMeetingAccess, new { userId, meetingId, acceptedStatus = (int)ParticipantStatus.Accepted });
+        return await connection.ExecuteScalarAsync<bool>(@"SELECT CAST(CASE WHEN EXISTS (
+SELECT 1 FROM dbo.Meetings m
+WHERE m.Id = @meetingId
+AND (
+    m.CreatedById = @userId OR EXISTS (
+        SELECT 1 FROM dbo.MeetingParticipants mp
+        WHERE mp.MeetingId = m.Id AND mp.ContactId = @userId AND mp.Status = @acceptedStatus
+    )
+)) THEN 1 ELSE 0 END AS bit)", new { userId, meetingId, acceptedStatus = (int)ParticipantStatus.Accepted });
     }
 
     public async Task<(Guid Id, string? FirstName, string? LastName)?> GetSenderAsync(Guid userId)
     {
         using var connection = connectionFactory.CreateConnection();
-        var sender = await connection.QuerySingleOrDefaultAsync<(Guid Id, string? FirstName, string? LastName)>(MessagesSql.Sender, new { userId });
+        var sender = await connection.QuerySingleOrDefaultAsync<(Guid Id, string? FirstName, string? LastName)>("SELECT TOP 1 Id, FirstName, LastName FROM dbo.Contacts WHERE Id = @userId", new { userId });
         return sender == default ? null : sender;
     }
 
     public async Task<(DateTime StartTime, string? Location)?> GetMeetingInfoAsync(Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();
-        var meeting = await connection.QuerySingleOrDefaultAsync<(Guid Id, DateTime StartTime, string? Location)>(MessagesSql.MeetingInfo, new { meetingId });
+        var meeting = await connection.QuerySingleOrDefaultAsync<(Guid Id, DateTime StartTime, string? Location)>("SELECT TOP 1 Id, StartTime, Location FROM dbo.Meetings WHERE Id = @meetingId", new { meetingId });
         return meeting == default ? null : (meeting.StartTime, meeting.Location);
     }
 
@@ -46,21 +57,34 @@ public class DapperMessageRepository : IMessageRepository
     {
         var id = Guid.NewGuid();
         using var connection = connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(MessagesSql.Insert, new { Id = id, FriendshipId = friendshipId, MeetingId = meetingId, SenderId = senderId, Content = content, SentAt = DateTime.UtcNow });
+        await connection.ExecuteAsync(@"INSERT INTO dbo.Messages (Id, FriendshipId, MeetingId, SenderId, Content, SentAt)
+VALUES (@Id, @FriendshipId, @MeetingId, @SenderId, @Content, @SentAt)", new { Id = id, FriendshipId = friendshipId, MeetingId = meetingId, SenderId = senderId, Content = content, SentAt = DateTime.UtcNow });
         return id;
     }
 
     public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentFriendshipMessagesAsync(Guid friendshipId, int take)
     {
         using var connection = connectionFactory.CreateConnection();
-        var rows = await connection.QueryAsync<MessageRow>(MessagesSql.SelectRecentByFriendship, new { friendshipId, take });
+        var rows = await connection.QueryAsync<MessageRow>(@"SELECT TOP (@take)
+m.Id, m.SenderId, m.Content, m.SentAt, m.FriendshipId, m.MeetingId,
+c.FirstName AS SenderFirstName, c.LastName AS SenderLastName
+FROM dbo.Messages m
+INNER JOIN dbo.Contacts c ON c.Id = m.SenderId
+WHERE m.FriendshipId = @friendshipId
+ORDER BY m.SentAt DESC", new { friendshipId, take });
         return rows.Select(Map).OrderBy(m => m.SentAt).ToList();
     }
 
     public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentMeetingMessagesAsync(Guid meetingId, int take)
     {
         using var connection = connectionFactory.CreateConnection();
-        var rows = await connection.QueryAsync<MessageRow>(MessagesSql.SelectRecentByMeeting, new { meetingId, take });
+        var rows = await connection.QueryAsync<MessageRow>(@"SELECT TOP (@take)
+m.Id, m.SenderId, m.Content, m.SentAt, m.FriendshipId, m.MeetingId,
+c.FirstName AS SenderFirstName, c.LastName AS SenderLastName
+FROM dbo.Messages m
+INNER JOIN dbo.Contacts c ON c.Id = m.SenderId
+WHERE m.MeetingId = @meetingId
+ORDER BY m.SentAt DESC", new { meetingId, take });
         return rows.Select(Map).OrderBy(m => m.SentAt).ToList();
     }
 
@@ -87,4 +111,5 @@ public class DapperMessageRepository : IMessageRepository
         public string? SenderFirstName { get; set; }
         public string? SenderLastName { get; set; }
     }
+
 }
