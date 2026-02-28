@@ -1,7 +1,6 @@
-﻿using CalendarApp.Data.Models;
+using AutoMapper;
 using CalendarApp.Models.Account;
 using CalendarApp.Services.User.Models;
-using AutoMapper;
 
 namespace CalendarApp.Infrastructure.Mapping
 {
@@ -9,10 +8,9 @@ namespace CalendarApp.Infrastructure.Mapping
     {
         public AccountProfile()
         {
-            // Account Mappings
-            CreateMap<Contact, RegisterViewModel>().ReverseMap();
-            CreateMap<Contact, ProfileViewModel>().ReverseMap();
-            CreateMap<Contact, EditProfileViewModel>().ReverseMap();
+            CreateMap<UserRecord, RegisterViewModel>().ReverseMap();
+            CreateMap<UserRecord, ProfileViewModel>().ReverseMap();
+            CreateMap<UserRecord, EditProfileViewModel>().ReverseMap();
             CreateMap<EditProfileViewModel, UpdateProfileDto>();
         }
     }

@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Data;
 using CalendarApp.Services.Friendships.Models;
 using Dapper;

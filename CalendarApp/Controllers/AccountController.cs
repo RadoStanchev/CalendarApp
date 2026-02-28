@@ -1,9 +1,8 @@
 ﻿using AutoMapper;
-using CalendarApp.Data.Models;
+using CalendarApp.Services.User.Models;
 using CalendarApp.Models.Account;
 using CalendarApp.Services.Auth;
 using CalendarApp.Services.User;
-using CalendarApp.Services.User.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,7 +33,7 @@ namespace CalendarApp.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = mapper.Map<Contact>(model);
+            var user = mapper.Map<UserRecord>(model);
             user.UserName = model.Email;
 
             var result = await authenticationService.RegisterAsync(user, model.Password, false);

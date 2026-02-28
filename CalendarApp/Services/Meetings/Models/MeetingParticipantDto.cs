@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 
 namespace CalendarApp.Services.Meetings.Models
 {

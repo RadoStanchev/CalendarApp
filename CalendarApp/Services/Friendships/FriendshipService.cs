@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Services.Friendships.Repositories;
 using CalendarApp.Services.Notifications;

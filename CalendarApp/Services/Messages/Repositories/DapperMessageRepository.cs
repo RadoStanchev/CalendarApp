@@ -1,8 +1,9 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Data;
 using CalendarApp.Infrastructure.Data.Sql;
 using CalendarApp.Services.Messages.Models;
 using Dapper;
+using CalendarApp.Services.Friendships.Models;
+using CalendarApp.Services.Meetings.Models;
 
 namespace CalendarApp.Services.Messages.Repositories;
 

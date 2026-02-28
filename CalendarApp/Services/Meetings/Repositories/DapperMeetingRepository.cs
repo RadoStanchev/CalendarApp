@@ -1,5 +1,6 @@
-using CalendarApp.Data.Models;
+using System.Data;
 using CalendarApp.Infrastructure.Data;
+using CalendarApp.Infrastructure.Data.Sql;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using Dapper;
@@ -13,6 +14,12 @@ public class DapperMeetingRepository : IMeetingRepository
     public DapperMeetingRepository(IDbConnectionFactory connectionFactory)
     {
         this.connectionFactory = connectionFactory;
+    }
+
+    public async Task<MeetingRecord?> GetByIdAsync(Guid meetingId)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<MeetingRecord>(MeetingsSql.SelectRecordById, new { meetingId });
     }
 
     public async Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId)
@@ -73,18 +80,19 @@ WHERE m.Id = @meetingId
         connection.Open();
         using var tx = connection.BeginTransaction();
 
-        await connection.ExecuteAsync(@"
-INSERT INTO dbo.Meetings (Id, StartTime, Location, Description, CategoryId, CreatedById, ReminderSent)
-VALUES (@meetingId, @startTimeUtc, @location, @description, @categoryId, @createdById, 0)",
-            new
-            {
-                meetingId,
-                startTimeUtc,
-                location = dto.Location,
-                description = dto.Description,
-                categoryId = dto.CategoryId,
-                createdById = dto.CreatedById
-            }, tx);
+        var createParams = new DynamicParameters();
+        createParams.Add("@MeetingId", meetingId);
+        createParams.Add("@StartTime", startTimeUtc);
+        createParams.Add("@Location", dto.Location);
+        createParams.Add("@Description", dto.Description);
+        createParams.Add("@CategoryId", dto.CategoryId);
+        createParams.Add("@CreatedById", dto.CreatedById);
+
+        await connection.ExecuteAsync(
+            MeetingsSql.CreateProcedure,
+            createParams,
+            tx,
+            commandType: CommandType.StoredProcedure);
 
         var participants = new Dictionary<Guid, ParticipantStatus>
         {
@@ -103,10 +111,16 @@ VALUES (@meetingId, @startTimeUtc, @location, @description, @categoryId, @create
 
         foreach (var (contactId, status) in participants)
         {
-            await connection.ExecuteAsync(@"
-INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, Status)
-VALUES (@id, @meetingId, @contactId, @status)",
-                new { id = Guid.NewGuid(), meetingId, contactId, status = (int)status }, tx);
+            await connection.ExecuteAsync(
+                MeetingsSql.ParticipantUpsertProcedure,
+                new
+                {
+                    MeetingId = meetingId,
+                    ContactId = contactId,
+                    Status = (int)status
+                },
+                tx,
+                commandType: CommandType.StoredProcedure);
         }
 
         tx.Commit();
@@ -145,7 +159,10 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
     public async Task<MeetingDetailsDto?> GetMeetingDetailsAsync(Guid meetingId, Guid requesterId)
     {
         using var connection = connectionFactory.CreateConnection();
-        var details = await connection.QuerySingleOrDefaultAsync<MeetingDetailsDto>(@"
+
+        var detailsLookup = new Dictionary<Guid, MeetingDetailsDto>();
+
+        var rows = await connection.QueryAsync<MeetingDetailsDto, MeetingParticipantDto, MeetingDetailsDto>(@"
 SELECT m.Id,
        m.StartTime,
        m.Location,
@@ -158,35 +175,44 @@ SELECT m.Id,
        @requesterId AS ViewerId,
        CASE WHEN m.CreatedById = @requesterId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsCreator,
        CASE WHEN m.CreatedById = @requesterId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @requesterId) THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsParticipant,
-       (SELECT TOP 1 Status FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @requesterId) AS ViewerStatus
-FROM dbo.Meetings m
-JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
-LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
-WHERE m.Id = @meetingId
-  AND (
-      m.CreatedById = @requesterId
-      OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @requesterId)
-  )", new { meetingId, requesterId });
-
-        if (details == null)
-        {
-            return null;
-        }
-
-        var participants = await connection.QueryAsync<MeetingParticipantDto>(@"
-SELECT mp.ContactId,
+       (SELECT TOP 1 Status FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @requesterId) AS ViewerStatus,
+       mp.ContactId,
        CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
        c.Email,
        mp.Status,
        CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
-FROM dbo.MeetingParticipants mp
-JOIN dbo.Contacts c ON c.Id = mp.ContactId
-JOIN dbo.Meetings m ON m.Id = mp.MeetingId
-WHERE mp.MeetingId = @meetingId
-ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName)", new { meetingId });
+FROM dbo.Meetings m
+JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
+LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
+LEFT JOIN dbo.MeetingParticipants mp ON mp.MeetingId = m.Id
+LEFT JOIN dbo.Contacts c ON c.Id = mp.ContactId
+WHERE m.Id = @meetingId
+  AND (
+      m.CreatedById = @requesterId
+      OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @requesterId)
+  )
+ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName)",
+            (details, participant) =>
+            {
+                if (!detailsLookup.TryGetValue(details.Id, out var tracked))
+                {
+                    tracked = details;
+                    tracked.Participants = [];
+                    detailsLookup[tracked.Id] = tracked;
+                }
 
-        details.Participants = participants.ToList();
-        return details;
+                if (participant != null && participant.ContactId != Guid.Empty)
+                {
+                    tracked.Participants.Add(participant);
+                }
+
+                return tracked;
+            },
+            new { meetingId, requesterId },
+            splitOn: "ContactId");
+
+        _ = rows.ToList();
+        return detailsLookup.Values.SingleOrDefault();
     }
 
     public async Task<bool> UpdateMeetingAsync(MeetingUpdateDto dto, DateTime startTimeUtc)
@@ -202,46 +228,59 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
             return false;
         }
 
-        await connection.ExecuteAsync(@"
-UPDATE dbo.Meetings
-SET StartTime = @startTimeUtc,
-    Location = @location,
-    Description = @description,
-    CategoryId = @categoryId,
-    ReminderSent = CASE WHEN StartTime <> @startTimeUtc AND @startTimeUtc > SYSUTCDATETIME() THEN 0 ELSE ReminderSent END
-WHERE Id = @id",
-            new { id = dto.Id, startTimeUtc, location = dto.Location, description = dto.Description, categoryId = dto.CategoryId }, tx);
+        await connection.ExecuteAsync(
+            MeetingsSql.UpdateProcedure,
+            new
+            {
+                MeetingId = dto.Id,
+                StartTime = startTimeUtc,
+                Location = dto.Location,
+                Description = dto.Description,
+                CategoryId = dto.CategoryId
+            },
+            tx,
+            commandType: CommandType.StoredProcedure);
 
         var incoming = (dto.Participants ?? Array.Empty<MeetingParticipantUpdateDto>())
             .GroupBy(p => p.ContactId)
             .ToDictionary(g => g.Key, g => g.Last().Status);
         incoming[dto.UpdatedById] = ParticipantStatus.Accepted;
 
-        var existing = (await connection.QueryAsync<(Guid ContactId, int Status)>("SELECT ContactId, Status FROM dbo.MeetingParticipants WHERE MeetingId = @meetingId", new { meetingId = dto.Id }, tx)).ToDictionary(x => x.ContactId, x => (ParticipantStatus)x.Status);
+        var existing = (await connection.QueryAsync<MeetingParticipantRecord>(
+                "SELECT Id, MeetingId, ContactId, Status FROM dbo.MeetingParticipants WHERE MeetingId = @meetingId",
+                new { meetingId = dto.Id },
+                tx))
+            .ToDictionary(x => x.ContactId, x => (ParticipantStatus)x.Status);
 
         foreach (var existingParticipant in existing)
         {
             if (!incoming.TryGetValue(existingParticipant.Key, out var incomingStatus))
             {
-                await connection.ExecuteAsync("DELETE FROM dbo.MeetingParticipants WHERE MeetingId = @meetingId AND ContactId = @contactId", new { meetingId = dto.Id, contactId = existingParticipant.Key }, tx);
+                await connection.ExecuteAsync(
+                    MeetingsSql.ParticipantDeleteProcedure,
+                    new { MeetingId = dto.Id, ContactId = existingParticipant.Key },
+                    tx,
+                    commandType: CommandType.StoredProcedure);
+
                 continue;
             }
 
-            await connection.ExecuteAsync("UPDATE dbo.MeetingParticipants SET Status = @status WHERE MeetingId = @meetingId AND ContactId = @contactId", new { meetingId = dto.Id, contactId = existingParticipant.Key, status = (int)incomingStatus }, tx);
+            await connection.ExecuteAsync(
+                MeetingsSql.ParticipantUpsertProcedure,
+                new { MeetingId = dto.Id, ContactId = existingParticipant.Key, Status = (int)incomingStatus },
+                tx,
+                commandType: CommandType.StoredProcedure);
+
             incoming.Remove(existingParticipant.Key);
         }
 
         foreach (var added in incoming)
         {
-            if (added.Key == dto.UpdatedById)
-            {
-                continue;
-            }
-
-            await connection.ExecuteAsync(@"
-INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, Status)
-VALUES (@id, @meetingId, @contactId, @status)",
-                new { id = Guid.NewGuid(), meetingId = dto.Id, contactId = added.Key, status = (int)added.Value }, tx);
+            await connection.ExecuteAsync(
+                MeetingsSql.ParticipantUpsertProcedure,
+                new { MeetingId = dto.Id, ContactId = added.Key, Status = (int)added.Value },
+                tx,
+                commandType: CommandType.StoredProcedure);
         }
 
         tx.Commit();
@@ -342,10 +381,15 @@ SELECT CASE WHEN EXISTS(
             return false;
         }
 
-        var affected = await connection.ExecuteAsync(@"
-UPDATE dbo.MeetingParticipants
-SET Status = @status
-WHERE MeetingId = @meetingId AND ContactId = @participantId", new { meetingId, participantId, status = (int)status });
+        var affected = await connection.ExecuteAsync(
+            MeetingsSql.UpdateParticipantStatusProcedure,
+            new
+            {
+                MeetingId = meetingId,
+                ContactId = participantId,
+                Status = (int)status
+            },
+            commandType: CommandType.StoredProcedure);
 
         return affected > 0;
     }

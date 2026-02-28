@@ -1,4 +1,4 @@
-using CalendarApp.Data.Models;
+using CalendarApp.Services.User.Models;
 using CalendarApp.Infrastructure.Data;
 using Dapper;
 
@@ -13,7 +13,7 @@ public class DapperUserRepository : IUserRepository
         this.connectionFactory = connectionFactory;
     }
 
-    public async Task<bool> CreateAsync(Contact user)
+    public async Task<bool> CreateAsync(UserRecord user)
     {
         const string sql = @"INSERT INTO dbo.Contacts
 (Id, UserName, Email, EmailConfirmed, PasswordHash, SecurityStamp, FirstName, LastName, BirthDate, Address, Note)
@@ -31,35 +31,35 @@ VALUES (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @SecurityStamp, 
         return affected > 0;
     }
 
-    public async Task<IEnumerable<Contact>> GetAllAsync()
+    public async Task<IEnumerable<UserRecord>> GetAllAsync()
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QueryAsync<Contact>("SELECT * FROM dbo.Contacts ORDER BY FirstName");
+        return await connection.QueryAsync<UserRecord>("SELECT * FROM dbo.Contacts ORDER BY FirstName");
     }
 
-    public async Task<Contact?> GetByEmailAsync(string email)
+    public async Task<UserRecord?> GetByEmailAsync(string email)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<Contact>("SELECT TOP 1 * FROM dbo.Contacts WHERE Email = @email", new { email });
+        return await connection.QueryFirstOrDefaultAsync<UserRecord>("SELECT TOP 1 * FROM dbo.Contacts WHERE Email = @email", new { email });
     }
 
-    public async Task<Contact?> GetByIdAsync(Guid id)
+    public async Task<UserRecord?> GetByIdAsync(Guid id)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.QueryFirstOrDefaultAsync<Contact>("SELECT TOP 1 * FROM dbo.Contacts WHERE Id = @id", new { id });
+        return await connection.QueryFirstOrDefaultAsync<UserRecord>("SELECT TOP 1 * FROM dbo.Contacts WHERE Id = @id", new { id });
     }
 
-    public async Task<IEnumerable<Contact>> SearchAsync(string term)
+    public async Task<IEnumerable<UserRecord>> SearchAsync(string term)
     {
         using var connection = connectionFactory.CreateConnection();
         const string sql = @"SELECT * FROM dbo.Contacts
 WHERE LOWER(FirstName) LIKE @term OR LOWER(LastName) LIKE @term OR LOWER(Email) LIKE @term
 ORDER BY FirstName";
 
-        return await connection.QueryAsync<Contact>(sql, new { term = $"%{term.ToLower()}%" });
+        return await connection.QueryAsync<UserRecord>(sql, new { term = $"%{term.ToLower()}%" });
     }
 
-    public async Task<bool> UpdateProfileAsync(Contact user)
+    public async Task<bool> UpdateProfileAsync(UserRecord user)
     {
         const string sql = @"UPDATE dbo.Contacts
 SET FirstName = @FirstName,

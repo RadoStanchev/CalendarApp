@@ -1,4 +1,4 @@
-using CalendarApp.Data.Models;
+using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Infrastructure.Data;
 using CalendarApp.Infrastructure.Time;
 using CalendarApp.Services.Notifications;
@@ -57,7 +57,7 @@ namespace CalendarApp.Infrastructure.Background
             var windowEnd = now.Add(ReminderWindow);
 
             using var connection = connectionFactory.CreateConnection();
-            var meetings = (await connection.QueryAsync<Meeting>(new CommandDefinition(@"
+            var meetings = (await connection.QueryAsync<MeetingRecord>(new CommandDefinition(@"
 SELECT Id, StartTime, [Location], [Description], CategoryId, CreatedById, ReminderSent
 FROM dbo.Meetings
 WHERE ReminderSent = 0 AND StartTime >= @Now AND StartTime <= @WindowEnd",

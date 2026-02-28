@@ -1,4 +1,3 @@
-﻿using CalendarApp.Data.Models;
 using CalendarApp.Services.User.Models;
 using CalendarApp.Services.User.Repositories;
 
@@ -13,13 +12,13 @@ namespace CalendarApp.Services.User
             this.userRepository = userRepository;
         }
 
-        public Task<Contact?> GetByIdAsync(Guid id) => userRepository.GetByIdAsync(id);
+        public Task<UserRecord?> GetByIdAsync(Guid id) => userRepository.GetByIdAsync(id);
 
-        public Task<Contact?> GetByEmailAsync(string email) => userRepository.GetByEmailAsync(email);
+        public Task<UserRecord?> GetByEmailAsync(string email) => userRepository.GetByEmailAsync(email);
 
-        public Task<IEnumerable<Contact>> SearchAsync(string term) => userRepository.SearchAsync(term ?? string.Empty);
+        public Task<IEnumerable<UserRecord>> SearchAsync(string term) => userRepository.SearchAsync(term ?? string.Empty);
 
-        public Task<IEnumerable<Contact>> GetAllAsync() => userRepository.GetAllAsync();
+        public Task<IEnumerable<UserRecord>> GetAllAsync() => userRepository.GetAllAsync();
 
         public async Task<bool> UpdateProfileAsync(UpdateProfileDto dto)
         {

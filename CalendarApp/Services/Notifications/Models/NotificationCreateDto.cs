@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace CalendarApp.Services.Notifications.Models
