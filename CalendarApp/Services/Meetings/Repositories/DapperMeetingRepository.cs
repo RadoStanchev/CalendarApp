@@ -198,13 +198,13 @@ ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.Firs
                 if (!detailsLookup.TryGetValue(details.Id, out var tracked))
                 {
                     tracked = details;
-                    tracked.Participants = [];
+                    tracked.Participants = new List<MeetingParticipantDto>();
                     detailsLookup[tracked.Id] = tracked;
                 }
 
-                if (participant != null && participant.ContactId != Guid.Empty)
+                if (participant != null && participant.ContactId != Guid.Empty && tracked.Participants is IList<MeetingParticipantDto> list)
                 {
-                    tracked.Participants.Add(participant);
+                    list.Add(participant);
                 }
 
                 return tracked;
