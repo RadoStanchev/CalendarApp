@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 
@@ -8,6 +7,7 @@ public interface IMeetingRepository
 {
     Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId);
     Task<MeetingThreadDto?> GetChatThreadAsync(Guid meetingId, Guid userId);
+    Task<MeetingRecord?> GetByIdAsync(Guid meetingId);
     Task<Guid> CreateMeetingAsync(MeetingCreateDto dto, DateTime startTimeUtc);
     Task<MeetingEditDto?> GetMeetingForEditAsync(Guid meetingId, Guid requesterId);
     Task<MeetingDetailsDto?> GetMeetingDetailsAsync(Guid meetingId, Guid requesterId);

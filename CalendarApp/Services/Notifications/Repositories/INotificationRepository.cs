@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Services.Notifications.Models;
 
 namespace CalendarApp.Services.Notifications.Repositories;
@@ -10,5 +9,5 @@ public interface INotificationRepository
     Task<int> GetUnreadCountAsync(Guid userId);
     Task<bool> MarkAsReadAsync(Guid userId, Guid notificationId);
     Task<int> MarkAllAsReadAsync(Guid userId);
-    Task<IReadOnlyCollection<Notification>> CreateAsync(IEnumerable<Notification> notifications);
+    Task<IReadOnlyCollection<NotificationRecord>> CreateAsync(IEnumerable<NotificationRecord> notifications);
 }

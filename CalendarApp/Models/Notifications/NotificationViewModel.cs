@@ -1,4 +1,4 @@
-using CalendarApp.Data.Models;
+using CalendarApp.Services.Notifications.Models;
 
 namespace CalendarApp.Models.Notifications
 {

@@ -1,4 +1,4 @@
-using CalendarApp.Data.Models;
+using CalendarApp.Services.User.Models;
 using CalendarApp.Services.User.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -10,12 +10,12 @@ namespace CalendarApp.Services.Auth;
 public class CookieAuthenticationService : IAuthenticationService
 {
     private readonly IUserRepository userRepository;
-    private readonly IPasswordHasher<Contact> passwordHasher;
+    private readonly IPasswordHasher<UserRecord> passwordHasher;
     private readonly IHttpContextAccessor httpContextAccessor;
 
     public CookieAuthenticationService(
         IUserRepository userRepository,
-        IPasswordHasher<Contact> passwordHasher,
+        IPasswordHasher<UserRecord> passwordHasher,
         IHttpContextAccessor httpContextAccessor)
     {
         this.userRepository = userRepository;
@@ -55,7 +55,7 @@ public class CookieAuthenticationService : IAuthenticationService
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 
-    public async Task<(bool Succeeded, IEnumerable<string> Errors)> RegisterAsync(Contact user, string password, bool isPersistent)
+    public async Task<(bool Succeeded, IEnumerable<string> Errors)> RegisterAsync(UserRecord user, string password, bool isPersistent)
     {
         var existing = await userRepository.GetByEmailAsync(user.Email!);
         if (existing != null)
@@ -78,7 +78,7 @@ public class CookieAuthenticationService : IAuthenticationService
         return (true, []);
     }
 
-    private async Task SignInAsync(Contact user, bool isPersistent)
+    private async Task SignInAsync(UserRecord user, bool isPersistent)
     {
         var context = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("HTTP context is unavailable.");
 

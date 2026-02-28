@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 using System.Collections.Generic;

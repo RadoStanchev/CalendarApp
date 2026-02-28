@@ -19,6 +19,7 @@ using CalendarApp.Services.Notifications;
 using CalendarApp.Services.User;
 using CalendarApp.Services.User.Repositories;
 using CalendarApp.Services.UserPresence;
+using CalendarApp.Services.User.Models;
 using Dapper;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -54,7 +55,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddScoped<IPasswordHasher<CalendarApp.Data.Models.Contact>, PasswordHasher<CalendarApp.Data.Models.Contact>>();
+builder.Services.AddScoped<IPasswordHasher<UserRecord>, PasswordHasher<UserRecord>>();
 builder.Services.AddScoped<IAuthenticationService, CookieAuthenticationService>();
 
 builder.Services.AddScoped<IUserRepository, DapperUserRepository>();

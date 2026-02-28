@@ -1,7 +1,7 @@
 using AutoMapper;
-using CalendarApp.Data.Models;
 using CalendarApp.Hubs;
 using CalendarApp.Infrastructure.Time;
+using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Notifications.Models;
 using CalendarApp.Services.Notifications.Repositories;
 using Microsoft.AspNetCore.SignalR;
@@ -38,7 +38,7 @@ namespace CalendarApp.Services.Notifications
         public Task<int> MarkAllAsReadAsync(Guid userId)
             => notificationRepository.MarkAllAsReadAsync(userId);
 
-        public async Task SendMeetingReminderAsync(Meeting meeting, IEnumerable<Guid> recipientIds)
+        public async Task SendMeetingReminderAsync(MeetingRecord meeting, IEnumerable<Guid> recipientIds)
         {
             ArgumentNullException.ThrowIfNull(meeting);
 
@@ -46,7 +46,7 @@ namespace CalendarApp.Services.Notifications
             if (recipients.Count == 0) return;
 
             var message = BuildReminderMessage(meeting);
-            var notifications = recipients.Select(userId => new Notification
+            var notifications = recipients.Select(userId => new NotificationRecord
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
@@ -72,7 +72,7 @@ namespace CalendarApp.Services.Notifications
             }
         }
 
-        private static string BuildReminderMessage(Meeting meeting)
+        private static string BuildReminderMessage(MeetingRecord meeting)
         {
             var startTimeLocal = BulgarianTime.ConvertUtcToLocal(meeting.StartTime);
             var description = string.IsNullOrWhiteSpace(meeting.Description) ? "Предстояща среща" : meeting.Description;
@@ -89,7 +89,7 @@ namespace CalendarApp.Services.Notifications
         {
             if (notifications == null) throw new ArgumentNullException(nameof(notifications));
 
-            var materialized = notifications.Where(n => n != null).Select(mapper.Map<Notification>).ToList();
+            var materialized = notifications.Where(n => n != null).Select(mapper.Map<NotificationRecord>).ToList();
             if (materialized.Count == 0) return Array.Empty<NotificationDto>();
 
             foreach (var n in materialized)

@@ -1,14 +1,14 @@
-using CalendarApp.Data.Models;
+using CalendarApp.Services.User.Models;
 
 namespace CalendarApp.Services.User.Repositories;
 
 public interface IUserRepository
 {
-    Task<Contact?> GetByIdAsync(Guid id);
-    Task<Contact?> GetByEmailAsync(string email);
-    Task<IEnumerable<Contact>> SearchAsync(string term);
-    Task<IEnumerable<Contact>> GetAllAsync();
-    Task<bool> UpdateProfileAsync(Contact user);
+    Task<UserRecord?> GetByIdAsync(Guid id);
+    Task<UserRecord?> GetByEmailAsync(string email);
+    Task<IEnumerable<UserRecord>> SearchAsync(string term);
+    Task<IEnumerable<UserRecord>> GetAllAsync();
+    Task<bool> UpdateProfileAsync(UserRecord user);
     Task<bool> DeleteAsync(Guid id);
-    Task<bool> CreateAsync(Contact user);
+    Task<bool> CreateAsync(UserRecord user);
 }

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using CalendarApp.Data.Models;
+using CalendarApp.Services.Meetings.Models;
 
 namespace CalendarApp.Models.Meetings
 {

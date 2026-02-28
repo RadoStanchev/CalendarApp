@@ -1,8 +1,7 @@
 namespace CalendarApp.Services.Notifications.Models
 {
     using System;
-    using CalendarApp.Data.Models;
-
+    
     public class NotificationDto
     {
         public Guid Id { get; set; }

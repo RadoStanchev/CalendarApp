@@ -1,4 +1,3 @@
-using CalendarApp.Data.Models;
 using CalendarApp.Infrastructure.Data;
 using CalendarApp.Infrastructure.Data.Sql;
 using CalendarApp.Services.Notifications.Models;
@@ -53,7 +52,7 @@ public class DapperNotificationRepository : INotificationRepository
         return await connection.ExecuteAsync(NotificationsSql.MarkAllAsRead, new { userId });
     }
 
-    public async Task<IReadOnlyCollection<Notification>> CreateAsync(IEnumerable<Notification> notifications)
+    public async Task<IReadOnlyCollection<NotificationRecord>> CreateAsync(IEnumerable<NotificationRecord> notifications)
     {
         var materialized = notifications.ToList();
         if (materialized.Count == 0)
