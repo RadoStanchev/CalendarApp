@@ -103,6 +103,8 @@ if (builder.Configuration.GetValue<bool>("Azure:SignalR:Enabled"))
 
 var app = builder.Build();
 
+app.PrepareDatabase();
+
 app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 
 if (!app.Environment.IsDevelopment())
