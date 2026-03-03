@@ -21,8 +21,12 @@ namespace CalendarApp.Infrastructure.Extensions
 
             EnsureDatabaseExists(connectionString);
 
-            var schemaFilePath = GetSqlFilePath(hostEnvironment.ContentRootPath, "schema.sql");
-            var seedDefaultsFilePath = GetSqlFilePath(hostEnvironment.ContentRootPath, "seed-defaults.sql");
+            var databaseDirectoryPath = Path.Combine(hostEnvironment.ContentRootPath, "database");
+            var schemaFilePath = Path.Combine(databaseDirectoryPath, "schema.sql");
+            var seedDefaultsFilePath = Path.Combine(databaseDirectoryPath, "seed-defaults.sql");
+
+            EnsureSqlFileExists(schemaFilePath);
+            EnsureSqlFileExists(seedDefaultsFilePath);
 
             if (!HasCoreSchema(connectionFactory))
             {
@@ -37,16 +41,12 @@ namespace CalendarApp.Infrastructure.Extensions
             return app;
         }
 
-        private static string GetSqlFilePath(string contentRootPath, string fileName)
+        private static void EnsureSqlFileExists(string filePath)
         {
-            var filePath = Path.Combine(contentRootPath, "database", fileName);
-
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException($"Could not find SQL file at '{filePath}'.", filePath);
             }
-
-            return filePath;
         }
 
         private static void EnsureDatabaseExists(string connectionString)
