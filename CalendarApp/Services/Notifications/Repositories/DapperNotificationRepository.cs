@@ -38,7 +38,7 @@ ORDER BY CreatedAt DESC", new { userId, filter = (int)query.Filter, limit = quer
     public async Task<int> GetUnreadCountAsync(Guid userId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<int>("SELECT COUNT(1) FROM dbo.Notifications WHERE UserId = @userId AND IsRead = 0", new { userId });
+        return await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.Notifications WHERE UserId = @userId AND IsRead = 0", new { userId });
     }
 
     public async Task<bool> MarkAsReadAsync(Guid userId, Guid notificationId)

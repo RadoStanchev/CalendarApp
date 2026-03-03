@@ -53,7 +53,7 @@ VALUES (@Id, @Name, @Color)", new { Id = id, Name = name, Color = color });
     public async Task<int> CountAsync()
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<int>("SELECT COUNT(1) FROM dbo.Categories");
+        return await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.Categories");
     }
 
     public async Task<bool> DeleteAsync(Guid categoryId)

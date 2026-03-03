@@ -34,7 +34,7 @@ SELECT m.Id AS MeetingId,
        m.CreatedById,
        creator.FirstName AS CreatorFirstName,
        creator.LastName AS CreatorLastName,
-       (SELECT COUNT(1) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @acceptedParticipantStatus) AS ParticipantCount,
+       (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @acceptedParticipantStatus) AS ParticipantCount,
        lastMessage.Content AS LastMessageContent,
        lastMessage.SentAt AS LastMessageSentAt
 FROM dbo.Meetings m
@@ -64,7 +64,7 @@ SELECT m.Id AS MeetingId,
        m.CreatedById,
        creator.FirstName AS CreatorFirstName,
        creator.LastName AS CreatorLastName,
-       (SELECT COUNT(1) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @acceptedParticipantStatus) AS ParticipantCount
+       (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @acceptedParticipantStatus) AS ParticipantCount
 FROM dbo.Meetings m
 JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
 WHERE m.Id = @meetingId
@@ -344,7 +344,7 @@ SELECT m.Id,
        cat.Color AS CategoryColor,
        CASE WHEN m.CreatedById = @userId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsCreator,
        CASE WHEN m.CreatedById = @userId THEN @acceptedStatus ELSE (SELECT TOP 1 mp.Status FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @userId) END AS ViewerStatus,
-       (SELECT COUNT(1) FROM dbo.MeetingParticipants mp2 WHERE mp2.MeetingId = m.Id) AS ParticipantCount
+       (SELECT COUNT(*) FROM dbo.MeetingParticipants mp2 WHERE mp2.MeetingId = m.Id) AS ParticipantCount
 FROM dbo.Meetings m
 JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
 LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId

@@ -3,9 +3,9 @@ SET XACT_ABORT ON;
 
 BEGIN TRANSACTION;
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[Categories])
+IF NOT EXISTS (SELECT * FROM dbo.Categories)
 BEGIN
-    INSERT INTO [dbo].[Categories] ([Id], [Name], [Color])
+    INSERT INTO dbo.Categories (Id, Name, Color)
     VALUES
         ('A1111111-1111-1111-1111-111111111111', N'Работа', '#007BFF'),
         ('A2222222-2222-2222-2222-222222222222', N'Лично', '#28A745'),
@@ -14,10 +14,10 @@ BEGIN
         ('A5555555-5555-5555-5555-555555555555', N'Образование', '#6610F2');
 END;
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[Contacts])
+IF NOT EXISTS (SELECT * FROM dbo.Contacts)
 BEGIN
-    INSERT INTO [dbo].[Contacts]
-        ([Id], [UserName], [Email], [EmailConfirmed], [PasswordHash], [SecurityStamp], [FirstName], [LastName], [BirthDate], [Address], [Note])
+    INSERT INTO dbo.Contacts
+        (Id, UserName, Email, EmailConfirmed, PasswordHash, SecurityStamp, FirstName, LastName, BirthDate, Address, Note)
     VALUES
         (NEWID(), 'maria@calendar.com', 'maria@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Maria', 'Ivanova', NULL, NULL, NULL),
         (NEWID(), 'georgi@calendar.com', 'georgi@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Georgi', 'Petrov', NULL, NULL, NULL),
@@ -31,9 +31,9 @@ BEGIN
         (NEWID(), 'admin@calendar.com', 'admin@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), N'Админ', N'Потребител', NULL, NULL, NULL);
 END;
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[Meetings])
+IF NOT EXISTS (SELECT * FROM dbo.Meetings)
 BEGIN
-    ;WITH [SeedRows]([Idx], [Subject]) AS
+    ;WITH SeedRows(Idx, Subject) AS
     (
         SELECT *
         FROM (VALUES
@@ -56,63 +56,63 @@ BEGIN
             (16, N'Обсъждане на бюджет'),
             (17, N'Мозъчна атака за UI/UX'),
             (18, N'Преглед на представянето'),
-            (19, N'Тиймбилдинг събитие')
-        ) AS [v]([Idx], [Subject])
+            (19, N'Тиймбилдинg събитие')
+        ) AS v(Idx, Subject)
     ),
-    [CategoryRows] AS
+    CategoryRows AS
     (
-        SELECT [Id], ROW_NUMBER() OVER (ORDER BY [Name]) - 1 AS [Idx]
-        FROM [dbo].[Categories]
+        SELECT Id, ROW_NUMBER() OVER (ORDER BY Name) - 1 AS Idx
+        FROM dbo.Categories
     ),
-    [ContactRows] AS
+    ContactRows AS
     (
-        SELECT [Id], ROW_NUMBER() OVER (ORDER BY [Email]) - 1 AS [Idx]
-        FROM [dbo].[Contacts]
+        SELECT Id, ROW_NUMBER() OVER (ORDER BY Email) - 1 AS Idx
+        FROM dbo.Contacts
     )
-    INSERT INTO [dbo].[Meetings]
-        ([Id], [StartTime], [Location], [Description], [CategoryId], [CreatedById], [ReminderSent])
+    INSERT INTO dbo.Meetings
+        (Id, StartTime, Location, Description, CategoryId, CreatedById, ReminderSent)
     SELECT
         NEWID(),
-        DATEADD(HOUR, 8 + ([s].[Idx] % 10), DATEADD(DAY, [s].[Idx] - 10, SYSUTCDATETIME())),
-        CONCAT(N'Стая ', ([s].[Idx] % 4) + 1),
-        [s].[Subject],
-        [c].[Id],
-        [u].[Id],
+        DATEADD(HOUR, 8 + (s.Idx % 10), DATEADD(DAY, s.Idx - 10, SYSUTCDATETIME())),
+        CONCAT(N'Стая ', (s.Idx % 4) + 1),
+        s.Subject,
+        c.Id,
+        u.Id,
         0
-    FROM [SeedRows] AS [s]
+    FROM SeedRows AS s
     CROSS APPLY (
-        SELECT TOP 1 [Id]
-        FROM [CategoryRows]
-        WHERE [Idx] = [s].[Idx] % NULLIF((SELECT COUNT(*) FROM [CategoryRows]), 0)
-    ) AS [c]
+        SELECT TOP 1 Id
+        FROM CategoryRows
+        WHERE Idx = s.Idx % NULLIF((SELECT COUNT(*) FROM CategoryRows), 0)
+    ) AS c
     CROSS APPLY (
-        SELECT TOP 1 [Id]
-        FROM [ContactRows]
-        WHERE [Idx] = [s].[Idx] % NULLIF((SELECT COUNT(*) FROM [ContactRows]), 0)
-    ) AS [u];
+        SELECT TOP 1 Id
+        FROM ContactRows
+        WHERE Idx = s.Idx % NULLIF((SELECT COUNT(*) FROM ContactRows), 0)
+    ) AS u;
 END;
 
-IF NOT EXISTS (SELECT 1 FROM [dbo].[MeetingParticipants])
+IF NOT EXISTS (SELECT * FROM dbo.MeetingParticipants)
 BEGIN
-    ;WITH [MeetingRows] AS
+    ;WITH MeetingRows AS
     (
-        SELECT [Id], ROW_NUMBER() OVER (ORDER BY [StartTime], [Id]) AS [MeetingNo]
-        FROM [dbo].[Meetings]
+        SELECT Id, ROW_NUMBER() OVER (ORDER BY StartTime, Id) AS MeetingNo
+        FROM dbo.Meetings
     ),
-    [ContactRows] AS
+    ContactRows AS
     (
-        SELECT [Id], ROW_NUMBER() OVER (ORDER BY [Email]) AS [ContactNo]
-        FROM [dbo].[Contacts]
+        SELECT Id, ROW_NUMBER() OVER (ORDER BY Email) AS ContactNo
+        FROM dbo.Contacts
     )
-    INSERT INTO [dbo].[MeetingParticipants] ([Id], [MeetingId], [ContactId], [Status])
+    INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, Status)
     SELECT
         NEWID(),
-        [m].[Id],
-        [c].[Id],
-        ([m].[MeetingNo] + [c].[ContactNo]) % 3
-    FROM [MeetingRows] AS [m]
-    INNER JOIN [ContactRows] AS [c]
-        ON [c].[ContactNo] BETWEEN 1 AND 4;
+        m.Id,
+        c.Id,
+        (m.MeetingNo + c.ContactNo) % 3
+    FROM MeetingRows AS m
+    INNER JOIN ContactRows AS c
+        ON c.ContactNo BETWEEN 1 AND 4;
 END;
 
 COMMIT TRANSACTION;
