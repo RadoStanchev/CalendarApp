@@ -1,6 +1,7 @@
 using CalendarApp.Infrastructure.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
 using System.Text.RegularExpressions;
 
 namespace CalendarApp.Infrastructure.Extensions
@@ -13,25 +14,39 @@ namespace CalendarApp.Infrastructure.Extensions
         {
             using var scope = app.ApplicationServices.CreateScope();
             var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+            var hostEnvironment = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
             var connectionFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
             var connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
             EnsureDatabaseExists(connectionString);
 
-            var databaseDirectory = FindDatabaseDirectory();
+            var schemaFilePath = GetSqlFilePath(hostEnvironment.ContentRootPath, "schema.sql");
+            var seedDefaultsFilePath = GetSqlFilePath(hostEnvironment.ContentRootPath, "seed-defaults.sql");
 
             if (!HasCoreSchema(connectionFactory))
             {
-                ExecuteSqlFile(connectionFactory, Path.Combine(databaseDirectory, "schema.sql"));
+                ExecuteSqlFile(connectionFactory, schemaFilePath);
             }
 
             if (IsSeedDataMissing(connectionFactory))
             {
-                ExecuteSqlFile(connectionFactory, Path.Combine(databaseDirectory, "seed-defaults.sql"));
+                ExecuteSqlFile(connectionFactory, seedDefaultsFilePath);
             }
 
             return app;
+        }
+
+        private static string GetSqlFilePath(string contentRootPath, string fileName)
+        {
+            var filePath = Path.Combine(contentRootPath, "database", fileName);
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException($"Could not find SQL file at '{filePath}'.", filePath);
+            }
+
+            return filePath;
         }
 
         private static void EnsureDatabaseExists(string connectionString)
@@ -106,27 +121,6 @@ namespace CalendarApp.Infrastructure.Extensions
             {
                 connection.Execute(batch);
             }
-        }
-
-        private static string FindDatabaseDirectory()
-        {
-            var currentDirectory = new DirectoryInfo(AppContext.BaseDirectory);
-
-            while (currentDirectory is not null)
-            {
-                var candidateDirectory = Path.Combine(currentDirectory.FullName, "database");
-                var schemaFilePath = Path.Combine(candidateDirectory, "schema.sql");
-                var seedFilePath = Path.Combine(candidateDirectory, "seed-defaults.sql");
-
-                if (File.Exists(schemaFilePath) && File.Exists(seedFilePath))
-                {
-                    return candidateDirectory;
-                }
-
-                currentDirectory = currentDirectory.Parent;
-            }
-
-            throw new DirectoryNotFoundException("Could not locate a database directory containing schema.sql and seed-defaults.sql.");
         }
     }
 }
