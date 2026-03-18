@@ -1,5 +1,5 @@
 using CalendarApp.Services.Messages.Models;
-using CalendarApp.Services.Messages.Repositories;
+using CalendarApp.Repositories.Messages;
 
 namespace CalendarApp.Services.Messages
 {

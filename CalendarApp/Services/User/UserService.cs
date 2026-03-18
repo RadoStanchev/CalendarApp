@@ -1,5 +1,5 @@
 using CalendarApp.Services.User.Models;
-using CalendarApp.Services.User.Repositories;
+using CalendarApp.Repositories.User;
 
 namespace CalendarApp.Services.User
 {

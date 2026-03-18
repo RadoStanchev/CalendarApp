@@ -1,7 +1,7 @@
 using CalendarApp.Infrastructure.Time;
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
-using CalendarApp.Services.Meetings.Repositories;
+using CalendarApp.Repositories.Meetings;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
 

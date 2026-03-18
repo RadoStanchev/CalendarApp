@@ -1,6 +1,6 @@
 using CalendarApp.Services.Categories.Models;
 
-namespace CalendarApp.Services.Categories.Repositories;
+namespace CalendarApp.Repositories.Categories;
 
 public interface ICategoryRepository
 {

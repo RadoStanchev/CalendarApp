@@ -1,5 +1,5 @@
 using CalendarApp.Services.Friendships.Models;
-using CalendarApp.Services.Friendships.Repositories;
+using CalendarApp.Repositories.Friendships;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
 

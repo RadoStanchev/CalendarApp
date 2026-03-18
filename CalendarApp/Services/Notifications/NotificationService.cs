@@ -3,7 +3,7 @@ using CalendarApp.Hubs;
 using CalendarApp.Infrastructure.Time;
 using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Notifications.Models;
-using CalendarApp.Services.Notifications.Repositories;
+using CalendarApp.Repositories.Notifications;
 using Microsoft.AspNetCore.SignalR;
 
 namespace CalendarApp.Services.Notifications

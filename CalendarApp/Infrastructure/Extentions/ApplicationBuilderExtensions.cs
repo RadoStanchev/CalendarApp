@@ -21,16 +21,19 @@ namespace CalendarApp.Infrastructure.Extensions
             var databaseDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "Database");
             var schemaFilePath = Path.Combine(databaseDirectoryPath, "schema.sql");
             var seedDefaultsFilePath = Path.Combine(databaseDirectoryPath, "seed-defaults.sql");
-            var proceduresFilePath = Path.Combine(databaseDirectoryPath, "procedures.sql");
+            var storedProceduresDirectoryPath = Path.Combine(databaseDirectoryPath, "StoredProcedures");
 
             if (File.Exists(schemaFilePath) && IsDatabaseEmpty(connectionFactory))
             {
                 ExecuteSqlFile(connectionFactory, schemaFilePath);
             }
 
-            if (File.Exists(proceduresFilePath))
+            if (Directory.Exists(storedProceduresDirectoryPath))
             {
-                ExecuteSqlFile(connectionFactory, proceduresFilePath);
+                foreach (var storedProcedureFilePath in Directory.GetFiles(storedProceduresDirectoryPath, "*.sql", SearchOption.TopDirectoryOnly).OrderBy(path => path))
+                {
+                    ExecuteSqlFile(connectionFactory, storedProcedureFilePath);
+                }
             }
 
             if (File.Exists(seedDefaultsFilePath) && IsSeedDataMissing(connectionFactory))
