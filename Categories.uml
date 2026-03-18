@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>DATABASE</ID>
+  <OriginalElement>518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Categories</OriginalElement>
+  <nodes>
+    <node x="-309.4054213438076" y="-78.0395139918835">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Notifications</node>
+    <node x="402.23371604672565" y="228.1442123778578">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants</node>
+    <node x="135.31052455277748" y="216.1442123778578">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships</node>
+    <node x="423.7337160467257" y="543.5300322684647">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Categories</node>
+    <node x="-253.16384089398517" y="204.1442123778578">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages</node>
+    <node x="120.1406894930069" y="-151.25739698643326">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts</node>
+    <node x="-123.61266694117074" y="655.4999638203392">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MessageSeens</node>
+    <node x="134.3105245527775" y="495.53003226846465">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts" relationship="REFERENCES">
+      <point x="0.0" y="104.0" />
+      <point x="239.8105245527775" y="784.9999638203392" />
+      <point x="615.7337160467257" y="784.9999638203392" />
+      <point x="615.7337160467257" y="-14.257000000000005" />
+      <point x="112.5" y="-14.999603013566741" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Notifications" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts" relationship="REFERENCES">
+      <point x="91.0" y="-13.217882994549768" />
+      <point x="-112.5" y="0.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MessageSeens" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts" relationship="REFERENCES">
+      <point x="100.49966694117074" y="9.530036179660783" />
+      <point x="384.5221202997516" y="721.03" />
+      <point x="384.5221202997516" y="51.93684210526317" />
+      <point x="115.0487841912036" y="51.19423909169643" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts" relationship="REFERENCES">
+      <point x="0.0" y="-92.0" />
+      <point x="-147.66384089398517" y="123.4604860081165" />
+      <point x="-112.5" y="122.71788299454977" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MessageSeens" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" relationship="REFERENCES">
+      <point x="-100.5" y="0.0" />
+      <point x="-162.664" y="711.4999638203392" />
+      <point x="-15.00015910601482" y="92.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" relationship="REFERENCES">
+      <point x="2.8395327433372586E-4" y="67.99978762214221" />
+      <point x="500.234" y="442.0" />
+      <point x="271.3473684210526" y="442.0" />
+      <point x="31.53684386827507" y="-103.11248840881558" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" relationship="REFERENCES">
+      <point x="-1.5910601482005404E-4" y="91.99978762214221" />
+      <point x="-147.664" y="442.0" />
+      <point x="239.81100000000006" y="442.0" />
+      <point x="4.754472225556583E-4" y="-104.00003226846468" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts" relationship="REFERENCES">
+      <point x="7.830164940229423" y="-80.0" />
+      <point x="15.0" y="152.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships" relationship="REFERENCES">
+      <point x="105.5" y="0.0" />
+      <point x="-104.5" y="0.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Categories" relationship="REFERENCES">
+      <point x="105.5" y="0.0" />
+      <point x="-76.5" y="0.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Contacts" relationship="REFERENCES">
+      <point x="-97.99971604672567" y="-2.1237785779248952E-4" />
+      <point x="451.2338580233628" y="296.144" />
+      <point x="451.2338580233628" y="296.14360301356675" />
+      <point x="500.23371604672565" y="296.14360301356675" />
+      <point x="500.23371604672565" y="0.7426030135667414" />
+      <point x="429.47332293564347" y="0.7426030135667414" />
+      <point x="429.47332293564347" y="0.7426030135667361" />
+      <point x="361.2614035087719" y="0.7426030135667361" />
+      <point x="361.2614035087719" y="0.7430000000000003" />
+      <point x="112.50031050699312" y="3.969864332642459E-4" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Compact" zoom="0.5894519131334023" showDependencies="false" x="316.3043859649123" y="323.3754385964912" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Columns</Category>
+    <Category>Comments</Category>
+    <Category>Key columns</Category>
+    <Category>Virtual foreign keys</Category>
+  </Categories>
+</Diagram>
+

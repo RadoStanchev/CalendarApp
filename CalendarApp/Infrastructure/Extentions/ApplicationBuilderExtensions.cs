@@ -18,11 +18,11 @@ namespace CalendarApp.Infrastructure.Extensions
 
             EnsureDatabaseExists(connectionString);
 
-            var databaseDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "database");
+            var databaseDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "Database");
             var schemaFilePath = Path.Combine(databaseDirectoryPath, "schema.sql");
             var seedDefaultsFilePath = Path.Combine(databaseDirectoryPath, "seed-defaults.sql");
 
-            if (File.Exists(schemaFilePath))
+            if (File.Exists(schemaFilePath) && IsDatabaseEmpty(connectionFactory))
             {
                 ExecuteSqlFile(connectionFactory, schemaFilePath);
             }
@@ -48,6 +48,12 @@ namespace CalendarApp.Infrastructure.Extensions
             {
                 connection.Execute($"CREATE DATABASE {databaseName}");
             }
+        }
+
+        private static bool IsDatabaseEmpty(IDbConnectionFactory connectionFactory)
+        {
+            using var connection = connectionFactory.CreateConnection();
+            return connection.ExecuteScalar<int>("SELECT COUNT(*) FROM sys.tables WHERE is_ms_shipped = 0") == 0;
         }
 
         private static bool IsSeedDataMissing(IDbConnectionFactory connectionFactory)

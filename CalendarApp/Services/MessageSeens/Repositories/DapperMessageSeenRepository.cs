@@ -43,6 +43,7 @@ WHERE m.MeetingId = @meetingId
     public async Task InsertManyAsync(Guid userId, IEnumerable<Guid> messageIds, DateTime seenAtUtc)
     {
         using var connection = connectionFactory.CreateConnection();
+        connection.Open();
         using var tx = connection.BeginTransaction();
         foreach (var messageId in messageIds)
         {

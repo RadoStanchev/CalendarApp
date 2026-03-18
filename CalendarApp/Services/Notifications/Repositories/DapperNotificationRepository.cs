@@ -70,6 +70,7 @@ WHERE UserId = @userId AND Id = @notificationId AND IsRead = 0", new { userId, n
         }
 
         using var connection = connectionFactory.CreateConnection();
+        connection.Open();
         using var tx = connection.BeginTransaction();
 
         foreach (var notification in materialized)
