@@ -1,5 +1,5 @@
 using CalendarApp.Services.Categories.Models;
-using CalendarApp.Services.Categories.Repositories;
+using CalendarApp.Repositories.Categories;
 
 namespace CalendarApp.Services.Categories
 {

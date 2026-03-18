@@ -1,5 +1,5 @@
 using CalendarApp.Services.User.Models;
-using CalendarApp.Services.User.Repositories;
+using CalendarApp.Repositories.User;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;

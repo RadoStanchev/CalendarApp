@@ -1,4 +1,4 @@
-namespace CalendarApp.Services.MessageSeens.Repositories;
+namespace CalendarApp.Repositories.MessageSeens;
 
 public interface IMessageSeenRepository
 {

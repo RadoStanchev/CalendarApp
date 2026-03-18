@@ -1,6 +1,6 @@
 using CalendarApp.Services.Friendships.Models;
 
-namespace CalendarApp.Services.Friendships.Repositories;
+namespace CalendarApp.Repositories.Friendships;
 
 public interface IFriendshipRepository
 {

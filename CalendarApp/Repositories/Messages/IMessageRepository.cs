@@ -1,6 +1,6 @@
 using CalendarApp.Services.Messages.Models;
 
-namespace CalendarApp.Services.Messages.Repositories;
+namespace CalendarApp.Repositories.Messages;
 
 public interface IMessageRepository
 {

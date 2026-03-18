@@ -1,7 +1,7 @@
 using CalendarApp.Models.Meetings;
 using CalendarApp.Services.Meetings.Models;
 
-namespace CalendarApp.Services.Meetings.Repositories;
+namespace CalendarApp.Repositories.Meetings;
 
 public interface IMeetingRepository
 {

@@ -1,5 +1,5 @@
 using CalendarApp.Services.Messages;
-using CalendarApp.Services.MessageSeens.Repositories;
+using CalendarApp.Repositories.MessageSeens;
 
 namespace CalendarApp.Services.MessageSeens
 {

@@ -1,6 +1,6 @@
 using CalendarApp.Services.User.Models;
 
-namespace CalendarApp.Services.User.Repositories;
+namespace CalendarApp.Repositories.User;
 
 public interface IUserRepository
 {

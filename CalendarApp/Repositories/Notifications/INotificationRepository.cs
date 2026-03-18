@@ -1,6 +1,6 @@
 using CalendarApp.Services.Notifications.Models;
 
-namespace CalendarApp.Services.Notifications.Repositories;
+namespace CalendarApp.Repositories.Notifications;
 
 public interface INotificationRepository
 {
