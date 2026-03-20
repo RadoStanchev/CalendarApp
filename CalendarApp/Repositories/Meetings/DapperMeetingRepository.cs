@@ -274,24 +274,6 @@ public class DapperMeetingRepository : IMeetingRepository
         return affected > 0;
     }
 
-    public async Task<bool> CategoryExistsAsync(Guid categoryId)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>(
-            "dbo.usp_Meeting_CategoryExists",
-            new { CategoryId = categoryId },
-            commandType: CommandType.StoredProcedure);
-    }
-
-    public async Task<string?> GetContactFullNameAsync(Guid userId)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        return await connection.QuerySingleOrDefaultAsync<string>(
-            "dbo.usp_Meeting_GetContactFullName",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
-    }
-
     public async Task<IReadOnlyCollection<Guid>> GetParticipantIdsAsync(Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();

@@ -165,12 +165,4 @@ public class DapperFriendshipRepository : IFriendshipRepository
         return affected > 0;
     }
 
-    public async Task<string?> GetContactFullNameAsync(Guid userId)
-    {
-        using var connection = connectionFactory.CreateConnection();
-        return await connection.QuerySingleOrDefaultAsync<string>(
-            "dbo.usp_Friendship_GetContactFullName",
-            new { UserId = userId },
-            commandType: CommandType.StoredProcedure);
-    }
 }

@@ -1,18 +1,25 @@
-using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Repositories.Friendships;
+using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
+using CalendarApp.Services.User;
+using CalendarApp.Services.User.Models;
 
 namespace CalendarApp.Services.Friendships
 {
     public class FriendshipService : IFriendshipService
     {
         private readonly IFriendshipRepository friendshipRepository;
+        private readonly IUserService userService;
         private readonly INotificationService notificationService;
 
-        public FriendshipService(IFriendshipRepository friendshipRepository, INotificationService notificationService)
+        public FriendshipService(
+            IFriendshipRepository friendshipRepository,
+            IUserService userService,
+            INotificationService notificationService)
         {
             this.friendshipRepository = friendshipRepository;
+            this.userService = userService;
             this.notificationService = notificationService;
         }
 
@@ -42,7 +49,7 @@ namespace CalendarApp.Services.Friendships
                 return result;
             }
 
-            var requesterName = await friendshipRepository.GetContactFullNameAsync(requesterId);
+            var requesterName = await GetUserFullNameAsync(requesterId);
             if (!string.IsNullOrWhiteSpace(requesterName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -64,7 +71,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var receiverName = await friendshipRepository.GetContactFullNameAsync(receiverId);
+            var receiverName = await GetUserFullNameAsync(receiverId);
             if (!string.IsNullOrWhiteSpace(receiverName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -86,7 +93,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var receiverName = await friendshipRepository.GetContactFullNameAsync(receiverId);
+            var receiverName = await GetUserFullNameAsync(receiverId);
             if (!string.IsNullOrWhiteSpace(receiverName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -108,7 +115,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var requesterName = await friendshipRepository.GetContactFullNameAsync(requesterId);
+            var requesterName = await GetUserFullNameAsync(requesterId);
             if (!string.IsNullOrWhiteSpace(requesterName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -124,5 +131,26 @@ namespace CalendarApp.Services.Friendships
 
         public Task<bool> RemoveFriendAsync(Guid friendshipId, Guid cancelerId)
             => friendshipRepository.RemoveFriendAsync(friendshipId, cancelerId);
+
+        private async Task<string?> GetUserFullNameAsync(Guid userId)
+        {
+            var user = await userService.GetByIdAsync(userId);
+            return FormatFullName(user);
+        }
+
+        private static string? FormatFullName(UserRecord? user)
+        {
+            if (user == null)
+            {
+                return null;
+            }
+
+            var parts = new[] { user.FirstName, user.LastName }
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select(part => part!.Trim());
+
+            var fullName = string.Join(" ", parts);
+            return string.IsNullOrWhiteSpace(fullName) ? null : fullName;
+        }
     }
 }

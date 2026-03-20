@@ -75,8 +75,13 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT TOP (@Take)
-        m.Id, m.SenderId, m.Content, m.SentAt, m.FriendshipId, m.MeetingId,
-        c.FirstName AS SenderFirstName, c.LastName AS SenderLastName
+        m.FriendshipId,
+        m.MeetingId,
+        m.Id AS MessageId,
+        m.SenderId,
+        CONCAT(c.FirstName, ' ', c.LastName) AS SenderName,
+        m.Content,
+        m.SentAt
     FROM dbo.Messages m
     INNER JOIN dbo.Contacts c ON c.Id = m.SenderId
     WHERE m.FriendshipId = @FriendshipId
@@ -91,8 +96,13 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT TOP (@Take)
-        m.Id, m.SenderId, m.Content, m.SentAt, m.FriendshipId, m.MeetingId,
-        c.FirstName AS SenderFirstName, c.LastName AS SenderLastName
+        m.FriendshipId,
+        m.MeetingId,
+        m.Id AS MessageId,
+        m.SenderId,
+        CONCAT(c.FirstName, ' ', c.LastName) AS SenderName,
+        m.Content,
+        m.SentAt
     FROM dbo.Messages m
     INNER JOIN dbo.Contacts c ON c.Id = m.SenderId
     WHERE m.MeetingId = @MeetingId
