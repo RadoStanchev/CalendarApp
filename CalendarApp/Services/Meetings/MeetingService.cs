@@ -1,20 +1,31 @@
 using CalendarApp.Infrastructure.Time;
 using CalendarApp.Models.Meetings;
-using CalendarApp.Services.Meetings.Models;
+using CalendarApp.Repositories.Categories;
 using CalendarApp.Repositories.Meetings;
+using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
+using CalendarApp.Services.User;
+using CalendarApp.Services.User.Models;
 
 namespace CalendarApp.Services.Meetings
 {
     public class MeetingService : IMeetingService
     {
         private readonly IMeetingRepository meetingRepository;
+        private readonly ICategoryRepository categoryRepository;
+        private readonly IUserService userService;
         private readonly INotificationService notificationService;
 
-        public MeetingService(IMeetingRepository meetingRepository, INotificationService notificationService)
+        public MeetingService(
+            IMeetingRepository meetingRepository,
+            ICategoryRepository categoryRepository,
+            IUserService userService,
+            INotificationService notificationService)
         {
             this.meetingRepository = meetingRepository;
+            this.categoryRepository = categoryRepository;
+            this.userService = userService;
             this.notificationService = notificationService;
         }
 
@@ -30,7 +41,7 @@ namespace CalendarApp.Services.Meetings
             var startUtc = BulgarianTime.ConvertLocalToUtc(dto.StartTime);
             var meetingId = await meetingRepository.CreateMeetingAsync(dto, startUtc);
 
-            var creatorName = await meetingRepository.GetContactFullNameAsync(dto.CreatedById);
+            var creatorName = await GetUserFullNameAsync(dto.CreatedById);
             if (!string.IsNullOrWhiteSpace(creatorName))
             {
                 var startLocal = BulgarianTime.ConvertUtcToLocal(startUtc).ToString("g");
@@ -90,7 +101,7 @@ namespace CalendarApp.Services.Meetings
                 return false;
             }
 
-            var updaterName = await meetingRepository.GetContactFullNameAsync(dto.UpdatedById);
+            var updaterName = await GetUserFullNameAsync(dto.UpdatedById);
             if (string.IsNullOrWhiteSpace(updaterName))
             {
                 return true;
@@ -163,11 +174,32 @@ namespace CalendarApp.Services.Meetings
                 throw new ArgumentException("Изисква се категория.", nameof(categoryId));
             }
 
-            var exists = await meetingRepository.CategoryExistsAsync(categoryId);
-            if (!exists)
+            var category = await categoryRepository.GetByIdAsync(categoryId);
+            if (category == null)
             {
                 throw new ArgumentException("Избраната категория не съществува.", nameof(categoryId));
             }
+        }
+
+        private async Task<string?> GetUserFullNameAsync(Guid userId)
+        {
+            var user = await userService.GetByIdAsync(userId);
+            return FormatFullName(user);
+        }
+
+        private static string? FormatFullName(UserRecord? user)
+        {
+            if (user == null)
+            {
+                return null;
+            }
+
+            var parts = new[] { user.FirstName, user.LastName }
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select(part => part!.Trim());
+
+            var fullName = string.Join(" ", parts);
+            return string.IsNullOrWhiteSpace(fullName) ? null : fullName;
         }
 
         private static string LocationSuffix(string? location)

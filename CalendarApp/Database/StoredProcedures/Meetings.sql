@@ -316,25 +316,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE dbo.usp_Meeting_CategoryExists
-    @CategoryId UNIQUEIDENTIFIER
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM dbo.Categories WHERE Id = @CategoryId) THEN 1 ELSE 0 END AS bit);
-END
-GO
 
-CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetContactFullName
-    @UserId UNIQUEIDENTIFIER
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT CONCAT(FirstName, ' ', LastName)
-    FROM dbo.Contacts
-    WHERE Id = @UserId;
-END
-GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_GetIds
     @MeetingId UNIQUEIDENTIFIER

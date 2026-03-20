@@ -323,13 +323,3 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE dbo.usp_Friendship_GetContactFullName
-    @UserId UNIQUEIDENTIFIER
-AS
-BEGIN
-    SET NOCOUNT ON;
-    SELECT CONCAT(FirstName, ' ', LastName)
-    FROM dbo.Contacts
-    WHERE Id = @UserId;
-END
-GO

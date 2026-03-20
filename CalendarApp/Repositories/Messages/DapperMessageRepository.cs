@@ -53,38 +53,14 @@ public class DapperMessageRepository : IMessageRepository
     public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentFriendshipMessagesAsync(Guid friendshipId, int take)
     {
         using var connection = connectionFactory.CreateConnection();
-        var rows = await connection.QueryAsync<MessageRow>("dbo.usp_Message_GetRecentFriendshipMessages", new { FriendshipId = friendshipId, Take = take }, commandType: CommandType.StoredProcedure);
-        return rows.Select(Map).OrderBy(m => m.SentAt).ToList();
+        var messages = await connection.QueryAsync<ChatMessageDto>("dbo.usp_Message_GetRecentFriendshipMessages", new { FriendshipId = friendshipId, Take = take }, commandType: CommandType.StoredProcedure);
+        return messages.OrderBy(m => m.SentAt).ToList();
     }
 
     public async Task<IReadOnlyCollection<ChatMessageDto>> GetRecentMeetingMessagesAsync(Guid meetingId, int take)
     {
         using var connection = connectionFactory.CreateConnection();
-        var rows = await connection.QueryAsync<MessageRow>("dbo.usp_Message_GetRecentMeetingMessages", new { MeetingId = meetingId, Take = take }, commandType: CommandType.StoredProcedure);
-        return rows.Select(Map).OrderBy(m => m.SentAt).ToList();
-    }
-
-    private static ChatMessageDto Map(MessageRow row) => new()
-    {
-        FriendshipId = row.FriendshipId,
-        MeetingId = row.MeetingId,
-        MessageId = row.Id,
-        SenderId = row.SenderId,
-        SenderName = string.Join(" ", new[] { row.SenderFirstName, row.SenderLastName }.Where(x => !string.IsNullOrWhiteSpace(x))),
-        Content = row.Content,
-        SentAt = row.SentAt,
-        Metadata = new Dictionary<string, string?>()
-    };
-
-    private sealed class MessageRow
-    {
-        public Guid Id { get; set; }
-        public Guid SenderId { get; set; }
-        public string Content { get; set; } = string.Empty;
-        public DateTime SentAt { get; set; }
-        public Guid? FriendshipId { get; set; }
-        public Guid? MeetingId { get; set; }
-        public string? SenderFirstName { get; set; }
-        public string? SenderLastName { get; set; }
+        var messages = await connection.QueryAsync<ChatMessageDto>("dbo.usp_Message_GetRecentMeetingMessages", new { MeetingId = meetingId, Take = take }, commandType: CommandType.StoredProcedure);
+        return messages.OrderBy(m => m.SentAt).ToList();
     }
 }

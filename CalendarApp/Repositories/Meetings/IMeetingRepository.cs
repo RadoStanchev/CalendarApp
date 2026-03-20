@@ -16,8 +16,6 @@ public interface IMeetingRepository
     Task<IReadOnlyCollection<ContactSuggestionViewModel>> GetContactsAsync(IEnumerable<Guid> ids);
     Task<(IReadOnlyCollection<MeetingSummaryDto> UpcomingMeetings, IReadOnlyCollection<MeetingSummaryDto> PastMeetings)> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null);
     Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status);
-    Task<bool> CategoryExistsAsync(Guid categoryId);
-    Task<string?> GetContactFullNameAsync(Guid userId);
     Task<IReadOnlyCollection<Guid>> GetParticipantIdsAsync(Guid meetingId);
     Task<IReadOnlyCollection<Guid>> GetNewlyAddedParticipantIdsAsync(Guid meetingId, IEnumerable<Guid> beforeParticipantIds);
     Task<DateTime?> GetMeetingStartTimeAsync(Guid meetingId);
