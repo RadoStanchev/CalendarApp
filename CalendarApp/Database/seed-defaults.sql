@@ -17,18 +17,18 @@ END;
 IF NOT EXISTS (SELECT * FROM dbo.Contacts)
 BEGIN
     INSERT INTO dbo.Contacts
-        (Id, UserName, Email, EmailConfirmed, PasswordHash, SecurityStamp, FirstName, LastName, BirthDate, Address, Note)
+        (Id, UserName, Email, EmailConfirmed, PasswordHash, FirstName, LastName, BirthDate, Address, Note)
     VALUES
-        (NEWID(), 'maria@calendar.com', 'maria@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Maria', 'Ivanova', NULL, NULL, NULL),
-        (NEWID(), 'georgi@calendar.com', 'georgi@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Georgi', 'Petrov', NULL, NULL, NULL),
-        (NEWID(), 'elena@calendar.com', 'elena@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Elena', 'Dimitrova', NULL, NULL, NULL),
-        (NEWID(), 'ivan@calendar.com', 'ivan@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Ivan', 'Stoyanov', NULL, NULL, NULL),
-        (NEWID(), 'nikolay@calendar.com', 'nikolay@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Nikolay', 'Georgiev', NULL, NULL, NULL),
-        (NEWID(), 'petya@calendar.com', 'petya@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Petya', 'Todorova', NULL, NULL, NULL),
-        (NEWID(), 'stefan@calendar.com', 'stefan@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Stefan', 'Kolev', NULL, NULL, NULL),
-        (NEWID(), 'tanya@calendar.com', 'tanya@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Tanya', 'Mihaylova', NULL, NULL, NULL),
-        (NEWID(), 'dimitar@calendar.com', 'dimitar@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), 'Dimitar', 'Krastev', NULL, NULL, NULL),
-        (NEWID(), 'admin@calendar.com', 'admin@calendar.com', 1, N'', CONVERT(nvarchar(100), NEWID()), N'Админ', N'Потребител', NULL, NULL, NULL);
+        (NEWID(), 'maria@calendar.com', 'maria@calendar.com', 1, N'', 'Maria', 'Ivanova', NULL, NULL, NULL),
+        (NEWID(), 'georgi@calendar.com', 'georgi@calendar.com', 1, N'', 'Georgi', 'Petrov', NULL, NULL, NULL),
+        (NEWID(), 'elena@calendar.com', 'elena@calendar.com', 1, N'', 'Elena', 'Dimitrova', NULL, NULL, NULL),
+        (NEWID(), 'ivan@calendar.com', 'ivan@calendar.com', 1, N'', 'Ivan', 'Stoyanov', NULL, NULL, NULL),
+        (NEWID(), 'nikolay@calendar.com', 'nikolay@calendar.com', 1, N'', 'Nikolay', 'Georgiev', NULL, NULL, NULL),
+        (NEWID(), 'petya@calendar.com', 'petya@calendar.com', 1, N'', 'Petya', 'Todorova', NULL, NULL, NULL),
+        (NEWID(), 'stefan@calendar.com', 'stefan@calendar.com', 1, N'', 'Stefan', 'Kolev', NULL, NULL, NULL),
+        (NEWID(), 'tanya@calendar.com', 'tanya@calendar.com', 1, N'', 'Tanya', 'Mihaylova', NULL, NULL, NULL),
+        (NEWID(), 'dimitar@calendar.com', 'dimitar@calendar.com', 1, N'', 'Dimitar', 'Krastev', NULL, NULL, NULL),
+        (NEWID(), 'admin@calendar.com', 'admin@calendar.com', 1, N'', N'Админ', N'Потребител', NULL, NULL, NULL);
 END;
 
 IF NOT EXISTS (SELECT * FROM dbo.Meetings)

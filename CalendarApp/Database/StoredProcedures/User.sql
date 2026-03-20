@@ -4,7 +4,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_Create
     @Email NVARCHAR(256),
     @EmailConfirmed BIT,
     @PasswordHash NVARCHAR(MAX),
-    @SecurityStamp NVARCHAR(MAX),
     @FirstName NVARCHAR(100),
     @LastName NVARCHAR(100),
     @BirthDate DATETIME2,
@@ -13,8 +12,8 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_Create
 AS
 BEGIN
     SET NOCOUNT ON;
-    INSERT INTO dbo.Contacts (Id, UserName, Email, EmailConfirmed, PasswordHash, SecurityStamp, FirstName, LastName, BirthDate, Address, Note)
-    VALUES (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @SecurityStamp, @FirstName, @LastName, @BirthDate, @Address, @Note);
+    INSERT INTO dbo.Contacts (Id, UserName, Email, EmailConfirmed, PasswordHash, FirstName, LastName, BirthDate, Address, Note)
+    VALUES (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @FirstName, @LastName, @BirthDate, @Address, @Note);
 END
 GO
 
@@ -31,7 +30,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT * FROM dbo.Contacts ORDER BY FirstName;
+    SELECT * FROM dbo.Contacts ORDER BY FirstName, LastName;
 END
 GO
 
@@ -79,8 +78,19 @@ BEGIN
     SET FirstName = @FirstName,
         LastName = @LastName,
         BirthDate = @BirthDate,
-        Address = @Address,
+        [Address] = @Address,
         Note = @Note
+    WHERE Id = @Id;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_User_GetFullName
+    @Id UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT TOP 1 CONCAT(FirstName, ' ', LastName) AS FullName
+    FROM dbo.Contacts
     WHERE Id = @Id;
 END
 GO

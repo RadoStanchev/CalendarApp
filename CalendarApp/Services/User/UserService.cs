@@ -14,6 +14,8 @@ namespace CalendarApp.Services.User
 
         public Task<UserRecord?> GetByIdAsync(Guid id) => userRepository.GetByIdAsync(id);
 
+        public Task<string?> GetFullNameAsync(Guid id) => userRepository.GetFullNameAsync(id);
+
         public Task<UserRecord?> GetByEmailAsync(string email) => userRepository.GetByEmailAsync(email);
 
         public Task<IEnumerable<UserRecord>> SearchAsync(string term) => userRepository.SearchAsync(term ?? string.Empty);

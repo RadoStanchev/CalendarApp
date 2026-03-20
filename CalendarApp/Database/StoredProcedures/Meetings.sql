@@ -269,7 +269,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetMeetingsForUser
 AS
 BEGIN
     SET NOCOUNT ON;
-    DECLARE @Pattern NVARCHAR(260) = '%' + LOWER(LTRIM(RTRIM(ISNULL(@SearchTerm, '')))) + '%';
+    DECLARE @Pattern NVARCHAR(260) = '%' + @SearchTerm + '%';
     SELECT m.Id,
            m.StartTime,
            m.Location,

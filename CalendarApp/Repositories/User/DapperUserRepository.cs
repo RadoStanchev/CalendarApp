@@ -46,6 +46,12 @@ public class DapperUserRepository : IUserRepository
         return await connection.QueryFirstOrDefaultAsync<UserRecord>("dbo.usp_User_GetById", new { Id = id }, commandType: CommandType.StoredProcedure);
     }
 
+    public async Task<string?> GetFullNameAsync(Guid id)
+    {
+        using var connection = connectionFactory.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<string>("dbo.usp_User_GetFullName", new { Id = id }, commandType: CommandType.StoredProcedure);
+    }
+
     public async Task<IEnumerable<UserRecord>> SearchAsync(string term)
     {
         using var connection = connectionFactory.CreateConnection();

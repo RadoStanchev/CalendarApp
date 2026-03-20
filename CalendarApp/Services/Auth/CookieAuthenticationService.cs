@@ -64,7 +64,6 @@ public class CookieAuthenticationService : IAuthenticationService
         }
 
         user.Id = Guid.NewGuid();
-        user.SecurityStamp = Guid.NewGuid().ToString();
         user.PasswordHash = passwordHasher.HashPassword(user, password);
         user.EmailConfirmed = true;
 

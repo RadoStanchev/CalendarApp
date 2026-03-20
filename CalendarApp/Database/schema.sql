@@ -10,7 +10,6 @@ CREATE TABLE dbo.Contacts (
     Email NVARCHAR(256) NOT NULL,
     EmailConfirmed BIT NOT NULL CONSTRAINT DF_Contacts_EmailConfirmed DEFAULT ((0)),
     PasswordHash NVARCHAR(1000) NOT NULL CONSTRAINT DF_Contacts_PasswordHash DEFAULT (N''),
-    SecurityStamp NVARCHAR(100) NOT NULL CONSTRAINT DF_Contacts_SecurityStamp DEFAULT (N''),
     FirstName NVARCHAR(50) NOT NULL,
     LastName NVARCHAR(50) NOT NULL,
     BirthDate DATETIME2 NULL,

@@ -1,5 +1,6 @@
 using CalendarApp.Services.Messages.Models;
 using CalendarApp.Repositories.Messages;
+using CalendarApp.Repositories.User;
 
 namespace CalendarApp.Services.Messages
 {
@@ -7,9 +8,12 @@ namespace CalendarApp.Services.Messages
     {
         private readonly IMessageRepository messageRepository;
 
-        public MessageService(IMessageRepository messageRepository)
+        private readonly IUserRepository userRepository;
+
+        public MessageService(IMessageRepository messageRepository, IUserRepository userRepository)
         {
             this.messageRepository = messageRepository;
+            this.userRepository = userRepository;
         }
 
         public async Task EnsureFriendshipAccessAsync(Guid userId, Guid friendshipId)
@@ -36,15 +40,15 @@ namespace CalendarApp.Services.Messages
             }
 
             await EnsureFriendshipAccessAsync(userId, friendshipId);
-            var sender = await GetSenderAsync(userId);
+            var sender = await userRepository.GetFullNameAsync(userId);
             var messageId = await messageRepository.InsertAsync(userId, content, friendshipId: friendshipId);
 
             return new ChatMessageDto
             {
                 FriendshipId = friendshipId,
                 MessageId = messageId,
-                SenderId = sender.Id,
-                SenderName = sender.Name,
+                SenderId = userId,
+                SenderName = sender,
                 Content = content,
                 SentAt = DateTime.UtcNow,
                 Metadata = new Dictionary<string, string?>()
@@ -59,7 +63,7 @@ namespace CalendarApp.Services.Messages
             }
 
             await EnsureMeetingAccessAsync(userId, meetingId);
-            var sender = await GetSenderAsync(userId);
+            var sender = await userRepository.GetFullNameAsync(userId);
             var meeting = await messageRepository.GetMeetingInfoAsync(meetingId)
                 ?? throw new InvalidOperationException("Срещата не беше намерена.");
 
@@ -69,8 +73,8 @@ namespace CalendarApp.Services.Messages
             {
                 MeetingId = meetingId,
                 MessageId = messageId,
-                SenderId = sender.Id,
-                SenderName = sender.Name,
+                SenderId = userId,
+                SenderName = sender,
                 Content = content,
                 SentAt = DateTime.UtcNow,
                 Metadata = new Dictionary<string, string?>
@@ -91,14 +95,6 @@ namespace CalendarApp.Services.Messages
         {
             await EnsureMeetingAccessAsync(userId, meetingId);
             return await messageRepository.GetRecentMeetingMessagesAsync(meetingId, take);
-        }
-
-        private async Task<(Guid Id, string Name)> GetSenderAsync(Guid userId)
-        {
-            var (Id, FirstName, LastName) = await messageRepository.GetSenderAsync(userId)
-                ?? throw new InvalidOperationException("Подателят не е намерен.");
-
-            return (Id, string.Join(" ", new[] { FirstName, LastName }.Where(x => !string.IsNullOrWhiteSpace(x))));
         }
     }
 }

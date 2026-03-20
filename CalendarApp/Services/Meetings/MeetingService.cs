@@ -41,25 +41,23 @@ namespace CalendarApp.Services.Meetings
             var startUtc = BulgarianTime.ConvertLocalToUtc(dto.StartTime);
             var meetingId = await meetingRepository.CreateMeetingAsync(dto, startUtc);
 
-            var creatorName = await GetUserFullNameAsync(dto.CreatedById);
-            if (!string.IsNullOrWhiteSpace(creatorName))
-            {
-                var startLocal = BulgarianTime.ConvertUtcToLocal(startUtc).ToString("g");
-                var locationSuffix = LocationSuffix(dto.Location);
-                var invitees = (await meetingRepository.GetParticipantIdsAsync(meetingId))
-                    .Where(id => id != dto.CreatedById)
-                    .Distinct()
-                    .ToList();
+            var creatorName = await userService.GetFullNameAsync(dto.CreatedById);
+            
+            var startLocal = BulgarianTime.ConvertUtcToLocal(startUtc).ToString("g");
+            var locationSuffix = LocationSuffix(dto.Location);
+            var invitees = (await meetingRepository.GetParticipantIdsAsync(meetingId))
+                .Where(id => id != dto.CreatedById)
+                .Distinct()
+                .ToList();
 
-                if (invitees.Count > 0)
+            if (invitees.Count > 0)
+            {
+                await notificationService.CreateNotificationsAsync(invitees.Select(id => new NotificationCreateDto
                 {
-                    await notificationService.CreateNotificationsAsync(invitees.Select(id => new NotificationCreateDto
-                    {
-                        UserId = id,
-                        Message = $"{creatorName} ви покани на среща на {startLocal}{locationSuffix}.",
-                        Type = NotificationType.Invitation
-                    }));
-                }
+                    UserId = id,
+                    Message = $"{creatorName} ви покани на среща на {startLocal}{locationSuffix}.",
+                    Type = NotificationType.Invitation
+                }));
             }
 
             return meetingId;
@@ -101,11 +99,7 @@ namespace CalendarApp.Services.Meetings
                 return false;
             }
 
-            var updaterName = await GetUserFullNameAsync(dto.UpdatedById);
-            if (string.IsNullOrWhiteSpace(updaterName))
-            {
-                return true;
-            }
+            var updaterName = await userService.GetFullNameAsync(dto.UpdatedById);
 
             var startLocal = BulgarianTime.ConvertUtcToLocal(startUtc).ToString("g");
             var locationSuffix = LocationSuffix(dto.Location);
@@ -179,27 +173,6 @@ namespace CalendarApp.Services.Meetings
             {
                 throw new ArgumentException("Избраната категория не съществува.", nameof(categoryId));
             }
-        }
-
-        private async Task<string?> GetUserFullNameAsync(Guid userId)
-        {
-            var user = await userService.GetByIdAsync(userId);
-            return FormatFullName(user);
-        }
-
-        private static string? FormatFullName(UserRecord? user)
-        {
-            if (user == null)
-            {
-                return null;
-            }
-
-            var parts = new[] { user.FirstName, user.LastName }
-                .Where(part => !string.IsNullOrWhiteSpace(part))
-                .Select(part => part!.Trim());
-
-            var fullName = string.Join(" ", parts);
-            return string.IsNullOrWhiteSpace(fullName) ? null : fullName;
         }
 
         private static string LocationSuffix(string? location)
