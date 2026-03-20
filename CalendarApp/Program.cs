@@ -1,7 +1,7 @@
 using CalendarApp.Hubs;
 using CalendarApp.Infrastructure.Background;
 using CalendarApp.Infrastructure.Data;
-using CalendarApp.Infrastructure.Extensions;
+using CalendarApp.Infrastructure.Extentions;
 using CalendarApp.Infrastructure.Mapping;
 using CalendarApp.Services.Auth;
 using CalendarApp.Services.Categories;

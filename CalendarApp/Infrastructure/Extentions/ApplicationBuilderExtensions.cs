@@ -3,9 +3,9 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
 
-namespace CalendarApp.Infrastructure.Extensions
+namespace CalendarApp.Infrastructure.Extentions
 {
-    public static class ApplicationBuilderExtensions
+    public static class ApplicationBuilderExtentions
     {
         private static readonly Regex BatchSeparatorRegex = new(@"^\s*GO\s*(?:--.*)?$", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled);
 
