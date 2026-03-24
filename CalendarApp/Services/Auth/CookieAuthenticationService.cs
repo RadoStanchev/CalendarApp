@@ -84,7 +84,7 @@ public class CookieAuthenticationService : IAuthenticationService
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.UserName ?? user.Email ?? user.Id.ToString()),
+            new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim() switch { { Length: > 0 } fullName => fullName, _ => user.Email ?? user.Id.ToString() }),
             new(ClaimTypes.Email, user.Email ?? string.Empty)
         };
 

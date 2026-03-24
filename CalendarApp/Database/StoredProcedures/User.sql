@@ -1,6 +1,5 @@
 CREATE OR ALTER PROCEDURE dbo.usp_User_Create
     @Id UNIQUEIDENTIFIER,
-    @UserName NVARCHAR(256),
     @Email NVARCHAR(256),
     @EmailConfirmed BIT,
     @PasswordHash NVARCHAR(MAX),
@@ -11,8 +10,8 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_Create
     @Note NVARCHAR(MAX)
 AS
 BEGIN
-    INSERT INTO dbo.Contacts (Id, UserName, Email, EmailConfirmed, PasswordHash, FirstName, LastName, BirthDate, Address, Note)
-    VALUES (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @FirstName, @LastName, @BirthDate, @Address, @Note);
+    INSERT INTO dbo.Users (Id, Email, EmailConfirmed, PasswordHash, FirstName, LastName, BirthDate, Address, Note)
+    VALUES (@Id, @Email, @EmailConfirmed, @PasswordHash, @FirstName, @LastName, @BirthDate, @Address, @Note);
 END
 GO
 
@@ -20,7 +19,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_Delete
     @Id UNIQUEIDENTIFIER
 AS
 BEGIN
-    DELETE FROM dbo.Contacts WHERE Id = @Id;
+    DELETE FROM dbo.Users WHERE Id = @Id;
 END
 GO
 
@@ -28,7 +27,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_GetAll
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT * FROM dbo.Contacts ORDER BY FirstName, LastName;
+    SELECT * FROM dbo.Users ORDER BY FirstName, LastName;
 END
 GO
 
@@ -37,7 +36,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_GetByEmail
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT TOP 1 * FROM dbo.Contacts WHERE Email = @Email;
+    SELECT TOP 1 * FROM dbo.Users WHERE Email = @Email;
 END
 GO
 
@@ -46,7 +45,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_GetById
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT TOP 1 * FROM dbo.Contacts WHERE Id = @Id;
+    SELECT TOP 1 * FROM dbo.Users WHERE Id = @Id;
 END
 GO
 
@@ -56,7 +55,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @Pattern NVARCHAR(260) = '%' + @Term + '%';
-    SELECT * FROM dbo.Contacts
+    SELECT * FROM dbo.Users
     WHERE LOWER(FirstName) LIKE @Pattern OR LOWER(LastName) LIKE @Pattern OR LOWER(Email) LIKE @Pattern
     ORDER BY FirstName;
 END
@@ -71,7 +70,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_UpdateProfile
     @Note NVARCHAR(MAX)
 AS
 BEGIN
-    UPDATE dbo.Contacts
+    UPDATE dbo.Users
     SET FirstName = @FirstName,
         LastName = @LastName,
         BirthDate = @BirthDate,
@@ -87,7 +86,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SELECT TOP 1 CONCAT(FirstName, ' ', LastName) AS FullName
-    FROM dbo.Contacts
+    FROM dbo.Users
     WHERE Id = @Id;
 END
 GO
