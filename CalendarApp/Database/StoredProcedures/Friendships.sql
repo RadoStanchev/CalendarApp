@@ -17,8 +17,8 @@ BEGIN
            lastMessage.Content AS LastMessageContent,
            lastMessage.SentAt AS LastMessageSentAt
     FROM dbo.Friendships f
-    JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
-    JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
+    JOIN dbo.Users requester ON requester.Id = f.RequesterId
+    JOIN dbo.Users receiver ON receiver.Id = f.ReceiverId
     OUTER APPLY (
         SELECT TOP (1) m.Content, m.SentAt
         FROM dbo.Messages m
@@ -49,8 +49,8 @@ BEGIN
            CASE WHEN f.RequesterId = @UserId THEN receiver.Email ELSE requester.Email END AS FriendEmail,
            f.CreatedAt
     FROM dbo.Friendships f
-    JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
-    JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
+    JOIN dbo.Users requester ON requester.Id = f.RequesterId
+    JOIN dbo.Users receiver ON receiver.Id = f.ReceiverId
     WHERE f.Id = @FriendshipId
       AND f.StatusId = @AcceptedStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId);
@@ -73,8 +73,8 @@ BEGIN
            CASE WHEN f.RequesterId = @UserId THEN receiver.LastName ELSE requester.LastName END AS LastName,
            CASE WHEN f.RequesterId = @UserId THEN receiver.Email ELSE requester.Email END AS Email
     FROM dbo.Friendships f
-    JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
-    JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
+    JOIN dbo.Users requester ON requester.Id = f.RequesterId
+    JOIN dbo.Users receiver ON receiver.Id = f.ReceiverId
     WHERE f.StatusId = @AcceptedStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId)
     ORDER BY FirstName, LastName;
@@ -101,8 +101,8 @@ BEGIN
            f.CreatedAt,
            CASE WHEN f.ReceiverId = @UserId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsIncoming
     FROM dbo.Friendships f
-    JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
-    JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
+    JOIN dbo.Users requester ON requester.Id = f.RequesterId
+    JOIN dbo.Users receiver ON receiver.Id = f.ReceiverId
     WHERE f.StatusId = @PendingStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId)
     ORDER BY f.CreatedAt DESC;
@@ -137,7 +137,7 @@ BEGIN
         c.LastName,
         c.Email,
         COUNT(DISTINCT fof.FriendId) AS MutualFriendCount
-    FROM dbo.Contacts c
+    FROM dbo.Users c
     LEFT JOIN (
         SELECT CASE WHEN f2.RequesterId = mf.FriendId THEN f2.ReceiverId ELSE f2.RequesterId END AS FriendId
         FROM dbo.Friendships f2
@@ -189,7 +189,7 @@ BEGIN
            END AS RelationshipStatus,
            f.Id AS FriendshipId,
            CASE WHEN f.StatusId = @PendingStatusId AND f.ReceiverId = @UserId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsIncomingRequest
-    FROM dbo.Contacts c
+    FROM dbo.Users c
     OUTER APPLY (
         SELECT TOP (1) Id, RequesterId, ReceiverId, StatusId
         FROM dbo.Friendships

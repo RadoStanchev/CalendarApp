@@ -26,7 +26,7 @@ BEGIN
            lastMessage.Content AS LastMessageContent,
            lastMessage.SentAt AS LastMessageSentAt
     FROM dbo.Meetings m
-    JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
+    JOIN dbo.Users creator ON creator.Id = m.CreatedById
     OUTER APPLY (
         SELECT TOP (1) Content, SentAt
         FROM dbo.Messages msg
@@ -55,7 +55,7 @@ BEGIN
            creator.LastName AS CreatorLastName,
            (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @AcceptedParticipantStatus) AS ParticipantCount
     FROM dbo.Meetings m
-    JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
+    JOIN dbo.Users creator ON creator.Id = m.CreatedById
     WHERE m.Id = @MeetingId
       AND (
           m.CreatedById = @UserId
@@ -101,7 +101,7 @@ BEGIN
            mp.Status,
            CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
     FROM dbo.MeetingParticipants mp
-    JOIN dbo.Contacts c ON c.Id = mp.ContactId
+    JOIN dbo.Users c ON c.Id = mp.ContactId
     JOIN dbo.Meetings m ON m.Id = mp.MeetingId
     WHERE mp.MeetingId = @MeetingId
     ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName);
@@ -128,7 +128,7 @@ BEGIN
            CASE WHEN m.CreatedById = @RequesterId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsParticipant,
            (SELECT TOP 1 Status FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) AS ViewerStatus
     FROM dbo.Meetings m
-    JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
+    JOIN dbo.Users creator ON creator.Id = m.CreatedById
     LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
     WHERE m.Id = @MeetingId
       AND (m.CreatedById = @RequesterId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId));
@@ -146,7 +146,7 @@ BEGIN
            mp.Status,
            CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
     FROM dbo.MeetingParticipants mp
-    JOIN dbo.Contacts c ON c.Id = mp.ContactId
+    JOIN dbo.Users c ON c.Id = mp.ContactId
     JOIN dbo.Meetings m ON m.Id = mp.MeetingId
     WHERE mp.MeetingId = @MeetingId
     ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName);
@@ -231,7 +231,7 @@ BEGIN
     SELECT c.Id,
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email
-    FROM dbo.Contacts c
+    FROM dbo.Users c
     WHERE c.Id <> @RequesterId
       AND (@ExcludedIds IS NULL OR NOT EXISTS (
             SELECT 1 FROM STRING_SPLIT(@ExcludedIds, ',') excluded
@@ -250,7 +250,7 @@ BEGIN
     SELECT c.Id,
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email
-    FROM dbo.Contacts c
+    FROM dbo.Users c
     WHERE EXISTS (
         SELECT 1 FROM STRING_SPLIT(@Ids, ',') valueset
         WHERE TRY_CONVERT(uniqueidentifier, valueset.value) = c.Id
@@ -279,7 +279,7 @@ BEGIN
            CASE WHEN m.CreatedById = @UserId THEN @AcceptedStatus ELSE (SELECT TOP 1 mp.Status FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId) END AS ViewerStatus,
            (SELECT COUNT(*) FROM dbo.MeetingParticipants mp2 WHERE mp2.MeetingId = m.Id) AS ParticipantCount
     FROM dbo.Meetings m
-    JOIN dbo.Contacts creator ON creator.Id = m.CreatedById
+    JOIN dbo.Users creator ON creator.Id = m.CreatedById
     LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
     WHERE (m.CreatedById = @UserId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId))
       AND (@SearchTerm IS NULL OR LOWER(ISNULL(m.Description, '')) LIKE @Pattern OR LOWER(ISNULL(m.Location, '')) LIKE @Pattern)

@@ -40,7 +40,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_Message_GetSender
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT TOP 1 Id, FirstName, LastName FROM dbo.Contacts WHERE Id = @UserId;
+    SELECT TOP 1 Id, FirstName, LastName FROM dbo.Users WHERE Id = @UserId;
 END
 GO
 
@@ -82,7 +82,7 @@ BEGIN
         m.Content,
         m.SentAt
     FROM dbo.Messages m
-    INNER JOIN dbo.Contacts c ON c.Id = m.SenderId
+    INNER JOIN dbo.Users c ON c.Id = m.SenderId
     WHERE m.FriendshipId = @FriendshipId
     ORDER BY m.SentAt DESC;
 END
@@ -103,7 +103,7 @@ BEGIN
         m.Content,
         m.SentAt
     FROM dbo.Messages m
-    INNER JOIN dbo.Contacts c ON c.Id = m.SenderId
+    INNER JOIN dbo.Users c ON c.Id = m.SenderId
     WHERE m.MeetingId = @MeetingId
     ORDER BY m.SentAt DESC;
 END

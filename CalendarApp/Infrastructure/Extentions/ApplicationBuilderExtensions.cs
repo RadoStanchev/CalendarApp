@@ -69,7 +69,7 @@ namespace CalendarApp.Infrastructure.Extentions
         {
             using var connection = connectionFactory.CreateConnection();
             return connection.ExecuteScalar<int>("SELECT COUNT(*) FROM dbo.Categories") == 0
-                || connection.ExecuteScalar<int>("SELECT COUNT(*) FROM dbo.Contacts") == 0
+                || connection.ExecuteScalar<int>("SELECT COUNT(*) FROM dbo.Users") == 0
                 || connection.ExecuteScalar<int>("SELECT COUNT(*) FROM dbo.Meetings") == 0
                 || connection.ExecuteScalar<int>("SELECT COUNT(*) FROM dbo.MeetingParticipants") == 0;
         }

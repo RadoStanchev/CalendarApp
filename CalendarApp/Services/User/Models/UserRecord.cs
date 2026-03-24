@@ -3,7 +3,6 @@ namespace CalendarApp.Services.User.Models;
 public class UserRecord
 {
     public Guid Id { get; set; }
-    public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; }
     public string PasswordHash { get; set; } = string.Empty;

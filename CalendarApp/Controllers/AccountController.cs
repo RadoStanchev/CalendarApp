@@ -34,8 +34,6 @@ namespace CalendarApp.Controllers
                 return View(model);
 
             var user = mapper.Map<UserRecord>(model);
-            user.UserName = model.Email;
-
             var result = await authenticationService.RegisterAsync(user, model.Password, false);
 
             if (result.Succeeded)
