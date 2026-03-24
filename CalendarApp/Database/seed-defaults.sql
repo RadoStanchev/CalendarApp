@@ -4,7 +4,7 @@ SET XACT_ABORT ON;
 BEGIN TRANSACTION;
 
 
-IF NOT EXISTS (SELECT 1 FROM dbo.FriendshipStatuses)
+IF NOT EXISTS (SELECT * FROM dbo.FriendshipStatuses)
 BEGIN
     INSERT INTO dbo.FriendshipStatuses (Id, Name)
     VALUES

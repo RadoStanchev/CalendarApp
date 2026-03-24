@@ -1,4 +1,5 @@
 using CalendarApp.Repositories.Friendships;
+using CalendarApp.Repositories.User;
 using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
@@ -10,16 +11,16 @@ namespace CalendarApp.Services.Friendships
     public class FriendshipService : IFriendshipService
     {
         private readonly IFriendshipRepository friendshipRepository;
-        private readonly IUserService userService;
+        private readonly IUserRepository userRepository;
         private readonly INotificationService notificationService;
 
         public FriendshipService(
             IFriendshipRepository friendshipRepository,
-            IUserService userService,
+            IUserRepository userRepository,
             INotificationService notificationService)
         {
             this.friendshipRepository = friendshipRepository;
-            this.userService = userService;
+            this.userRepository = userRepository;
             this.notificationService = notificationService;
         }
 
@@ -49,7 +50,7 @@ namespace CalendarApp.Services.Friendships
                 return result;
             }
 
-            var requesterName = await GetUserFullNameAsync(requesterId);
+            var requesterName = await userRepository.GetFullNameAsync(requesterId);
             if (!string.IsNullOrWhiteSpace(requesterName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -71,7 +72,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var receiverName = await GetUserFullNameAsync(receiverId);
+            var receiverName = await userRepository.GetFullNameAsync(receiverId);
             if (!string.IsNullOrWhiteSpace(receiverName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -93,7 +94,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var receiverName = await GetUserFullNameAsync(receiverId);
+            var receiverName = await userRepository.GetFullNameAsync(receiverId);
             if (!string.IsNullOrWhiteSpace(receiverName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -115,7 +116,7 @@ namespace CalendarApp.Services.Friendships
                 return false;
             }
 
-            var requesterName = await GetUserFullNameAsync(requesterId);
+            var requesterName = await userRepository.GetFullNameAsync(requesterId);
             if (!string.IsNullOrWhiteSpace(requesterName))
             {
                 await notificationService.CreateNotificationAsync(new NotificationCreateDto
@@ -131,25 +132,5 @@ namespace CalendarApp.Services.Friendships
 
         public Task<bool> RemoveFriendAsync(Guid friendshipId, Guid cancelerId)
             => friendshipRepository.RemoveFriendAsync(friendshipId, cancelerId);
-        private async Task<string?> GetUserFullNameAsync(Guid userId)
-        {
-            var user = await userService.GetByIdAsync(userId);
-            return FormatFullName(user);
-        }
-
-        private static string? FormatFullName(UserRecord? user)
-        {
-            if (user == null)
-            {
-                return null;
-            }
-
-            var parts = new[] { user.FirstName, user.LastName }
-                .Where(part => !string.IsNullOrWhiteSpace(part))
-                .Select(part => part!.Trim());
-
-            var fullName = string.Join(" ", parts);
-            return string.IsNullOrWhiteSpace(fullName) ? null : fullName;
-        }
     }
 }

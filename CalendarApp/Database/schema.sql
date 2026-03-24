@@ -34,14 +34,6 @@ CREATE TABLE dbo.FriendshipStatuses (
 );
 GO
 
-INSERT INTO dbo.FriendshipStatuses (Id, Name)
-VALUES
-    (1, N'Pending'),
-    (2, N'Accepted'),
-    (3, N'Declined'),
-    (4, N'Blocked');
-GO
-
 CREATE TABLE dbo.Friendships (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT DF_Friendships_Id DEFAULT NEWID(),
     RequesterId UNIQUEIDENTIFIER NOT NULL,
