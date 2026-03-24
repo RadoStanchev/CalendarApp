@@ -29,7 +29,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Category_Create
     @Color NVARCHAR(20)
 AS
 BEGIN
-    SET NOCOUNT ON;
     INSERT INTO dbo.Categories (Id, Name, Color)
     VALUES (@Id, @Name, @Color);
 END
@@ -41,7 +40,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Category_Update
     @Color NVARCHAR(20)
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Categories
     SET Name = @Name, Color = @Color
     WHERE Id = @Id;
@@ -60,7 +58,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Category_Delete
     @categoryId UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     DELETE FROM dbo.Categories WHERE Id = @categoryId;
 END
 GO

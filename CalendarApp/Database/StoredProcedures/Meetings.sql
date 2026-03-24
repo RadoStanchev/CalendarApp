@@ -73,7 +73,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Meeting_Create
     @CreatedById UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     INSERT INTO dbo.Meetings (Id, StartTime, Location, Description, CategoryId, CreatedById)
     VALUES (@MeetingId, @StartTime, @Location, @Description, @CategoryId, @CreatedById);
 END
@@ -171,7 +170,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Meeting_Update
     @CategoryId UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Meetings
     SET StartTime = @StartTime,
         Location = @Location,
@@ -187,7 +185,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_Upsert
     @Status INT
 AS
 BEGIN
-    SET NOCOUNT ON;
     IF EXISTS (SELECT 1 FROM dbo.MeetingParticipants WHERE MeetingId = @MeetingId AND ContactId = @ContactId)
     BEGIN
         UPDATE dbo.MeetingParticipants
@@ -218,7 +215,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_Delete
     @ContactId UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     DELETE FROM dbo.MeetingParticipants
     WHERE MeetingId = @MeetingId AND ContactId = @ContactId;
 END
@@ -309,7 +305,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_UpdateStatus
     @Status INT
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.MeetingParticipants
     SET Status = @Status
     WHERE MeetingId = @MeetingId AND ContactId = @ContactId;

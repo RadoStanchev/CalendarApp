@@ -38,7 +38,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_MessageSeen_Insert
     @SeenAt DATETIME2
 AS
 BEGIN
-    SET NOCOUNT ON;
     INSERT INTO dbo.MessageSeens (MessageId, ContactId, SeenAt)
     VALUES (@MessageId, @ContactId, @SeenAt);
 END
