@@ -191,8 +191,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Friendship_SendRequest
     @BlockedStatus INT
 AS
 BEGIN
-    SET NOCOUNT ON;
-
     DECLARE @ExistingId UNIQUEIDENTIFIER;
     DECLARE @ExistingStatus INT;
 
@@ -236,7 +234,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Friendship_AcceptRequest
     @PendingStatus INT
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Friendships
     SET Status = @AcceptedStatus,
         CreatedAt = SYSUTCDATETIME()
@@ -263,7 +260,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Friendship_DeclineRequest
     @PendingStatus INT
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Friendships
     SET Status = @DeclinedStatus,
         CreatedAt = SYSUTCDATETIME()
@@ -289,7 +285,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Friendship_CancelRequest
     @PendingStatus INT
 AS
 BEGIN
-    SET NOCOUNT ON;
     DECLARE @ReceiverId UNIQUEIDENTIFIER;
 
     SELECT @ReceiverId = ReceiverId
@@ -315,7 +310,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Friendship_Remove
     @AcceptedStatus INT
 AS
 BEGIN
-    SET NOCOUNT ON;
     DELETE FROM dbo.Friendships
     WHERE Id = @FriendshipId
       AND Status = @AcceptedStatus

@@ -11,7 +11,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_Create
     @Note NVARCHAR(MAX)
 AS
 BEGIN
-    SET NOCOUNT ON;
     INSERT INTO dbo.Contacts (Id, UserName, Email, EmailConfirmed, PasswordHash, FirstName, LastName, BirthDate, Address, Note)
     VALUES (@Id, @UserName, @Email, @EmailConfirmed, @PasswordHash, @FirstName, @LastName, @BirthDate, @Address, @Note);
 END
@@ -21,7 +20,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_Delete
     @Id UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     DELETE FROM dbo.Contacts WHERE Id = @Id;
 END
 GO
@@ -73,7 +71,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_User_UpdateProfile
     @Note NVARCHAR(MAX)
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Contacts
     SET FirstName = @FirstName,
         LastName = @LastName,

@@ -42,7 +42,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Notification_MarkAsRead
     @NotificationId UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Notifications
     SET IsRead = 1
     WHERE UserId = @UserId AND Id = @NotificationId AND IsRead = 0;
@@ -61,7 +60,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Notification_MarkAllAsRead
     @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
-    SET NOCOUNT ON;
     UPDATE dbo.Notifications SET IsRead = 1 WHERE UserId = @UserId AND IsRead = 0;
     SELECT @@ROWCOUNT;
 END
@@ -76,7 +74,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Notification_Create
     @CreatedAt DATETIME2
 AS
 BEGIN
-    SET NOCOUNT ON;
     INSERT INTO dbo.Notifications (Id, UserId, Message, Type, IsRead, CreatedAt)
     VALUES (@Id, @UserId, @Message, @Type, @IsRead, @CreatedAt);
 END

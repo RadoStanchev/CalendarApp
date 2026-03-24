@@ -62,7 +62,6 @@ CREATE OR ALTER PROCEDURE dbo.usp_Message_Insert
     @SentAt DATETIME2
 AS
 BEGIN
-    SET NOCOUNT ON;
     INSERT INTO dbo.Messages (Id, FriendshipId, MeetingId, SenderId, Content, SentAt)
     VALUES (@Id, @FriendshipId, @MeetingId, @SenderId, @Content, @SentAt);
 END
