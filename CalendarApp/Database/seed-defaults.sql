@@ -3,6 +3,17 @@ SET XACT_ABORT ON;
 
 BEGIN TRANSACTION;
 
+
+IF NOT EXISTS (SELECT 1 FROM dbo.FriendshipStatuses)
+BEGIN
+    INSERT INTO dbo.FriendshipStatuses (Id, Name)
+    VALUES
+        (1, N'Pending'),
+        (2, N'Accepted'),
+        (3, N'Declined'),
+        (4, N'Blocked');
+END;
+
 IF NOT EXISTS (SELECT * FROM dbo.Categories)
 BEGIN
     INSERT INTO dbo.Categories (Id, Name, Color)

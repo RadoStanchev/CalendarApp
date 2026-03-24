@@ -1,9 +1,13 @@
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_GetChatThreads
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+
     SELECT f.Id AS FriendshipId,
            CASE WHEN f.RequesterId = @UserId THEN f.ReceiverId ELSE f.RequesterId END AS FriendId,
            CASE WHEN f.RequesterId = @UserId THEN receiver.FirstName ELSE requester.FirstName END AS FriendFirstName,
@@ -21,7 +25,7 @@ BEGIN
         WHERE m.FriendshipId = f.Id
         ORDER BY m.SentAt DESC
     ) lastMessage
-    WHERE f.Status = @AcceptedStatus
+    WHERE f.StatusId = @AcceptedStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId)
     ORDER BY ISNULL(lastMessage.SentAt, f.CreatedAt) DESC;
 END
@@ -29,11 +33,15 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_GetChatThread
     @FriendshipId UNIQUEIDENTIFIER,
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+
     SELECT f.Id AS FriendshipId,
            CASE WHEN f.RequesterId = @UserId THEN f.ReceiverId ELSE f.RequesterId END AS FriendId,
            CASE WHEN f.RequesterId = @UserId THEN receiver.FirstName ELSE requester.FirstName END AS FriendFirstName,
@@ -44,17 +52,21 @@ BEGIN
     JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
     JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
     WHERE f.Id = @FriendshipId
-      AND f.Status = @AcceptedStatus
+      AND f.StatusId = @AcceptedStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId);
 END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_GetFriends
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+
     SELECT f.Id AS FriendshipId,
            CASE WHEN f.RequesterId = @UserId THEN f.ReceiverId ELSE f.RequesterId END AS UserId,
            CASE WHEN f.RequesterId = @UserId THEN receiver.FirstName ELSE requester.FirstName END AS FirstName,
@@ -63,18 +75,22 @@ BEGIN
     FROM dbo.Friendships f
     JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
     JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
-    WHERE f.Status = @AcceptedStatus
+    WHERE f.StatusId = @AcceptedStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId)
     ORDER BY FirstName, LastName;
 END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_GetPendingRequests
-    @UserId UNIQUEIDENTIFIER,
-    @PendingStatus INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
+
     SELECT f.Id AS FriendshipId,
            f.RequesterId,
            f.ReceiverId,
@@ -87,7 +103,7 @@ BEGIN
     FROM dbo.Friendships f
     JOIN dbo.Contacts requester ON requester.Id = f.RequesterId
     JOIN dbo.Contacts receiver ON receiver.Id = f.ReceiverId
-    WHERE f.Status = @PendingStatus
+    WHERE f.StatusId = @PendingStatusId
       AND (f.RequesterId = @UserId OR f.ReceiverId = @UserId)
     ORDER BY f.CreatedAt DESC;
 END
@@ -95,17 +111,25 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_GetSuggestions
     @UserId UNIQUEIDENTIFIER,
-    @MaxSuggestions INT,
-    @PendingStatus INT,
-    @AcceptedStatus INT,
-    @BlockedStatus INT
+    @MaxSuggestions INT
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+    DECLARE @BlockedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Blocked'
+    );
+
     WITH MyAcceptedFriends AS (
         SELECT CASE WHEN RequesterId = @UserId THEN ReceiverId ELSE RequesterId END AS FriendId
         FROM dbo.Friendships
-        WHERE Status = @AcceptedStatus AND (RequesterId = @UserId OR ReceiverId = @UserId)
+        WHERE StatusId = @AcceptedStatusId AND (RequesterId = @UserId OR ReceiverId = @UserId)
     )
     SELECT TOP (@MaxSuggestions)
         c.Id AS UserId,
@@ -118,14 +142,14 @@ BEGIN
         SELECT CASE WHEN f2.RequesterId = mf.FriendId THEN f2.ReceiverId ELSE f2.RequesterId END AS FriendId
         FROM dbo.Friendships f2
         JOIN MyAcceptedFriends mf ON (f2.RequesterId = mf.FriendId OR f2.ReceiverId = mf.FriendId)
-        WHERE f2.Status = @AcceptedStatus
+        WHERE f2.StatusId = @AcceptedStatusId
     ) fof ON fof.FriendId = c.Id
     WHERE c.Id <> @UserId
       AND NOT EXISTS (
           SELECT 1 FROM dbo.Friendships f
           WHERE ((f.RequesterId = @UserId AND f.ReceiverId = c.Id)
              OR (f.RequesterId = c.Id AND f.ReceiverId = @UserId))
-            AND f.Status IN (@PendingStatus, @AcceptedStatus, @BlockedStatus)
+            AND f.StatusId IN (@PendingStatusId, @AcceptedStatusId, @BlockedStatusId)
       )
     GROUP BY c.Id, c.FirstName, c.LastName, c.Email
     ORDER BY MutualFriendCount DESC, c.FirstName, c.LastName;
@@ -135,18 +159,21 @@ GO
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_Search
     @UserId UNIQUEIDENTIFIER,
     @SearchTerm NVARCHAR(256),
-    @ExcludedIds NVARCHAR(MAX) = NULL,
-    @PendingStatus INT,
-    @AcceptedStatus INT,
-    @BlockedStatus INT,
-    @NoneStatus INT,
-    @FriendStatus INT,
-    @IncomingStatus INT,
-    @OutgoingStatus INT,
-    @BlockedState INT
+    @ExcludedIds NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+    DECLARE @BlockedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Blocked'
+    );
+
     DECLARE @Normalized NVARCHAR(260) = '%' + @SearchTerm + '%';
 
     SELECT c.Id AS UserId,
@@ -154,17 +181,17 @@ BEGIN
            c.LastName,
            c.Email,
            CASE
-             WHEN f.Status = @AcceptedStatus THEN @FriendStatus
-             WHEN f.Status = @PendingStatus AND f.ReceiverId = @UserId THEN @IncomingStatus
-             WHEN f.Status = @PendingStatus AND f.RequesterId = @UserId THEN @OutgoingStatus
-             WHEN f.Status = @BlockedStatus THEN @BlockedState
-             ELSE @NoneStatus
+               WHEN f.StatusId = @AcceptedStatusId THEN N'Friend'
+               WHEN f.StatusId = @PendingStatusId AND f.ReceiverId = @UserId THEN N'IncomingRequest'
+               WHEN f.StatusId = @PendingStatusId AND f.RequesterId = @UserId THEN N'OutgoingRequest'
+               WHEN f.StatusId = @BlockedStatusId THEN N'Blocked'
+               ELSE N'None'
            END AS RelationshipStatus,
            f.Id AS FriendshipId,
-           CASE WHEN f.Status = @PendingStatus AND f.ReceiverId = @UserId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsIncomingRequest
+           CASE WHEN f.StatusId = @PendingStatusId AND f.ReceiverId = @UserId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsIncomingRequest
     FROM dbo.Contacts c
     OUTER APPLY (
-        SELECT TOP (1) Id, RequesterId, ReceiverId, Status
+        SELECT TOP (1) Id, RequesterId, ReceiverId, StatusId
         FROM dbo.Friendships
         WHERE (RequesterId = @UserId AND ReceiverId = c.Id)
            OR (RequesterId = c.Id AND ReceiverId = @UserId)
@@ -185,22 +212,29 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_SendRequest
     @RequesterId UNIQUEIDENTIFIER,
-    @ReceiverId UNIQUEIDENTIFIER,
-    @PendingStatus INT,
-    @AcceptedStatus INT,
-    @BlockedStatus INT
+    @ReceiverId UNIQUEIDENTIFIER
 AS
 BEGIN
-    DECLARE @ExistingId UNIQUEIDENTIFIER;
-    DECLARE @ExistingStatus INT;
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+    DECLARE @BlockedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Blocked'
+    );
 
-    SELECT TOP (1) @ExistingId = Id, @ExistingStatus = Status
+    DECLARE @ExistingId UNIQUEIDENTIFIER;
+    DECLARE @ExistingStatusId INT;
+
+    SELECT TOP (1) @ExistingId = Id, @ExistingStatusId = StatusId
     FROM dbo.Friendships
     WHERE (RequesterId = @RequesterId AND ReceiverId = @ReceiverId)
        OR (RequesterId = @ReceiverId AND ReceiverId = @RequesterId)
     ORDER BY CreatedAt DESC;
 
-    IF @ExistingId IS NOT NULL AND @ExistingStatus IN (@AcceptedStatus, @PendingStatus, @BlockedStatus)
+    IF @ExistingId IS NOT NULL AND @ExistingStatusId IN (@AcceptedStatusId, @PendingStatusId, @BlockedStatusId)
     BEGIN
         SELECT CAST(0 AS bit) AS Success, @ExistingId AS FriendshipId;
         RETURN;
@@ -211,7 +245,7 @@ BEGIN
         UPDATE dbo.Friendships
         SET RequesterId = @RequesterId,
             ReceiverId = @ReceiverId,
-            Status = @PendingStatus,
+            StatusId = @PendingStatusId,
             CreatedAt = SYSUTCDATETIME()
         WHERE Id = @ExistingId;
 
@@ -220,8 +254,8 @@ BEGIN
     END
 
     DECLARE @Id UNIQUEIDENTIFIER = NEWID();
-    INSERT INTO dbo.Friendships (Id, RequesterId, ReceiverId, Status, CreatedAt)
-    VALUES (@Id, @RequesterId, @ReceiverId, @PendingStatus, SYSUTCDATETIME());
+    INSERT INTO dbo.Friendships (Id, RequesterId, ReceiverId, StatusId, CreatedAt)
+    VALUES (@Id, @RequesterId, @ReceiverId, @PendingStatusId, SYSUTCDATETIME());
 
     SELECT CAST(1 AS bit) AS Success, @Id AS FriendshipId;
 END
@@ -229,16 +263,21 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_AcceptRequest
     @FriendshipId UNIQUEIDENTIFIER,
-    @ReceiverId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT,
-    @PendingStatus INT
+    @ReceiverId UNIQUEIDENTIFIER
 AS
 BEGIN
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
+
     UPDATE dbo.Friendships
-    SET Status = @AcceptedStatus,
+    SET StatusId = @AcceptedStatusId,
         CreatedAt = SYSUTCDATETIME()
     WHERE Id = @FriendshipId
-      AND Status = @PendingStatus
+      AND StatusId = @PendingStatusId
       AND ReceiverId = @ReceiverId;
 
     IF @@ROWCOUNT = 0
@@ -255,16 +294,21 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_DeclineRequest
     @FriendshipId UNIQUEIDENTIFIER,
-    @ReceiverId UNIQUEIDENTIFIER,
-    @DeclinedStatus INT,
-    @PendingStatus INT
+    @ReceiverId UNIQUEIDENTIFIER
 AS
 BEGIN
+    DECLARE @DeclinedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Declined'
+    );
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
+
     UPDATE dbo.Friendships
-    SET Status = @DeclinedStatus,
+    SET StatusId = @DeclinedStatusId,
         CreatedAt = SYSUTCDATETIME()
     WHERE Id = @FriendshipId
-      AND Status = @PendingStatus
+      AND StatusId = @PendingStatusId
       AND ReceiverId = @ReceiverId;
 
     IF @@ROWCOUNT = 0
@@ -281,16 +325,18 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_CancelRequest
     @FriendshipId UNIQUEIDENTIFIER,
-    @RequesterId UNIQUEIDENTIFIER,
-    @PendingStatus INT
+    @RequesterId UNIQUEIDENTIFIER
 AS
 BEGIN
+    DECLARE @PendingStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Pending'
+    );
     DECLARE @ReceiverId UNIQUEIDENTIFIER;
 
     SELECT @ReceiverId = ReceiverId
     FROM dbo.Friendships
     WHERE Id = @FriendshipId
-      AND Status = @PendingStatus
+      AND StatusId = @PendingStatusId
       AND RequesterId = @RequesterId;
 
     IF @ReceiverId IS NULL
@@ -306,14 +352,16 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Friendship_Remove
     @FriendshipId UNIQUEIDENTIFIER,
-    @CancelerId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT
+    @CancelerId UNIQUEIDENTIFIER
 AS
 BEGIN
+    DECLARE @AcceptedStatusId INT = (
+        SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted'
+    );
+
     DELETE FROM dbo.Friendships
     WHERE Id = @FriendshipId
-      AND Status = @AcceptedStatus
+      AND StatusId = @AcceptedStatusId
       AND (RequesterId = @CancelerId OR ReceiverId = @CancelerId);
 END
 GO
-

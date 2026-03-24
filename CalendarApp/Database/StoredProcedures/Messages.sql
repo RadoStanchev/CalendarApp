@@ -8,7 +8,7 @@ BEGIN
     SELECT CAST(CASE WHEN EXISTS (
         SELECT 1 FROM dbo.Friendships
         WHERE Id = @FriendshipId
-          AND Status = @AcceptedStatus
+          AND StatusId = @AcceptedStatus
           AND (RequesterId = @UserId OR ReceiverId = @UserId)
     ) THEN 1 ELSE 0 END AS bit);
 END

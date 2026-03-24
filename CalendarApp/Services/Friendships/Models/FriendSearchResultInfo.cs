@@ -12,7 +12,7 @@ namespace CalendarApp.Services.Friendships.Models
 
         public string Email { get; set; } = string.Empty;
 
-        public FriendRelationshipStatus RelationshipStatus { get; set; }
+        public string RelationshipStatus { get; set; } = "None";
 
         public Guid? FriendshipId { get; set; }
 

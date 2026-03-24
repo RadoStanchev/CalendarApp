@@ -119,7 +119,7 @@ namespace CalendarApp.Controllers
                 id = result.UserId,
                 displayName = $"{result.FirstName} {result.LastName}",
                 email = result.Email,
-                status = result.RelationshipStatus.ToString(),
+                status = result.RelationshipStatus,
                 friendshipId = result.FriendshipId,
                 isIncomingRequest = result.IsIncomingRequest
             });

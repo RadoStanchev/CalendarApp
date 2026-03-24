@@ -1,6 +1,5 @@
 using System.Data;
 using CalendarApp.Infrastructure.Data;
-using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Services.Meetings.Models;
 using CalendarApp.Services.Messages.Models;
 using Dapper;
@@ -9,6 +8,8 @@ namespace CalendarApp.Repositories.Messages;
 
 public class DapperMessageRepository : IMessageRepository
 {
+    private const int AcceptedFriendshipStatusId = 2;
+
     private readonly IDbConnectionFactory connectionFactory;
 
     public DapperMessageRepository(IDbConnectionFactory connectionFactory)
@@ -19,7 +20,7 @@ public class DapperMessageRepository : IMessageRepository
     public async Task<bool> HasFriendshipAccessAsync(Guid userId, Guid friendshipId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasFriendshipAccess", new { UserId = userId, FriendshipId = friendshipId, AcceptedStatus = (int)FriendshipStatus.Accepted }, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasFriendshipAccess", new { UserId = userId, FriendshipId = friendshipId, AcceptedStatus = AcceptedFriendshipStatusId }, commandType: CommandType.StoredProcedure);
     }
 
     public async Task<bool> HasMeetingAccessAsync(Guid userId, Guid meetingId)
