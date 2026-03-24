@@ -19,7 +19,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         var rows = await connection.QueryAsync<FriendshipThreadDto>(
             "dbo.usp_Friendship_GetChatThreads",
-            new { UserId = userId, AcceptedStatus = (int)FriendshipStatus.Accepted },
+            new { UserId = userId },
             commandType: CommandType.StoredProcedure);
 
         return rows.ToList();
@@ -30,7 +30,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<FriendshipThreadDto>(
             "dbo.usp_Friendship_GetChatThread",
-            new { FriendshipId = friendshipId, UserId = userId, AcceptedStatus = (int)FriendshipStatus.Accepted },
+            new { FriendshipId = friendshipId, UserId = userId },
             commandType: CommandType.StoredProcedure);
     }
 
@@ -39,7 +39,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         var rows = await connection.QueryAsync<FriendInfo>(
             "dbo.usp_Friendship_GetFriends",
-            new { UserId = userId, AcceptedStatus = (int)FriendshipStatus.Accepted },
+            new { UserId = userId },
             commandType: CommandType.StoredProcedure);
 
         return rows.ToList();
@@ -50,7 +50,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         var rows = await connection.QueryAsync<FriendRequestInfo>(
             "dbo.usp_Friendship_GetPendingRequests",
-            new { UserId = userId, PendingStatus = (int)FriendshipStatus.Pending },
+            new { UserId = userId },
             commandType: CommandType.StoredProcedure);
 
         return rows.ToList();
@@ -64,10 +64,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
             new
             {
                 UserId = userId,
-                MaxSuggestions = maxSuggestions,
-                PendingStatus = (int)FriendshipStatus.Pending,
-                AcceptedStatus = (int)FriendshipStatus.Accepted,
-                BlockedStatus = (int)FriendshipStatus.Blocked
+                MaxSuggestions = maxSuggestions
             },
             commandType: CommandType.StoredProcedure);
 
@@ -86,15 +83,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
             {
                 UserId = userId,
                 SearchTerm = term.Trim().ToLowerInvariant(),
-                ExcludedIds = excludedCsv,
-                PendingStatus = (int)FriendshipStatus.Pending,
-                AcceptedStatus = (int)FriendshipStatus.Accepted,
-                BlockedStatus = (int)FriendshipStatus.Blocked,
-                NoneStatus = FriendRelationshipStatus.None,
-                FriendStatus = FriendRelationshipStatus.Friend,
-                IncomingStatus = FriendRelationshipStatus.IncomingRequest,
-                OutgoingStatus = FriendRelationshipStatus.OutgoingRequest,
-                BlockedState = FriendRelationshipStatus.Blocked
+                ExcludedIds = excludedCsv
             },
             commandType: CommandType.StoredProcedure);
 
@@ -111,7 +100,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         using var multi = await connection.QueryMultipleAsync(
             "dbo.usp_Friendship_SendRequest",
-            new { RequesterId = requesterId, ReceiverId = receiverId, PendingStatus = (int)FriendshipStatus.Pending, AcceptedStatus = (int)FriendshipStatus.Accepted, BlockedStatus = (int)FriendshipStatus.Blocked },
+            new { RequesterId = requesterId, ReceiverId = receiverId },
             commandType: CommandType.StoredProcedure);
 
         var result = await multi.ReadSingleAsync<(bool Success, Guid? FriendshipId)>();
@@ -123,7 +112,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         using var multi = await connection.QueryMultipleAsync(
             "dbo.usp_Friendship_AcceptRequest",
-            new { FriendshipId = friendshipId, ReceiverId = receiverId, AcceptedStatus = (int)FriendshipStatus.Accepted, PendingStatus = (int)FriendshipStatus.Pending },
+            new { FriendshipId = friendshipId, ReceiverId = receiverId },
             commandType: CommandType.StoredProcedure);
 
         var result = await multi.ReadSingleAsync<(bool Success, Guid? RequesterId)>();
@@ -135,7 +124,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         using var multi = await connection.QueryMultipleAsync(
             "dbo.usp_Friendship_DeclineRequest",
-            new { FriendshipId = friendshipId, ReceiverId = receiverId, DeclinedStatus = (int)FriendshipStatus.Declined, PendingStatus = (int)FriendshipStatus.Pending },
+            new { FriendshipId = friendshipId, ReceiverId = receiverId },
             commandType: CommandType.StoredProcedure);
 
         var result = await multi.ReadSingleAsync<(bool Success, Guid? RequesterId)>();
@@ -147,7 +136,7 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         using var multi = await connection.QueryMultipleAsync(
             "dbo.usp_Friendship_CancelRequest",
-            new { FriendshipId = friendshipId, RequesterId = requesterId, PendingStatus = (int)FriendshipStatus.Pending },
+            new { FriendshipId = friendshipId, RequesterId = requesterId },
             commandType: CommandType.StoredProcedure);
 
         var result = await multi.ReadSingleAsync<(bool Success, Guid? ReceiverId)>();
@@ -159,10 +148,9 @@ public class DapperFriendshipRepository : IFriendshipRepository
         using var connection = connectionFactory.CreateConnection();
         var affected = await connection.ExecuteAsync(
             "dbo.usp_Friendship_Remove",
-            new { FriendshipId = friendshipId, CancelerId = cancelerId, AcceptedStatus = (int)FriendshipStatus.Accepted },
+            new { FriendshipId = friendshipId, CancelerId = cancelerId },
             commandType: CommandType.StoredProcedure);
 
         return affected > 0;
     }
-
 }

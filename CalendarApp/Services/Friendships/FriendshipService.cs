@@ -131,7 +131,6 @@ namespace CalendarApp.Services.Friendships
 
         public Task<bool> RemoveFriendAsync(Guid friendshipId, Guid cancelerId)
             => friendshipRepository.RemoveFriendAsync(friendshipId, cancelerId);
-
         private async Task<string?> GetUserFullNameAsync(Guid userId)
         {
             var user = await userService.GetByIdAsync(userId);

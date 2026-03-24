@@ -27,15 +27,31 @@ CREATE TABLE dbo.Categories (
 );
 GO
 
+CREATE TABLE dbo.FriendshipStatuses (
+    Id INT NOT NULL,
+    Name NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_FriendshipStatuses PRIMARY KEY CLUSTERED (Id ASC)
+);
+GO
+
+INSERT INTO dbo.FriendshipStatuses (Id, Name)
+VALUES
+    (1, N'Pending'),
+    (2, N'Accepted'),
+    (3, N'Declined'),
+    (4, N'Blocked');
+GO
+
 CREATE TABLE dbo.Friendships (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT DF_Friendships_Id DEFAULT NEWID(),
     RequesterId UNIQUEIDENTIFIER NOT NULL,
     ReceiverId UNIQUEIDENTIFIER NOT NULL,
-    Status INT NOT NULL CONSTRAINT DF_Friendships_Status DEFAULT ((0)),
+    StatusId INT NOT NULL CONSTRAINT DF_Friendships_StatusId DEFAULT ((1)),
     CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_Friendships_CreatedAt DEFAULT SYSUTCDATETIME(),
     CONSTRAINT PK_Friendships PRIMARY KEY CLUSTERED (Id ASC),
     CONSTRAINT FK_Friendships_Contacts_RequesterId FOREIGN KEY (RequesterId) REFERENCES dbo.Contacts(Id) ON DELETE NO ACTION,
-    CONSTRAINT FK_Friendships_Contacts_ReceiverId FOREIGN KEY (ReceiverId) REFERENCES dbo.Contacts(Id) ON DELETE NO ACTION
+    CONSTRAINT FK_Friendships_Contacts_ReceiverId FOREIGN KEY (ReceiverId) REFERENCES dbo.Contacts(Id) ON DELETE NO ACTION,
+    CONSTRAINT FK_Friendships_FriendshipStatuses_StatusId FOREIGN KEY (StatusId) REFERENCES dbo.FriendshipStatuses(Id)
 );
 GO
 
@@ -105,6 +121,7 @@ CREATE UNIQUE INDEX IX_Contacts_UserName ON dbo.Contacts (UserName);
 
 CREATE INDEX IX_Friendships_RequesterId ON dbo.Friendships (RequesterId);
 CREATE INDEX IX_Friendships_ReceiverId ON dbo.Friendships (ReceiverId);
+CREATE INDEX IX_Friendships_StatusId ON dbo.Friendships (StatusId);
 
 CREATE INDEX IX_Meetings_CategoryId ON dbo.Meetings (CategoryId);
 CREATE INDEX IX_Meetings_CreatedById ON dbo.Meetings (CreatedById);
