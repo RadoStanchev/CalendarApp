@@ -1,5 +1,3 @@
-using CalendarApp.Services.Meetings.Models;
-
 namespace CalendarApp.Models.Meetings
 {
     public class MeetingParticipantDisplayViewModel
@@ -10,7 +8,7 @@ namespace CalendarApp.Models.Meetings
 
         public string Email { get; set; } = string.Empty;
 
-        public ParticipantStatus Status { get; set; }
+        public string Status { get; set; }
 
         public bool IsCreator { get; set; }
     }

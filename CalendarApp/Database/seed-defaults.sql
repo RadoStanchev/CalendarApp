@@ -14,6 +14,15 @@ BEGIN
         (4, N'Blocked');
 END;
 
+IF NOT EXISTS (SELECT * FROM dbo.ParticipantStatuses)
+BEGIN
+    INSERT INTO dbo.ParticipantStatuses (Id, Name)
+    VALUES
+        (0, N'Pending'),
+        (1, N'Accepted'),
+        (2, N'Declined');
+END;
+
 IF NOT EXISTS (SELECT * FROM dbo.Categories)
 BEGIN
     INSERT INTO dbo.Categories (Id, Name, Color)
@@ -115,7 +124,7 @@ BEGIN
         SELECT Id, ROW_NUMBER() OVER (ORDER BY Email) AS ContactNo
         FROM dbo.Users
     )
-    INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, Status)
+    INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, StatusId)
     SELECT
         NEWID(),
         m.Id,

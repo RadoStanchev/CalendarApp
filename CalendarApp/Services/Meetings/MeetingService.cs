@@ -158,7 +158,7 @@ namespace CalendarApp.Services.Meetings
             return result;
         }
 
-        public Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status)
+        public Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, int status)
             => meetingRepository.UpdateParticipantStatusAsync(meetingId, participantId, status);
 
         private async Task EnsureValidCategoryIdAsync(Guid categoryId)

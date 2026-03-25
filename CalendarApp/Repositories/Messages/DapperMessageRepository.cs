@@ -8,8 +8,6 @@ namespace CalendarApp.Repositories.Messages;
 
 public class DapperMessageRepository : IMessageRepository
 {
-    private const int AcceptedFriendshipStatusId = 2;
-
     private readonly IDbConnectionFactory connectionFactory;
 
     public DapperMessageRepository(IDbConnectionFactory connectionFactory)
@@ -20,13 +18,13 @@ public class DapperMessageRepository : IMessageRepository
     public async Task<bool> HasFriendshipAccessAsync(Guid userId, Guid friendshipId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasFriendshipAccess", new { UserId = userId, FriendshipId = friendshipId, AcceptedStatus = AcceptedFriendshipStatusId }, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasFriendshipAccess", new { UserId = userId, FriendshipId = friendshipId}, commandType: CommandType.StoredProcedure);
     }
 
     public async Task<bool> HasMeetingAccessAsync(Guid userId, Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasMeetingAccess", new { UserId = userId, MeetingId = meetingId, AcceptedStatus = (int)ParticipantStatus.Accepted }, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasMeetingAccess", new { UserId = userId, MeetingId = meetingId}, commandType: CommandType.StoredProcedure);
     }
 
     public async Task<(Guid Id, string? FirstName, string? LastName)?> GetSenderAsync(Guid userId)

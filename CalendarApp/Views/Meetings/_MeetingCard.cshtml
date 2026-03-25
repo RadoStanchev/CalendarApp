@@ -1,25 +1,24 @@
 @model MeetingListItemViewModel
-@using CalendarApp.Services.Meetings.Models
 @{
     string FormatStatusBadge(MeetingListItemViewModel meeting)
     {
-        if (!meeting.ViewerStatus.HasValue)
+        if (string.IsNullOrEmpty(meeting.ViewerStatus))
         {
             return string.Empty;
         }
 
-        return meeting.ViewerStatus.Value switch
+        return meeting.ViewerStatus switch
         {
-            ParticipantStatus.Accepted => "bg-success",
-            ParticipantStatus.Declined => "bg-danger",
+            "Accepted" => "bg-success",
+            "Declined" => "bg-danger",
             _ => "bg-warning text-dark"
         };
     }
 
-    string FormatStatusLabel(ParticipantStatus status) => status switch
+    string FormatStatusLabel(string status) => status switch
     {
-        ParticipantStatus.Accepted => "Прието",
-        ParticipantStatus.Declined => "Отказано",
+        "Accepted" => "Прието",
+        "Declined" => "Отказано",
         _ => "Чака отговор"
     };
 
@@ -33,7 +32,12 @@
         return $"background-color: {color}; border-color: {color}; color: #fff;";
     }
 
-    var statusOptions = Enum.GetValues<ParticipantStatus>();
+    var statusOptions = new Dictionary<int, string>
+    {
+        { 0, "Чака отговор" },
+        { 1, "Прието" },
+        { 2, "Отказано" }
+    };
 }
 
 <div class="card border-0 shadow-sm">
@@ -46,9 +50,9 @@
                     {
                         <span class="badge rounded-pill badge-category" style="@BuildCategoryBadgeStyle(Model.CategoryColor)">@Model.CategoryName</span>
                     }
-                    @if (Model.ViewerStatus.HasValue)
+                    @if (!string.IsNullOrEmpty(Model.ViewerStatus))
                     {
-                        <span class="badge @FormatStatusBadge(Model)">@FormatStatusLabel(Model.ViewerStatus.Value)</span>
+                        <span class="badge @FormatStatusBadge(Model)">@FormatStatusLabel(Model.ViewerStatus)</span>
                     }
                 </div>
                 <p class="text-muted mb-1">Организатор: @Model.CreatedByName</p>
@@ -62,7 +66,7 @@
                 {
                     <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Редактирай срещата</a>
                 }
-                else if (Model.ViewerStatus.HasValue)
+                else if (!string.IsNullOrEmpty(Model.ViewerStatus))
                 {
                     <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex flex-column gap-2">
                         @Html.AntiForgeryToken()
@@ -72,7 +76,7 @@
                             <select class="form-select form-select-sm" id="status-@Model.Id" name="status">
                                 @foreach (var status in statusOptions)
                                 {
-                                    <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? true : false)">@FormatStatusLabel(status)</option>
+                                    <option value="@status.Key" selected="@(Model.ViewerStatus == status.Value ? true : false)">@status.Value</option>
                                 }
                             </select>
                             <button type="submit" class="btn btn-sm btn-outline-primary">Запази</button>

@@ -21,7 +21,7 @@ namespace CalendarApp.Services.Meetings
 
         Task<(IReadOnlyCollection<MeetingSummaryDto> UpcomingMeetings, IReadOnlyCollection<MeetingSummaryDto> PastMeetings)> GetMeetingsForUserAsync(Guid userId, string? searchTerm = null);
 
-        Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status);
+        Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, int status);
 
         Task<IReadOnlyCollection<MeetingThreadDto>> GetChatThreadsAsync(Guid userId);
 

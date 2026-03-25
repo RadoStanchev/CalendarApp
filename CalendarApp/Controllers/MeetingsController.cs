@@ -191,7 +191,7 @@ namespace CalendarApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(Guid id, ParticipantStatus status, string? returnUrl)
+        public async Task<IActionResult> UpdateStatus(Guid id, int status, string? returnUrl)
         {
             var userId = authenticationService.GetCurrentUserId(User);
             var updated = await meetingService.UpdateParticipantStatusAsync(id, userId, status);

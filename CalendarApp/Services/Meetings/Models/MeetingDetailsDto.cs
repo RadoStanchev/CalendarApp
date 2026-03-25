@@ -27,7 +27,7 @@ namespace CalendarApp.Services.Meetings.Models
 
         public bool ViewerIsParticipant { get; set; }
 
-        public ParticipantStatus? ViewerStatus { get; set; }
+        public string? ViewerStatus { get; set; }
 
         public IReadOnlyCollection<MeetingParticipantDto> Participants { get; set; } = Array.Empty<MeetingParticipantDto>();
     }

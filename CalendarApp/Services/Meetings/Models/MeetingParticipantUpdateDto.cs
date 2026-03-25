@@ -5,6 +5,6 @@ namespace CalendarApp.Services.Meetings.Models
     {
         public Guid ContactId { get; set; }
 
-        public ParticipantStatus Status { get; set; } = ParticipantStatus.Pending;
+        public int StatusId { get; set; } = 0;
     }
 }
