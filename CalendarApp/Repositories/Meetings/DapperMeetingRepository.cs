@@ -96,36 +96,44 @@ public class DapperMeetingRepository : IMeetingRepository
     public async Task<MeetingEditDto?> GetMeetingForEditAsync(Guid meetingId, Guid requesterId)
     {
         using var connection = connectionFactory.CreateConnection();
-        using var multi = await connection.QueryMultipleAsync(
+        var meeting = await connection.QuerySingleOrDefaultAsync<MeetingEditDto>(
             "dbo.usp_Meeting_GetForEdit",
             new { MeetingId = meetingId, RequesterId = requesterId },
             commandType: CommandType.StoredProcedure);
 
-        var meeting = await multi.ReadSingleOrDefaultAsync<MeetingEditDto>();
         if (meeting == null)
         {
             return null;
         }
 
-        meeting.Participants = (await multi.ReadAsync<MeetingParticipantDto>()).ToList();
+        var participants = await connection.QueryAsync<MeetingParticipantDto>(
+            "dbo.usp_Meeting_GetParticipants",
+            new { MeetingId = meetingId },
+            commandType: CommandType.StoredProcedure);
+
+        meeting.Participants = participants.ToList();
         return meeting;
     }
 
     public async Task<MeetingDetailsDto?> GetMeetingDetailsAsync(Guid meetingId, Guid requesterId)
     {
         using var connection = connectionFactory.CreateConnection();
-        using var multi = await connection.QueryMultipleAsync(
+        var details = await connection.QuerySingleOrDefaultAsync<MeetingDetailsDto>(
             "dbo.usp_Meeting_GetDetails",
             new { MeetingId = meetingId, RequesterId = requesterId },
             commandType: CommandType.StoredProcedure);
 
-        var details = await multi.ReadSingleOrDefaultAsync<MeetingDetailsDto>();
         if (details == null)
         {
             return null;
         }
 
-        details.Participants = (await multi.ReadAsync<MeetingParticipantDto>()).ToList();
+        var participants = await connection.QueryAsync<MeetingParticipantDto>(
+            "dbo.usp_Meeting_GetParticipants",
+            new { MeetingId = meetingId },
+            commandType: CommandType.StoredProcedure);
+
+        details.Participants = participants.ToList();
         return details;
     }
 
@@ -223,16 +231,10 @@ public class DapperMeetingRepository : IMeetingRepository
 
     public async Task<IReadOnlyCollection<ContactSuggestionViewModel>> GetContactsAsync(IEnumerable<Guid> ids)
     {
-        var values = ids?.Distinct().ToArray() ?? Array.Empty<Guid>();
-        if (values.Length == 0)
-        {
-            return Array.Empty<ContactSuggestionViewModel>();
-        }
-
         using var connection = connectionFactory.CreateConnection();
         var rows = await connection.QueryAsync<ContactSuggestionViewModel>(
             "dbo.usp_Meeting_GetContacts",
-            new { Ids = string.Join(',', values) },
+            new { Ids = string.Join(',', ids == null ? Array.Empty<Guid>() : ids.Distinct().ToArray()) },
             commandType: CommandType.StoredProcedure);
 
         return rows.ToList();

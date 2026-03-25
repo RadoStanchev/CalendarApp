@@ -3,8 +3,6 @@ using CalendarApp.Repositories.User;
 using CalendarApp.Services.Friendships.Models;
 using CalendarApp.Services.Notifications;
 using CalendarApp.Services.Notifications.Models;
-using CalendarApp.Services.User;
-using CalendarApp.Services.User.Models;
 
 namespace CalendarApp.Services.Friendships
 {

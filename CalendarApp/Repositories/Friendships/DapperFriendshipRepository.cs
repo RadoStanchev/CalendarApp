@@ -98,49 +98,37 @@ public class DapperFriendshipRepository : IFriendshipRepository
         }
 
         using var connection = connectionFactory.CreateConnection();
-        using var multi = await connection.QueryMultipleAsync(
+        return await connection.QuerySingleAsync<(bool Success, Guid? FriendshipId)>(
             "dbo.usp_Friendship_SendRequest",
             new { RequesterId = requesterId, ReceiverId = receiverId },
             commandType: CommandType.StoredProcedure);
-
-        var result = await multi.ReadSingleAsync<(bool Success, Guid? FriendshipId)>();
-        return result;
     }
 
     public async Task<(bool Success, Guid? RequesterId)> AcceptFriendRequestAsync(Guid friendshipId, Guid receiverId)
     {
         using var connection = connectionFactory.CreateConnection();
-        using var multi = await connection.QueryMultipleAsync(
+        return await connection.QuerySingleAsync<(bool Success, Guid? RequesterId)>(
             "dbo.usp_Friendship_AcceptRequest",
             new { FriendshipId = friendshipId, ReceiverId = receiverId },
             commandType: CommandType.StoredProcedure);
-
-        var result = await multi.ReadSingleAsync<(bool Success, Guid? RequesterId)>();
-        return result;
     }
 
     public async Task<(bool Success, Guid? RequesterId)> DeclineFriendRequestAsync(Guid friendshipId, Guid receiverId)
     {
         using var connection = connectionFactory.CreateConnection();
-        using var multi = await connection.QueryMultipleAsync(
+        return await connection.QuerySingleAsync<(bool Success, Guid? RequesterId)>(
             "dbo.usp_Friendship_DeclineRequest",
             new { FriendshipId = friendshipId, ReceiverId = receiverId },
             commandType: CommandType.StoredProcedure);
-
-        var result = await multi.ReadSingleAsync<(bool Success, Guid? RequesterId)>();
-        return result;
     }
 
     public async Task<(bool Success, Guid? ReceiverId)> CancelFriendRequestAsync(Guid friendshipId, Guid requesterId)
     {
         using var connection = connectionFactory.CreateConnection();
-        using var multi = await connection.QueryMultipleAsync(
+        return await connection.QuerySingleAsync<(bool Success, Guid? ReceiverId)>(
             "dbo.usp_Friendship_CancelRequest",
             new { FriendshipId = friendshipId, RequesterId = requesterId },
             commandType: CommandType.StoredProcedure);
-
-        var result = await multi.ReadSingleAsync<(bool Success, Guid? ReceiverId)>();
-        return result;
     }
 
     public async Task<bool> RemoveFriendAsync(Guid friendshipId, Guid cancelerId)

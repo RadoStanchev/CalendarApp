@@ -1,12 +1,12 @@
 CREATE OR ALTER PROCEDURE dbo.usp_Message_HasFriendshipAccess
     @UserId UNIQUEIDENTIFIER,
-    @FriendshipId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT
+    @FriendshipId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedStatus INT = (SELECT Id FROM dbo.FriendshipStatuses WHERE Name = N'Accepted');
     SELECT CAST(CASE WHEN EXISTS (
-        SELECT 1 FROM dbo.Friendships
+        SELECT * FROM dbo.Friendships
         WHERE Id = @FriendshipId
           AND StatusId = @AcceptedStatus
           AND (RequesterId = @UserId OR ReceiverId = @UserId)
