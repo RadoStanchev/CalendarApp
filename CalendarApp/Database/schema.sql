@@ -31,6 +31,13 @@ CREATE TABLE dbo.FriendshipStatuses (
 );
 GO
 
+CREATE TABLE dbo.ParticipantStatuses (
+    Id INT NOT NULL,
+    Name NVARCHAR(50) NOT NULL,
+    CONSTRAINT PK_ParticipantStatuses PRIMARY KEY CLUSTERED (Id ASC)
+);
+GO
+
 CREATE TABLE dbo.Friendships (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT DF_Friendships_Id DEFAULT NEWID(),
     RequesterId UNIQUEIDENTIFIER NOT NULL,
@@ -62,10 +69,11 @@ CREATE TABLE dbo.MeetingParticipants (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT DF_MeetingParticipants_Id DEFAULT NEWID(),
     MeetingId UNIQUEIDENTIFIER NOT NULL,
     ContactId UNIQUEIDENTIFIER NOT NULL,
-    Status INT NOT NULL CONSTRAINT DF_MeetingParticipants_Status DEFAULT ((0)),
+    StatusId INT NOT NULL CONSTRAINT DF_MeetingParticipants_StatusId DEFAULT ((0)),
     CONSTRAINT PK_MeetingParticipants PRIMARY KEY CLUSTERED (Id ASC),
     CONSTRAINT FK_MeetingParticipants_Meetings_MeetingId FOREIGN KEY (MeetingId) REFERENCES dbo.Meetings(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_MeetingParticipants_Users_ContactId FOREIGN KEY (ContactId) REFERENCES dbo.Users(Id) ON DELETE CASCADE
+    CONSTRAINT FK_MeetingParticipants_Users_ContactId FOREIGN KEY (ContactId) REFERENCES dbo.Users(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_MeetingParticipants_ParticipantStatuses_StatusId FOREIGN KEY (StatusId) REFERENCES dbo.ParticipantStatuses(Id)
 );
 GO
 

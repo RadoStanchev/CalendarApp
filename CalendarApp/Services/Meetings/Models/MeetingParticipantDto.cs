@@ -9,7 +9,7 @@ namespace CalendarApp.Services.Meetings.Models
 
         public string Email { get; set; } = string.Empty;
 
-        public ParticipantStatus Status { get; set; }
+        public string Status { get; set; }
 
         public bool IsCreator { get; set; }
     }

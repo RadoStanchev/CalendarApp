@@ -24,7 +24,7 @@ public class DapperMessageRepository : IMessageRepository
     public async Task<bool> HasMeetingAccessAsync(Guid userId, Guid meetingId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasMeetingAccess", new { UserId = userId, MeetingId = meetingId, AcceptedStatus = (int)ParticipantStatus.Accepted }, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasMeetingAccess", new { UserId = userId, MeetingId = meetingId}, commandType: CommandType.StoredProcedure);
     }
 
     public async Task<(Guid Id, string? FirstName, string? LastName)?> GetSenderAsync(Guid userId)

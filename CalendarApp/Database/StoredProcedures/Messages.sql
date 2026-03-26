@@ -16,11 +16,12 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Message_HasMeetingAccess
     @UserId UNIQUEIDENTIFIER,
-    @MeetingId UNIQUEIDENTIFIER,
-    @AcceptedStatus INT
+    @MeetingId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedStatus INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
+
     SELECT CAST(CASE WHEN EXISTS (
         SELECT 1 FROM dbo.Meetings m
         WHERE m.Id = @MeetingId
@@ -28,7 +29,7 @@ BEGIN
               m.CreatedById = @UserId
               OR EXISTS (
                   SELECT 1 FROM dbo.MeetingParticipants mp
-                  WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId AND mp.Status = @AcceptedStatus
+                  WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId AND mp.StatusId = @AcceptedStatus
               )
           )
     ) THEN 1 ELSE 0 END AS bit);

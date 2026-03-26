@@ -10,11 +10,11 @@ END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetChatThreads
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedParticipantStatus INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedParticipantStatusId INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
     SELECT m.Id AS MeetingId,
            m.Description,
            m.StartTime,
@@ -22,7 +22,7 @@ BEGIN
            m.CreatedById,
            creator.FirstName AS CreatorFirstName,
            creator.LastName AS CreatorLastName,
-           (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @AcceptedParticipantStatus) AS ParticipantCount,
+           (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.StatusId = @AcceptedParticipantStatusId) AS ParticipantCount,
            lastMessage.Content AS LastMessageContent,
            lastMessage.SentAt AS LastMessageSentAt
     FROM dbo.Meetings m
@@ -34,18 +34,18 @@ BEGIN
         ORDER BY msg.SentAt DESC
     ) lastMessage
     WHERE m.CreatedById = @UserId
-       OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId AND mp.Status = @AcceptedParticipantStatus)
+       OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId AND mp.StatusId = @AcceptedParticipantStatusId)
     ORDER BY ISNULL(lastMessage.SentAt, m.StartTime) DESC;
 END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetChatThread
     @MeetingId UNIQUEIDENTIFIER,
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedParticipantStatus INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedParticipantStatusId INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
     SELECT m.Id AS MeetingId,
            m.Description,
            m.StartTime,
@@ -53,13 +53,13 @@ BEGIN
            m.CreatedById,
            creator.FirstName AS CreatorFirstName,
            creator.LastName AS CreatorLastName,
-           (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.Status = @AcceptedParticipantStatus) AS ParticipantCount
+           (SELECT COUNT(*) FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.StatusId = @AcceptedParticipantStatusId) AS ParticipantCount
     FROM dbo.Meetings m
     JOIN dbo.Users creator ON creator.Id = m.CreatedById
     WHERE m.Id = @MeetingId
       AND (
           m.CreatedById = @UserId
-          OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId AND mp.Status = @AcceptedParticipantStatus)
+          OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId AND mp.StatusId = @AcceptedParticipantStatusId)
       );
 END
 GO
@@ -108,7 +108,7 @@ BEGIN
            @RequesterId AS ViewerId,
            CASE WHEN m.CreatedById = @RequesterId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsCreator,
            CASE WHEN m.CreatedById = @RequesterId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsParticipant,
-           (SELECT TOP 1 Status FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) AS ViewerStatus
+           (SELECT TOP 1 ps.Name FROM dbo.MeetingParticipants vp JOIN dbo.ParticipantStatuses ps ON ps.Id = vp.StatusId WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) AS ViewerStatus
     FROM dbo.Meetings m
     JOIN dbo.Users creator ON creator.Id = m.CreatedById
     LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
@@ -125,11 +125,12 @@ BEGIN
     SELECT mp.ContactId,
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email,
-           mp.Status,
+           ps.Id AS StatusId,
            CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
     FROM dbo.MeetingParticipants mp
-    JOIN dbo.Users c ON c.Id = mp.ContactId -- Join with Users to get name/email
-    JOIN dbo.Meetings m ON m.Id = mp.MeetingId -- Join with Meetings to find the creator
+    JOIN dbo.Users c ON c.Id = mp.ContactId
+    JOIN dbo.Meetings m ON m.Id = mp.MeetingId
+    JOIN dbo.ParticipantStatuses ps ON ps.Id = mp.StatusId
     WHERE mp.MeetingId = @MeetingId
     ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName);
 END
@@ -164,19 +165,19 @@ GO
 CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_Upsert
     @MeetingId UNIQUEIDENTIFIER,
     @ContactId UNIQUEIDENTIFIER,
-    @Status INT
+    @StatusId INT
 AS
 BEGIN
     IF EXISTS (SELECT 1 FROM dbo.MeetingParticipants WHERE MeetingId = @MeetingId AND ContactId = @ContactId)
     BEGIN
         UPDATE dbo.MeetingParticipants
-        SET Status = @Status
+        SET StatusId = @StatusId
         WHERE MeetingId = @MeetingId AND ContactId = @ContactId;
     END
     ELSE
     BEGIN
-        INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, Status)
-        VALUES (NEWID(), @MeetingId, @ContactId, @Status);
+        INSERT INTO dbo.MeetingParticipants (Id, MeetingId, ContactId, StatusId)
+        VALUES (NEWID(), @MeetingId, @ContactId, @StatusId);
     END
 END
 GO
@@ -186,7 +187,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_GetByMeetingId
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT Id, MeetingId, ContactId, Status
+    SELECT Id, MeetingId, ContactId, StatusId
     FROM dbo.MeetingParticipants
     WHERE MeetingId = @MeetingId;
 END
@@ -243,11 +244,11 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetMeetingsForUser
     @UserId UNIQUEIDENTIFIER,
-    @SearchTerm NVARCHAR(256) = NULL,
-    @AcceptedStatus INT
+    @SearchTerm NVARCHAR(256) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedParticipantStatusId INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
     DECLARE @Pattern NVARCHAR(260) = '%' + @SearchTerm + '%';
     SELECT m.Id,
            m.StartTime,
@@ -259,7 +260,7 @@ BEGIN
            cat.Name AS CategoryName,
            cat.Color AS CategoryColor,
            CASE WHEN m.CreatedById = @UserId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsCreator,
-           CASE WHEN m.CreatedById = @UserId THEN @AcceptedStatus ELSE (SELECT TOP 1 mp.Status FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId) END AS ViewerStatus,
+           (SELECT TOP 1 ps.Name FROM dbo.MeetingParticipants mp JOIN dbo.ParticipantStatuses ps ON ps.Id = mp.StatusId WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId) AS ViewerStatus,
            (SELECT COUNT(*) FROM dbo.MeetingParticipants mp2 WHERE mp2.MeetingId = m.Id) AS ParticipantCount
     FROM dbo.Meetings m
     JOIN dbo.Users creator ON creator.Id = m.CreatedById
@@ -285,11 +286,11 @@ GO
 CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_UpdateStatus
     @MeetingId UNIQUEIDENTIFIER,
     @ContactId UNIQUEIDENTIFIER,
-    @Status INT
+    @StatusId INT
 AS
 BEGIN
     UPDATE dbo.MeetingParticipants
-    SET Status = @Status
+    SET StatusId = @StatusId
     WHERE MeetingId = @MeetingId AND ContactId = @ContactId;
 END
 GO

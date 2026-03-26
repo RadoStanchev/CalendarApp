@@ -1,5 +1,3 @@
-using CalendarApp.Services.Meetings.Models;
-
 namespace CalendarApp.Models.Meetings
 {
     public class MeetingDetailsViewModel
@@ -26,7 +24,7 @@ namespace CalendarApp.Models.Meetings
 
         public bool ViewerIsParticipant { get; set; }
 
-        public ParticipantStatus? ViewerStatus { get; set; }
+        public string? ViewerStatus { get; set; }
 
         public List<MeetingParticipantDisplayViewModel> Participants { get; set; } = new();
     }

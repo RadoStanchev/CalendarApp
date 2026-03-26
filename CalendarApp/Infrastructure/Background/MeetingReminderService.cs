@@ -74,7 +74,7 @@ WHERE ReminderSent = 0 AND StartTime >= @Now AND StartTime <= @WindowEnd",
 SELECT DISTINCT ContactId
 FROM dbo.MeetingParticipants
 WHERE MeetingId = @MeetingId AND Status <> @DeclinedStatus",
-                    new { MeetingId = meeting.Id, DeclinedStatus = (int)ParticipantStatus.Declined }, cancellationToken: cancellationToken))).ToList();
+                    new { MeetingId = meeting.Id, DeclinedStatus = 2 }, cancellationToken: cancellationToken))).ToList();
 
                 if (meeting.CreatedById != Guid.Empty && !recipientIds.Contains(meeting.CreatedById))
                 {

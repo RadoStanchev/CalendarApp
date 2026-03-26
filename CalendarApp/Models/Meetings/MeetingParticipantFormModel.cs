@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using CalendarApp.Services.Meetings.Models;
 
 namespace CalendarApp.Models.Meetings
 {
@@ -15,6 +14,6 @@ namespace CalendarApp.Models.Meetings
 
         [Required(ErrorMessage = "Моля, изберете статус.")]
         [Display(Name = "Статус")]
-        public ParticipantStatus Status { get; set; } = ParticipantStatus.Pending;
+        public int StatusId { get; set; } = 0;
     }
 }

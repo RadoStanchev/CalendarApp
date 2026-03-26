@@ -100,8 +100,6 @@ namespace CalendarApp.Services.Meetings
             }
 
             var updaterName = await userService.GetFullNameAsync(dto.UpdatedById);
-
-            var startLocal = BulgarianTime.ConvertUtcToLocal(startUtc).ToString("g");
             var locationSuffix = LocationSuffix(dto.Location);
 
             var currentParticipants = await meetingRepository.GetParticipantIdsAsync(dto.Id);
@@ -112,7 +110,7 @@ namespace CalendarApp.Services.Meetings
                 await notificationService.CreateNotificationsAsync(newlyAdded.Select(id => new NotificationCreateDto
                 {
                     UserId = id,
-                    Message = $"{updaterName} ви добави към среща на {startLocal}{locationSuffix}.",
+                    Message = $"{updaterName} ви добави към среща на {dto.StartTime.ToString("g")}{locationSuffix}.",
                     Type = NotificationType.Invitation
                 }));
             }
@@ -127,7 +125,7 @@ namespace CalendarApp.Services.Meetings
                 await notificationService.CreateNotificationsAsync(updateRecipients.Select(id => new NotificationCreateDto
                 {
                     UserId = id,
-                    Message = $"{updaterName} актуализира срещата на {startLocal}{locationSuffix}.",
+                    Message = $"{updaterName} актуализира срещата на {dto.StartTime.ToString("g")}{locationSuffix}.",
                     Type = NotificationType.Info
                 }));
             }
@@ -158,7 +156,7 @@ namespace CalendarApp.Services.Meetings
             return result;
         }
 
-        public Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, ParticipantStatus status)
+        public Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, int status)
             => meetingRepository.UpdateParticipantStatusAsync(meetingId, participantId, status);
 
         private async Task EnsureValidCategoryIdAsync(Guid categoryId)

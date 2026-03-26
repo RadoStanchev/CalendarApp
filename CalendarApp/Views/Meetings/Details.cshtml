@@ -4,17 +4,22 @@
     ViewData["Title"] = "Детайли за срещата";
     var message = TempData["MeetingMessage"] as string;
     var error = TempData["MeetingError"] as string;
-    var statusOptions = Enum.GetValues<ParticipantStatus>();
-    string FormatStatusClass(ParticipantStatus status) => status switch
+    var statusOptions = new Dictionary<int, string>
     {
-        ParticipantStatus.Accepted => "bg-success",
-        ParticipantStatus.Declined => "bg-danger",
+        { 0, "Чака отговор" },
+        { 1, "Прието" },
+        { 2, "Отказано" }
+    };
+    string FormatStatusClass(string status) => status switch
+    {
+        "Accepted" => "bg-success",
+        "Declined" => "bg-danger",
         _ => "bg-warning text-dark"
     };
-    string FormatStatusLabel(ParticipantStatus status) => status switch
+    string FormatStatusLabel(string status) => status switch
     {
-        ParticipantStatus.Accepted => "Прието",
-        ParticipantStatus.Declined => "Отказано",
+        "Accepted" => "Прието",
+        "Declined" => "Отказано",
         _ => "Чака отговор"
     };
 
@@ -28,7 +33,7 @@
         return $"background-color: {color}; border-color: {color}; color: #fff;";
     }
 
-    var chatEnabled = Model.ViewerIsCreator || (Model.ViewerIsParticipant && Model.ViewerStatus == ParticipantStatus.Accepted);
+    var chatEnabled = Model.ViewerIsCreator || (Model.ViewerIsParticipant && Model.ViewerStatus == "Accepted");
     var accentPalette = new[] { "accent-blue", "accent-purple", "accent-green", "accent-orange", "accent-teal" };
     string BuildAccent(Guid id) => accentPalette[Math.Abs(id.GetHashCode()) % accentPalette.Length];
     string BuildMeetingTitle(DateTime startTimeUtc, string? location)
@@ -62,7 +67,7 @@
             {
                 <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Редактирай срещата</a>
             }
-            else if (Model.ViewerIsParticipant && Model.ViewerStatus.HasValue)
+            else if (Model.ViewerIsParticipant && !string.IsNullOrEmpty(Model.ViewerStatus))
             {
                 <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex align-items-center gap-2">
                     @Html.AntiForgeryToken()
@@ -71,7 +76,7 @@
                     <select class="form-select form-select-sm" id="viewer-status" name="status">
                         @foreach (var status in statusOptions)
                         {
-                            <option value="@((int)status)" selected="@(Model.ViewerStatus == status ? true : false)">@FormatStatusLabel(status)</option>
+                            <option value="@status.Key" selected="@(Model.ViewerStatus == status.Value ? true : false)">@status.Value</option>
                         }
                     </select>
                     <button type="submit" class="btn btn-outline-primary btn-sm">Запази</button>
