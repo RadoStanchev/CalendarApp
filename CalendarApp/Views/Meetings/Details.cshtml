@@ -10,16 +10,16 @@
         { 1, "Прието" },
         { 2, "Отказано" }
     };
-    string FormatStatusClass(string status) => status switch
+    string FormatStatusClass(int statusId) => statusId switch
     {
-        "Accepted" => "bg-success",
-        "Declined" => "bg-danger",
+        1 => "bg-success",
+        2 => "bg-danger",
         _ => "bg-warning text-dark"
     };
-    string FormatStatusLabel(string status) => status switch
+    string FormatStatusLabel(int statusId) => statusId switch
     {
-        "Accepted" => "Прието",
-        "Declined" => "Отказано",
+        1 => "Прието",
+        2 => "Отказано",
         _ => "Чака отговор"
     };
 
@@ -159,7 +159,7 @@
                                         <div class="d-flex align-items-center gap-2">
                                             @if (Model.ViewerIsCreator)
                                             {
-                                                <span class="badge @FormatStatusClass(participant.Status)">@FormatStatusLabel(participant.Status)</span>
+                                                <span class="badge @FormatStatusClass(participant.StatusId)">@FormatStatusLabel(participant.StatusId)</span>
                                             }
                                             else if (!isViewer)
                                             {

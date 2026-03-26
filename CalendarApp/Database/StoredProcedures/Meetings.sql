@@ -125,12 +125,11 @@ BEGIN
     SELECT mp.ContactId,
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email,
-           ps.Id AS StatusId,
+           mp.StatusId AS StatusId,
            CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
     FROM dbo.MeetingParticipants mp
     JOIN dbo.Users c ON c.Id = mp.ContactId
     JOIN dbo.Meetings m ON m.Id = mp.MeetingId
-    JOIN dbo.ParticipantStatuses ps ON ps.Id = mp.StatusId
     WHERE mp.MeetingId = @MeetingId
     ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName);
 END

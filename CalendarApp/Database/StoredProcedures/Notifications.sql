@@ -19,7 +19,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_Notification_Get
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT TOP @Limit
+    SELECT TOP (@Limit)
         Id, UserId, Message, Type, IsRead, CreatedAt
     FROM dbo.Notifications
     WHERE UserId = @UserId
