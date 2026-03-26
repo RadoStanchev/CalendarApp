@@ -87,25 +87,6 @@ BEGIN
     SELECT Id, StartTime, Location, Description, CategoryId, CreatedById
     FROM dbo.Meetings
     WHERE Id = @MeetingId AND CreatedById = @RequesterId;
-
-    IF @@ROWCOUNT = 0
-    BEGIN
-        SELECT TOP 0 ContactId, CAST(NULL AS NVARCHAR(201)) AS DisplayName, CAST(NULL AS NVARCHAR(256)) AS Email, CAST(NULL AS NVARCHAR(50)) AS Status, CAST(NULL AS bit) AS IsCreator
-        FROM dbo.MeetingParticipants;
-        RETURN;
-    END
-
-    SELECT mp.ContactId,
-           CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
-           c.Email,
-           ps.Name AS Status,
-           CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
-    FROM dbo.MeetingParticipants mp
-    JOIN dbo.Users c ON c.Id = mp.ContactId
-    JOIN dbo.Meetings m ON m.Id = mp.MeetingId
-    JOIN dbo.ParticipantStatuses ps ON ps.Id = mp.StatusId
-    WHERE mp.MeetingId = @MeetingId
-    ORDER BY CASE WHEN mp.ContactId = m.CreatedById THEN 0 ELSE 1 END, CONCAT(c.FirstName, ' ', c.LastName);
 END
 GO
 
@@ -133,14 +114,14 @@ BEGIN
     LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
     WHERE m.Id = @MeetingId
       AND (m.CreatedById = @RequesterId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId));
+END
+GO
 
-    IF @@ROWCOUNT = 0
-    BEGIN
-        SELECT TOP 0 ContactId, CAST(NULL AS NVARCHAR(201)) AS DisplayName, CAST(NULL AS NVARCHAR(256)) AS Email, CAST(NULL AS NVARCHAR(50)) AS Status, CAST(NULL AS bit) AS IsCreator
-        FROM dbo.MeetingParticipants;
-        RETURN;
-    END
-
+CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetParticipants
+    @MeetingId UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
     SELECT mp.ContactId,
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email,
@@ -245,7 +226,7 @@ END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetContacts
-    @Ids NVARCHAR(MAX)
+    @ExcludedIds NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -253,10 +234,11 @@ BEGIN
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email
     FROM dbo.Users c
-    WHERE EXISTS (
-        SELECT 1 FROM STRING_SPLIT(@Ids, ',') valueset
-        WHERE TRY_CONVERT(uniqueidentifier, valueset.value) = c.Id
-    );
+    WHERE (@ExcludedIds IS NULL OR NOT EXISTS (
+            SELECT 1 FROM STRING_SPLIT(@ExcludedIds, ',') excluded
+            WHERE TRY_CONVERT(uniqueidentifier, excluded.value) = c.Id
+      ))
+    ORDER BY c.FirstName, c.LastName;
 END
 GO
 

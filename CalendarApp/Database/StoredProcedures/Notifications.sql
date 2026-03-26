@@ -15,11 +15,11 @@ GO
 CREATE OR ALTER PROCEDURE dbo.usp_Notification_Get
     @UserId UNIQUEIDENTIFIER,
     @Filter INT,
-    @Limit INT = NULL
+    @Limit INT = 10
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT TOP (CASE WHEN @Limit IS NULL THEN 2147483647 ELSE @Limit END)
+    SELECT TOP @Limit
         Id, UserId, Message, Type, IsRead, CreatedAt
     FROM dbo.Notifications
     WHERE UserId = @UserId

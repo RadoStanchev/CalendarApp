@@ -2,8 +2,6 @@ SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 GO
 
--- Domain schema only (no ASP.NET Identity role/claim/login tables and no EF migration metadata table).
-
 CREATE TABLE dbo.Users (
     Id UNIQUEIDENTIFIER NOT NULL CONSTRAINT DF_Users_Id DEFAULT NEWID(),
     Email NVARCHAR(256) NOT NULL,

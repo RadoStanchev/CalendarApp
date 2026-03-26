@@ -18,7 +18,7 @@ public class DapperMessageRepository : IMessageRepository
     public async Task<bool> HasFriendshipAccessAsync(Guid userId, Guid friendshipId)
     {
         using var connection = connectionFactory.CreateConnection();
-        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasFriendshipAccess", new { UserId = userId, FriendshipId = friendshipId}, commandType: CommandType.StoredProcedure);
+        return await connection.ExecuteScalarAsync<bool>("dbo.usp_Message_HasFriendshipAccess", new { UserId = userId, FriendshipId = friendshipId }, commandType: CommandType.StoredProcedure);
     }
 
     public async Task<bool> HasMeetingAccessAsync(Guid userId, Guid meetingId)
