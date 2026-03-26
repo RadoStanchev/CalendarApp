@@ -10,11 +10,11 @@ END
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetChatThreads
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedParticipantStatusId INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedParticipantStatusId INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
     SELECT m.Id AS MeetingId,
            m.Description,
            m.StartTime,
@@ -41,11 +41,11 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetChatThread
     @MeetingId UNIQUEIDENTIFIER,
-    @UserId UNIQUEIDENTIFIER,
-    @AcceptedParticipantStatusId INT
+    @UserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedParticipantStatusId INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
     SELECT m.Id AS MeetingId,
            m.Description,
            m.StartTime,
@@ -144,7 +144,7 @@ BEGIN
     SELECT mp.ContactId,
            CONCAT(c.FirstName, ' ', c.LastName) AS DisplayName,
            c.Email,
-           ps.Name AS Status,
+           ps.Id AS StatusId,
            CASE WHEN mp.ContactId = m.CreatedById THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS IsCreator
     FROM dbo.MeetingParticipants mp
     JOIN dbo.Users c ON c.Id = mp.ContactId
@@ -262,11 +262,11 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetMeetingsForUser
     @UserId UNIQUEIDENTIFIER,
-    @SearchTerm NVARCHAR(256) = NULL,
-    @AcceptedStatusId INT
+    @SearchTerm NVARCHAR(256) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @AcceptedParticipantStatusId INT = (SELECT TOP 1 Id FROM dbo.ParticipantStatuses WHERE Name = N'Accepted');
     DECLARE @Pattern NVARCHAR(260) = '%' + @SearchTerm + '%';
     SELECT m.Id,
            m.StartTime,

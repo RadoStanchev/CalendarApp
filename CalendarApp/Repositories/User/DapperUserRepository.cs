@@ -58,7 +58,7 @@ public class DapperUserRepository : IUserRepository
         return await connection.QueryAsync<UserRecord>("dbo.usp_User_Search", new { Term = term.Trim().ToLowerInvariant() }, commandType: CommandType.StoredProcedure);
     }
 
-    public async Task<bool> UpdateProfileAsync(UserRecord user)
+    public async Task<bool> UpdateProfileAsync(UpdateProfileDto user)
     {
         using var connection = connectionFactory.CreateConnection();
         var affected = await connection.ExecuteAsync("dbo.usp_User_UpdateProfile", user, commandType: CommandType.StoredProcedure);

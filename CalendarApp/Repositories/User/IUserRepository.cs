@@ -9,7 +9,7 @@ public interface IUserRepository
     Task<UserRecord?> GetByEmailAsync(string email);
     Task<IEnumerable<UserRecord>> SearchAsync(string term);
     Task<IEnumerable<UserRecord>> GetAllAsync();
-    Task<bool> UpdateProfileAsync(UserRecord user);
+    Task<bool> UpdateProfileAsync(UpdateProfileDto user);
     Task<bool> DeleteAsync(Guid id);
     Task<bool> CreateAsync(UserRecord user);
 }

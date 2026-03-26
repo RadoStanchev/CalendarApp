@@ -22,19 +22,7 @@ namespace CalendarApp.Services.User
 
         public Task<IEnumerable<UserRecord>> GetAllAsync() => userRepository.GetAllAsync();
 
-        public async Task<bool> UpdateProfileAsync(UpdateProfileDto dto)
-        {
-            var user = await userRepository.GetByIdAsync(dto.Id);
-            if (user == null) return false;
-
-            user.FirstName = dto.FirstName;
-            user.LastName = dto.LastName;
-            user.BirthDate = dto.BirthDate;
-            user.Address = dto.Address;
-            user.Note = dto.Note;
-
-            return await userRepository.UpdateProfileAsync(user);
-        }
+        public Task<bool> UpdateProfileAsync(UpdateProfileDto dto) => userRepository.UpdateProfileAsync(dto);
 
         public Task<bool> DeleteAsync(Guid id) => userRepository.DeleteAsync(id);
     }

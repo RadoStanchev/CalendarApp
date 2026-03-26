@@ -84,7 +84,15 @@ namespace CalendarApp.Infrastructure.Extentions
 
             foreach (var batch in batches)
             {
-                connection.Execute(batch);
+                try
+                {
+                    connection.Execute(batch);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error in SQL Batch: \n{batch}");
+                    throw;
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 CREATE OR ALTER PROCEDURE dbo.usp_Message_HasFriendshipAccess
     @UserId UNIQUEIDENTIFIER,
-    @FriendshipId UNIQUEIDENTIFIER,
+    @FriendshipId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -17,7 +17,7 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_Message_HasMeetingAccess
     @UserId UNIQUEIDENTIFIER,
-    @MeetingId UNIQUEIDENTIFIER,
+    @MeetingId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON;

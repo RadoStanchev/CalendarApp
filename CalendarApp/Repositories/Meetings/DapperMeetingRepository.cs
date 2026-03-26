@@ -29,7 +29,7 @@ public class DapperMeetingRepository : IMeetingRepository
         using var connection = connectionFactory.CreateConnection();
         var rows = await connection.QueryAsync<MeetingThreadDto>(
             "dbo.usp_Meeting_GetChatThreads",
-            new { UserId = userId, AcceptedParticipantStatus = 1 },
+            new { UserId = userId },
             commandType: CommandType.StoredProcedure);
 
         return rows.ToList();
@@ -40,7 +40,7 @@ public class DapperMeetingRepository : IMeetingRepository
         using var connection = connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<MeetingThreadDto>(
             "dbo.usp_Meeting_GetChatThread",
-            new { MeetingId = meetingId, UserId = userId, AcceptedParticipantStatus = 1 },
+            new { MeetingId = meetingId, UserId = userId },
             commandType: CommandType.StoredProcedure);
     }
 
@@ -80,11 +80,11 @@ public class DapperMeetingRepository : IMeetingRepository
             participants[participant.ContactId] = participant.StatusId;
         }
 
-        foreach (var (contactId, status) in participants)
+        foreach (var (contactId, statusId) in participants)
         {
             await connection.ExecuteAsync(
                 "dbo.usp_MeetingParticipant_Upsert",
-                new { MeetingId = meetingId, ContactId = contactId, Status = status },
+                new { MeetingId = meetingId, ContactId = contactId, StatusId = statusId },
                 tx,
                 commandType: CommandType.StoredProcedure);
         }
@@ -187,7 +187,7 @@ public class DapperMeetingRepository : IMeetingRepository
 
             await connection.ExecuteAsync(
                 "dbo.usp_MeetingParticipant_Upsert",
-                new { MeetingId = dto.Id, ContactId = existingParticipant.Key, Status = incomingStatus },
+                new { MeetingId = dto.Id, ContactId = existingParticipant.Key, StatusId = incomingStatus },
                 tx,
                 commandType: CommandType.StoredProcedure);
 
@@ -198,7 +198,7 @@ public class DapperMeetingRepository : IMeetingRepository
         {
             await connection.ExecuteAsync(
                 "dbo.usp_MeetingParticipant_Upsert",
-                new { MeetingId = dto.Id, ContactId = added.Key, Status = added.Value },
+                new { MeetingId = dto.Id, ContactId = added.Key, StatusId = added.Value },
                 tx,
                 commandType: CommandType.StoredProcedure);
         }
@@ -243,7 +243,7 @@ public class DapperMeetingRepository : IMeetingRepository
         using var connection = connectionFactory.CreateConnection();
         var rows = await connection.QueryAsync<MeetingSummaryDto>(
             "dbo.usp_Meeting_GetMeetingsForUser",
-            new { UserId = userId, SearchTerm = searchTerm, AcceptedStatus = 1 },
+            new { UserId = userId, SearchTerm = searchTerm},
             commandType: CommandType.StoredProcedure);
 
         var now = DateTime.UtcNow;
