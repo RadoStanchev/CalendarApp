@@ -4,25 +4,7 @@
     ViewData["Title"] = "Детайли за срещата";
     var message = TempData["MeetingMessage"] as string;
     var error = TempData["MeetingError"] as string;
-    var statusOptions = new Dictionary<int, string>
-    {
-        { 0, "Чака отговор" },
-        { 1, "Прието" },
-        { 2, "Отказано" }
-    };
-    string FormatStatusClass(int statusId) => statusId switch
-    {
-        1 => "bg-success",
-        2 => "bg-danger",
-        _ => "bg-warning text-dark"
-    };
-    string FormatStatusLabel(int statusId) => statusId switch
-    {
-        1 => "Прието",
-        2 => "Отказано",
-        _ => "Чака отговор"
-    };
-
+   
     string BuildCategoryBadgeStyle(string? color)
     {
         if (string.IsNullOrWhiteSpace(color))
@@ -74,7 +56,7 @@
                     <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Meetings", new { id = Model.Id })" />
                     <label class="form-label mb-0 me-1" for="viewer-status">Вашият статус</label>
                     <select class="form-select form-select-sm" id="viewer-status" name="status">
-                        @foreach (var status in statusOptions)
+                        @foreach (var status in ParticipantStatusHelper.Statuses)
                         {
                             <option value="@status.Key" selected="@(Model.ViewerStatus == status.Value ? true : false)">@status.Value</option>
                         }
@@ -159,7 +141,7 @@
                                         <div class="d-flex align-items-center gap-2">
                                             @if (Model.ViewerIsCreator)
                                             {
-                                                <span class="badge @FormatStatusClass(participant.StatusId)">@FormatStatusLabel(participant.StatusId)</span>
+                                                <span class="badge @ParticipantStatusHelper.GetCssClass(participant.StatusId)">@ParticipantStatusHelper.GetLabel(participant.StatusId)</span>
                                             }
                                             else if (!isViewer)
                                             {

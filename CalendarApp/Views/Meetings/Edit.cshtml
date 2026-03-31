@@ -2,12 +2,6 @@
 @{
     ViewData["Title"] = "Редакция на среща";
     var startValue = Model.StartTime?.ToString("yyyy-MM-ddTHH:mm");
-    var statuses = new Dictionary<int, string>
-    {
-        { 0, "Чака отговор" },
-        { 1, "Прието" },
-        { 2, "Отказано" }
-    };
 }
 
 <div class="meeting-form-page">
@@ -103,7 +97,7 @@
                                                 </div>
                                                 <div class="d-flex align-items-center gap-2">
                                                     <select class="form-select form-select-sm" data-status-select name="Participants[@i].StatusId">
-                                                        @foreach (var status in statuses)
+                                                        @foreach (var status in ParticipantStatusHelper.Statuses)
                                                         {
                                                             <option value="@status.Key" selected="@(participant.StatusId == status.Key)">@status.Value</option>
                                                         }

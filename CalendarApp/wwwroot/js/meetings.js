@@ -43,12 +43,12 @@
 
             const statusInput = item.querySelector('[data-status-input]');
             if (statusInput) {
-                statusInput.name = `Participants[${index}].Status`;
+                statusInput.name = `Participants[${index}].StatusId`;
             }
 
             const statusSelect = item.querySelector('[data-status-select]');
             if (statusSelect) {
-                statusSelect.name = `Participants[${index}].Status`;
+                statusSelect.name = `Participants[${index}].StatusId`;
             }
         });
     }
