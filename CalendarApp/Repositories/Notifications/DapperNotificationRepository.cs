@@ -24,7 +24,16 @@ public class DapperNotificationRepository : INotificationRepository
     public async Task<IReadOnlyList<NotificationDto>> GetAsync(Guid userId, NotificationQuery query)
     {
         using var connection = connectionFactory.CreateConnection();
-        var items = await connection.QueryAsync<NotificationDto>("dbo.usp_Notification_Get", new { UserId = userId, Filter = (int)query.Filter, Limit = query.Limit }, commandType: CommandType.StoredProcedure);
+        var items = await connection.QueryAsync<NotificationDto>(
+            "dbo.usp_Notification_Get", 
+            new 
+            { 
+                UserId = userId, 
+                Filter = (int)query.Filter, 
+                Limit = query.Limit ?? 10 
+            }, 
+            commandType: CommandType.StoredProcedure);
+            
         return items.ToList();
     }
 
