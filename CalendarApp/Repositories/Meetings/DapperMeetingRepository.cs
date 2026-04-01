@@ -255,7 +255,7 @@ public class DapperMeetingRepository : IMeetingRepository
         return (upcoming, past);
     }
 
-    public async Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, int status)
+    public async Task<bool> UpdateParticipantStatusAsync(Guid meetingId, Guid participantId, int statusId)
     {
         using var connection = connectionFactory.CreateConnection();
         var isCreator = await connection.ExecuteScalarAsync<bool>(
@@ -270,7 +270,7 @@ public class DapperMeetingRepository : IMeetingRepository
 
         var affected = await connection.ExecuteAsync(
             "dbo.usp_MeetingParticipant_UpdateStatus",
-            new { MeetingId = meetingId, ContactId = participantId, Status = status },
+            new { MeetingId = meetingId, ContactId = participantId, StatusId = statusId },
             commandType: CommandType.StoredProcedure);
 
         return affected > 0;

@@ -108,7 +108,7 @@ BEGIN
            @RequesterId AS ViewerId,
            CASE WHEN m.CreatedById = @RequesterId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsCreator,
            CASE WHEN m.CreatedById = @RequesterId OR EXISTS (SELECT 1 FROM dbo.MeetingParticipants vp WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsParticipant,
-           (SELECT TOP 1 ps.Name FROM dbo.MeetingParticipants vp JOIN dbo.ParticipantStatuses ps ON ps.Id = vp.StatusId WHERE vp.MeetingId = m.Id AND vp.ContactId = @RequesterId) AS ViewerStatus
+           (SELECT TOP 1 mp.StatusId FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @RequesterId) AS ViewerStatusId
     FROM dbo.Meetings m
     JOIN dbo.Users creator ON creator.Id = m.CreatedById
     LEFT JOIN dbo.Categories cat ON cat.Id = m.CategoryId
@@ -259,7 +259,7 @@ BEGIN
            cat.Name AS CategoryName,
            cat.Color AS CategoryColor,
            CASE WHEN m.CreatedById = @UserId THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS ViewerIsCreator,
-           (SELECT TOP 1 ps.Name FROM dbo.MeetingParticipants mp JOIN dbo.ParticipantStatuses ps ON ps.Id = mp.StatusId WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId) AS ViewerStatus,
+           (SELECT TOP 1 mp.StatusId FROM dbo.MeetingParticipants mp WHERE mp.MeetingId = m.Id AND mp.ContactId = @UserId) AS ViewerStatusId,
            (SELECT COUNT(*) FROM dbo.MeetingParticipants mp2 WHERE mp2.MeetingId = m.Id) AS ParticipantCount
     FROM dbo.Meetings m
     JOIN dbo.Users creator ON creator.Id = m.CreatedById

@@ -24,7 +24,7 @@ namespace CalendarApp.Models.Meetings
 
         public bool ViewerIsParticipant { get; set; }
 
-        public string? ViewerStatus { get; set; }
+        public int ViewerStatusId { get; set; }
 
         public List<MeetingParticipantDisplayViewModel> Participants { get; set; } = new();
     }

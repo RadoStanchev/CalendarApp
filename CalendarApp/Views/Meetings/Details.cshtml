@@ -4,18 +4,8 @@
     ViewData["Title"] = "Детайли за срещата";
     var message = TempData["MeetingMessage"] as string;
     var error = TempData["MeetingError"] as string;
-   
-    string BuildCategoryBadgeStyle(string? color)
-    {
-        if (string.IsNullOrWhiteSpace(color))
-        {
-            return string.Empty;
-        }
 
-        return $"background-color: {color}; border-color: {color}; color: #fff;";
-    }
-
-    var chatEnabled = Model.ViewerIsCreator || (Model.ViewerIsParticipant && Model.ViewerStatus == "Accepted");
+    var chatEnabled = Model.ViewerIsCreator || (Model.ViewerIsParticipant && Model.ViewerStatusId == 1);
     var accentPalette = new[] { "accent-blue", "accent-purple", "accent-green", "accent-orange", "accent-teal" };
     string BuildAccent(Guid id) => accentPalette[Math.Abs(id.GetHashCode()) % accentPalette.Length];
     string BuildMeetingTitle(DateTime startTimeUtc, string? location)
@@ -49,7 +39,7 @@
             {
                 <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.Id">Редактирай срещата</a>
             }
-            else if (Model.ViewerIsParticipant && !string.IsNullOrEmpty(Model.ViewerStatus))
+            else if (Model.ViewerIsParticipant)
             {
                 <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex align-items-center gap-2">
                     @Html.AntiForgeryToken()
@@ -58,7 +48,7 @@
                     <select class="form-select form-select-sm" id="viewer-status" name="status">
                         @foreach (var status in ParticipantStatusHelper.Statuses)
                         {
-                            <option value="@status.Key" selected="@(Model.ViewerStatus == status.Value ? true : false)">@status.Value</option>
+                            <option value="@status.Key" selected="@(Model.ViewerStatusId == status.Key ? true : false)">@status.Value</option>
                         }
                     </select>
                     <button type="submit" class="btn btn-outline-primary btn-sm">Запази</button>
@@ -98,7 +88,7 @@
                         <dd class="col-sm-8">
                             @if (!string.IsNullOrWhiteSpace(Model.CategoryName))
                             {
-                                <span class="badge rounded-pill" style="@BuildCategoryBadgeStyle(Model.CategoryColor)">@Model.CategoryName</span>
+                                <span class="badge rounded-pill" style="background-color: @Model.CategoryColor; border-color: @Model.CategoryColor; color: #fff;">@Model.CategoryName</span>
                             }
                             else
                             {

@@ -20,7 +20,7 @@ namespace CalendarApp.Models.Meetings
 
         public bool ViewerIsCreator { get; set; }
 
-        public string? ViewerStatus { get; set; }
+        public int ViewerStatusId { get; set; }
 
         public int ParticipantCount { get; set; }
     }
