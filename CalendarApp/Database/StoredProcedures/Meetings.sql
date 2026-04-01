@@ -338,3 +338,38 @@ BEGIN
     SELECT Location FROM dbo.Meetings WHERE Id = @MeetingId;
 END
 GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Meeting_GetPendingReminders
+    @Now DATETIME2,
+    @WindowEnd DATETIME2
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT Id, StartTime, [Location], [Description], CategoryId, CreatedById, ReminderSent
+    FROM dbo.Meetings
+    WHERE ReminderSent = 0 AND StartTime >= @Now AND StartTime <= @WindowEnd;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_MeetingParticipant_GetContactIds
+    @MeetingId UNIQUEIDENTIFIER,
+    @DeclinedStatus INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT DISTINCT ContactId
+    FROM dbo.MeetingParticipants
+    WHERE MeetingId = @MeetingId AND StatusId <> @DeclinedStatus;
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_Meeting_MarkReminderSent
+    @MeetingId UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE dbo.Meetings
+    SET ReminderSent = 1
+    WHERE Id = @MeetingId;
+END
+GO

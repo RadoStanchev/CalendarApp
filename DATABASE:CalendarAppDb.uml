@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>DATABASE</ID>
+  <OriginalElement>518e8f79-2e20-4907-bedb-aa953eb7cefb.DATABASE:CalendarAppDb</OriginalElement>
+  <nodes>
+    <node x="-15.418657534246677" y="-117.73282191780822">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings</node>
+    <node x="-289.07146249905406" y="778.5741945108175">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MessageSeens</node>
+    <node x="-299.07146249905406" y="507.68917376285276">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages</node>
+    <node x="332.7122452995426" y="780.6883914326802">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.FriendshipStatuses</node>
+    <node x="-311.6542857953749" y="162.99990134175215">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Notifications</node>
+    <node x="-29.418657534246677" y="141.63857534246586">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users</node>
+    <node x="302.5" y="155.58093150684942">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.ParticipantStatuses</node>
+    <node x="295.3128767123286" y="-81.73282191780822">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants</node>
+    <node x="-282.6542857953749" y="-95.67517808219174">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Categories</node>
+    <node x="-13.418657534246677" y="754.5741945108175">518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MessageSeens" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" relationship="REFERENCES">
+      <point x="-18.22668272588669" y="-55.61267122747108" />
+      <point x="-206.79814522494075" y="761.1070459531198" />
+      <point x="-205.759273875296" y="761.1070459531198" />
+      <point x="-205.759273875296" y="691.6891737628528" />
+      <point x="0.0" y="92.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users" relationship="REFERENCES">
+      <point x="1.2328767138569674E-4" y="67.99982191780822" />
+      <point x="393.313" y="124.139" />
+      <point x="-56.0" y="124.139" />
+      <point x="-56.0" y="269.639" />
+      <point x="-112.50034246575332" y="4.2465753415399377E-4" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users" relationship="REFERENCES">
+      <point x="-23.0" y="-80.0" />
+      <point x="-15.0" y="128.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MessageSeens" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users" relationship="REFERENCES">
+      <point x="100.50046249905407" y="-1.9451081755050836E-4" />
+      <point x="-56.0" y="834.574" />
+      <point x="-56.0" y="269.639" />
+      <point x="-112.50034246575332" y="4.2465753415399377E-4" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Categories" relationship="REFERENCES">
+      <point x="-105.5" y="-25.94235616438351" />
+      <point x="76.5" y="0.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships" relationship="REFERENCES">
+      <point x="15.0" y="92.0" />
+      <point x="-178.57146249905406" y="761.0741945108175" />
+      <point x="-104.5" y="-73.5" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.ParticipantStatuses" relationship="REFERENCES">
+      <point x="15.000123287671386" y="68.0" />
+      <point x="10.812999999999988" y="-44.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users" relationship="REFERENCES">
+      <point x="81.41717670367916" y="-92.0" />
+      <point x="-112.1542857953749" y="284.639" />
+      <point x="-112.5" y="15.000424657534154" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users" relationship="REFERENCES">
+      <point x="-7.0" y="104.0" />
+      <point x="0.0" y="-128.0" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.MeetingParticipants" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" relationship="REFERENCES">
+      <point x="-97.99987671232861" y="-1.780821917769515E-4" />
+      <point x="105.49965753424667" y="-1.780821917769515E-4" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Notifications" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Users" relationship="REFERENCES">
+      <point x="91.0" y="-0.3609013417521396" />
+      <point x="-112.5" y="-14.999575342465846" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Messages" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Meetings" relationship="REFERENCES">
+      <point x="105.50046249905407" y="2.4139105403264693E-4" />
+      <point x="246.0" y="599.6894151539068" />
+      <point x="246.0" y="-13.733" />
+      <point x="105.49965753424667" y="-1.780821917769515E-4" />
+    </edge>
+    <edge source="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.Friendships" target="518e8f79-2e20-4907-bedb-aa953eb7cefb.TABLE:CalendarAppDb.dbo.FriendshipStatuses" relationship="REFERENCES">
+      <point x="104.5" y="-9.885803078137315" />
+      <point x="-93.5" y="0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Compact" zoom="0.9625830959164292" showDependencies="false" x="28.506215469613153" y="376.3988752959747" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Columns</Category>
+    <Category>Comments</Category>
+    <Category>Key columns</Category>
+    <Category>Virtual foreign keys</Category>
+  </Categories>
+</Diagram>
+

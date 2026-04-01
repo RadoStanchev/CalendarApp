@@ -57,11 +57,11 @@ namespace CalendarApp.Infrastructure.Background
             var windowEnd = now.Add(ReminderWindow);
 
             using var connection = connectionFactory.CreateConnection();
-            var meetings = (await connection.QueryAsync<MeetingRecord>(new CommandDefinition(@"
-SELECT Id, StartTime, [Location], [Description], CategoryId, CreatedById, ReminderSent
-FROM dbo.Meetings
-WHERE ReminderSent = 0 AND StartTime >= @Now AND StartTime <= @WindowEnd",
-                new { Now = now, WindowEnd = windowEnd }, cancellationToken: cancellationToken))).ToList();
+
+            var meetings = (await connection.QueryAsync<MeetingRecord>(
+                "dbo.usp_Meeting_GetPendingReminders",
+                new { Now = now, WindowEnd = windowEnd }, 
+                commandType: System.Data.CommandType.StoredProcedure)).ToList();
 
             if (meetings.Count == 0)
             {
@@ -70,11 +70,10 @@ WHERE ReminderSent = 0 AND StartTime >= @Now AND StartTime <= @WindowEnd",
 
             foreach (var meeting in meetings)
             {
-                var recipientIds = (await connection.QueryAsync<Guid>(new CommandDefinition(@"
-SELECT DISTINCT ContactId
-FROM dbo.MeetingParticipants
-WHERE MeetingId = @MeetingId AND Status <> @DeclinedStatus",
-                    new { MeetingId = meeting.Id, DeclinedStatus = 2 }, cancellationToken: cancellationToken))).ToList();
+                var recipientIds = (await connection.QueryAsync<Guid>(
+                    "dbo.usp_MeetingParticipant_GetContactIds",
+                    new { MeetingId = meeting.Id, DeclinedStatus = 2 }, 
+                    commandType: System.Data.CommandType.StoredProcedure)).ToList();
 
                 if (meeting.CreatedById != Guid.Empty && !recipientIds.Contains(meeting.CreatedById))
                 {
@@ -86,10 +85,10 @@ WHERE MeetingId = @MeetingId AND Status <> @DeclinedStatus",
                     await notificationService.SendMeetingReminderAsync(meeting, recipientIds);
                 }
 
-                await connection.ExecuteAsync(new CommandDefinition(@"
-UPDATE dbo.Meetings
-SET ReminderSent = 1
-WHERE Id = @MeetingId", new { MeetingId = meeting.Id }, cancellationToken: cancellationToken));
+                await connection.ExecuteAsync(
+                    "dbo.usp_Meeting_MarkReminderSent", 
+                    new { MeetingId = meeting.Id }, 
+                    commandType: System.Data.CommandType.StoredProcedure);
             }
         }
     }
